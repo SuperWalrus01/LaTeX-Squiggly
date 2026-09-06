@@ -24,6 +24,18 @@ signing), so this is a stopgap, not a permanent shape.
 
 Current status: **1479 checks passing.**
 
+## Trying conversions by hand
+
+```
+swift run latex-unicode '\int_5^6'          # one-shot
+swift run latex-unicode                      # interactive, one fragment per line
+echo '\alpha' | swift run latex-unicode      # pipe
+swift run latex-unicode -c '\R'              # also print U+ values
+```
+
+Replacement text goes to stdout and explanations to stderr, so the tool
+composes. Exit status is 0 for converted and fallback, 1 for unsupported.
+
 ## API
 
 ```swift
@@ -149,6 +161,43 @@ overrule.
   friends exist if you want them.
 - **`\pmod`, `\overset`, `\underset`.**
 
+## Signing and distribution
+
+```
+Scripts/setup-signing.sh    one-time: a stable self-signed identity
+Scripts/make-app.sh         assemble and sign the .app from SwiftPM output
+Scripts/install.sh          build from source and install to /Applications
+```
+
+**Signing is a development need before it is a distribution one.** macOS TCC
+identifies an app by its code signature, and ad-hoc signatures key on the code
+directory hash, which changes on every build — so without a stable identity you
+re-grant Accessibility and Input Monitoring on every single rebuild.
+`setup-signing.sh` creates one. Verified: codesign accepts an untrusted
+self-signed certificate as long as its keychain is in the search list, so this
+does not touch the trust store.
+
+**Building from source is the distribution path.** Not a fallback — the only
+free one that is actually clean. Tested on macOS 15.6:
+
+| How the app arrives | Quarantined? |
+|---|---|
+| Built locally (`Scripts/install.sh`) | No — opens normally |
+| Downloaded `.tar.gz`, extracted with `tar -xzf` | **Yes** |
+| Downloaded `.dmg`, dragged from Finder | Yes |
+
+Command-line `tar` is widely believed to sidestep quarantine. It does for plain
+files, but **not** for `.app` bundles: macOS writes a fresh quarantine attribute
+(flag `0281`, not the archive's own) onto the extracted bundle's contents. A
+downloaded build therefore still costs the user a trip through System Settings →
+Privacy & Security, which on macOS 15 no longer has the old Control-click → Open
+shortcut.
+
+Notarization is the only thing that removes that step, and it requires a
+Developer ID certificate, which requires the paid Apple Developer Program.
+Until then: ship source, and `make-app.sh TARBALL=1` for anyone who won't build
+it — with honest instructions about what they'll see.
+
 ## Non-goals
 
 No image rendering, cloud sync, accounts, text editor, note-taking, iOS,
@@ -169,4 +218,6 @@ Sources/LaTeXUnicodeChecks/    the test suite (no XCTest)
 Sources/latex-unicode-check/   CLI runner
 Tests/LaTeXUnicodeTests/       swift test wrapper
 Tools/generate_tables.py       table generator
+Sources/latex-unicode/         convert CLI for trying things by hand
+Scripts/                       signing, bundling, install
 ```

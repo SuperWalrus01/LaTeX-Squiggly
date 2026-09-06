@@ -6,6 +6,7 @@ let package = Package(
     platforms: [.macOS(.v13)],
     products: [
         .library(name: "LaTeXUnicode", targets: ["LaTeXUnicode"]),
+        .executable(name: "latex-unicode", targets: ["latex-unicode"]),
         .executable(name: "latex-unicode-check", targets: ["latex-unicode-check"]),
     ],
     targets: [
@@ -15,6 +16,9 @@ let package = Package(
         // The test suite proper, written without XCTest so it can run on a
         // machine that has only the Command Line Tools installed.
         .target(name: "LaTeXUnicodeChecks", dependencies: ["LaTeXUnicode"]),
+
+        // Try conversions by hand: `swift run latex-unicode`.
+        .executableTarget(name: "latex-unicode", dependencies: ["LaTeXUnicode"]),
 
         // Runs the suite: `swift run latex-unicode-check`.
         .executableTarget(name: "latex-unicode-check", dependencies: ["LaTeXUnicodeChecks"]),
