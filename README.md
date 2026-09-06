@@ -6,7 +6,7 @@ in any app and it becomes `α` or `∫₅⁶` in place — real text, never an i
 - **Phase 0 — conversion engine.** Done. Pure Swift, no system APIs.
 - **Phase 1 — text replacement.** Done. Event tap, replacement, permissions.
 - **Phase 2 — per-app suppression.** **Not started.** See the warning below.
-- **Phase 3 — full UI.** Not started.
+- **Phase 3 — menu bar UI.** Done, minus the exclusion editor (needs Phase 2).
 
 ## ⚠️ Phase 2 has not landed
 
@@ -142,7 +142,24 @@ Superscripts: all ten digits, `+ - = ( )`, and every lowercase letter **except
 a missing letter returns `.unsupported`. Uppercase has no script forms in
 Unicode at all.
 
-Fallbacks: `\frac`, `\sqrt` (including `\sqrt[n]`), `\binom`.
+Fractions convert properly rather than falling back, in two tiers. A
+precomposed character where one exists, otherwise a superscript numerator, a
+FRACTION SLASH and a subscript denominator:
+
+```
+\frac{1}{2}      ->  ½      exact character
+\frac{5}{8}      ->  ⅝      exact character
+\frac{10}{17}    ->  ¹⁰⁄₁₇  composed
+\frac{n}{2}      ->  ⁿ⁄₂    composed
+\frac{a}{b}      ->  a/b    fallback — no subscript b exists
+\frac{x+1}{y-2}  ->  (x+1)/(y-2)
+```
+
+Composition needs every character to have its script form, and the subscript
+alphabet is missing `b c d f g q w y z`, so anything with those in the
+denominator still linearises and says so.
+
+Remaining fallbacks: `\sqrt` (including `\sqrt[n]`) and `\binom`.
 
 Unsupported: environments, stacked constructions, accents, alternate alphabets,
 spacing commands, line breaks, nested scripts.
@@ -237,6 +254,21 @@ to keep.
 
 **Synthetic events are stamped** via `CGEventSource.userData` so the tap ignores
 its own output instead of feeding on it.
+
+## The menu
+
+The status item shows state at a glance — a plain ƒ when converting, a
+struck-through one when off — and carries the enable toggle, permission
+shortcuts when something is missing, and **Symbols…**.
+
+The symbol browser searches all 202 symbols by command, Unicode name and
+category at once, so "greek capital" narrows to eleven rows and "double-struck"
+finds the blackboard bold letters without knowing they are called that. Double-
+click copies the glyph; there is a button for the command.
+
+```
+open -a LaTeX-Squigly --args --symbols   # opens the browser directly
+```
 
 ## Signing and distribution
 

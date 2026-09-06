@@ -38,7 +38,7 @@ func runConversionChecks(_ c: Checker) {
 
     // Whitespace before an argument is skipped, as in LaTeX, while the
     // terminator of an argument-less command is preserved.
-    c.fallback("\\frac 1 2", "1/2")
+    c.converted("\\frac 1 2", "\u{00BD}")
     c.fallback("\\sqrt 2", "√2")
     c.converted("x^ 2", "x²")
     c.converted("\\text {ok}", "ok")
@@ -108,8 +108,9 @@ func runConversionChecks(_ c: Checker) {
     c.isNil(convert("\\alpha").reason, "a clean conversion has no reason")
     c.equal(convert("\\alpha").requiresUserNotice, false, "clean conversion needs no notice")
 
-    c.equal(convert("\\frac{1}{2}").text, "1/2", "fallback text")
-    c.equal(convert("\\frac{1}{2}").requiresUserNotice, true, "fallback needs a notice")
+    c.equal(convert("\\frac{a}{b}").text, "a/b", "fallback text")
+    c.equal(convert("\\frac{a}{b}").requiresUserNotice, true, "fallback needs a notice")
+    c.equal(convert("\\frac{1}{2}").requiresUserNotice, false, "an exact fraction needs none")
 
     c.isNil(convert("\\begin{matrix}").text, "unsupported has no text")
     c.equal(convert("\\begin{matrix}").requiresUserNotice, true, "unsupported needs a notice")
@@ -117,8 +118,8 @@ func runConversionChecks(_ c: Checker) {
     // Every non-clean result carries a sentence, because the caller shows it
     // to a human.
     let explained = ["", "\\foo", "x_b", "x^q", "\\begin{matrix}", "\\vec{v}",
-                     "{", "}", "\\", "\\,", "\\frac{1}{2}", "\\sqrt{2}",
-                     "\\binom{n}{k}", "\\sqrt[5]{x}", "x^{a^b}", "\\mathbb{X}"]
+                     "{", "}", "\\", "\\,", "\\sqrt{2}",
+                     "\\binom{n}{k}", "\\sqrt[5]{x}", "\\frac{a}{b}", "x^{a^b}", "\\mathbb{X}"]
     for input in explained {
         guard let reason = convert(input).reason else {
             c.fail("expected a reason for \(input)")

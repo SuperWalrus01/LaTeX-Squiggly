@@ -181,10 +181,48 @@ private struct Renderer {
         guard !top.text.isEmpty, !bottom.text.isEmpty else {
             throw UnsupportedInput(reason: "\\\(name) has an empty argument.")
         }
+        // A fraction whose own arguments already needed an approximation
+        // cannot be represented exactly, so those go straight to the linear
+        // form rather than dressing up a fallback as a real fraction.
+        if top.fallbacks.isEmpty, bottom.fallbacks.isEmpty {
+            // Best: a single precomposed character.
+            if let exact = ScriptTables.vulgarFractions["\(top.text)/\(bottom.text)"] {
+                out.text += exact
+                return
+            }
+            // Next best: superscript numerator, fraction slash, subscript
+            // denominator. This composes any fraction whose digits and letters
+            // both have script forms, so 10/17 works even though no single
+            // character for it exists.
+            if let composed = composedFraction(numerator: top.text, denominator: bottom.text) {
+                out.text += composed
+                return
+            }
+        }
+
         out.text += parenthesised(top.text) + "/" + parenthesised(bottom.text)
         out.fallbacks += top.fallbacks + bottom.fallbacks
         out.fallbacks.append(
             "A fraction cannot be stacked in plain text, so it was written on one line with a slash.")
+    }
+
+    /// Builds a diagonal fraction out of existing script characters.
+    ///
+    /// Returns nil when any character lacks the form it needs — the subscript
+    /// alphabet is missing `b c d f g q w y z`, so `\frac{a}{b}` cannot be
+    /// composed and falls back to `a/b` instead.
+    private func composedFraction(numerator: String, denominator: String) -> String? {
+        var result = ""
+        for character in numerator {
+            guard let raised = ScriptTables.superscripts[character] else { return nil }
+            result.append(raised)
+        }
+        result.append(ScriptTables.fractionSlash)
+        for character in denominator {
+            guard let lowered = ScriptTables.subscripts[character] else { return nil }
+            result.append(lowered)
+        }
+        return result
     }
 
     private mutating func emitRoot() throws {

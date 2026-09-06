@@ -56,12 +56,20 @@ func runInputTrackingChecks(_ c: Checker) {
             "preceding prose is left alone")
 
     // A fallback still replaces, but must carry an explanation.
-    if case .replace(let r) = outcome("\\frac{1}{2}") {
-        c.equal(r.insert, "1/2 ", "fallback text")
+    if case .replace(let r) = outcome("\\frac{a}{b}") {
+        c.equal(r.insert, "a/b ", "fallback text")
         c.equal(r.deleteCount, 11, "fallback delete count")
         c.notNil(r.notice, "a fallback must carry a notice")
     } else {
-        c.fail("expected a fallback replacement for \\frac{1}{2}")
+        c.fail("expected a fallback replacement for \\frac{a}{b}")
+    }
+
+    // An exact fraction needs no notice at all.
+    if case .replace(let r) = outcome("\\frac{1}{2}") {
+        c.equal(r.insert, "\u{00BD} ", "exact fraction")
+        c.isNil(r.notice, "an exact fraction carries no notice")
+    } else {
+        c.fail("expected a replacement for \\frac{1}{2}")
     }
 
     // A recognised command with no honest form: say so, change nothing.
@@ -144,11 +152,11 @@ func runInputTrackingChecks(_ c: Checker) {
     } else {
         c.fail("expected a refusal for $x^q$")
     }
-    if case .replace(let r) = outcome("$\\frac{1}{2}$") {
+    if case .replace(let r) = outcome("$\\frac{a}{b}$") {
         c.notNil(r.notice, "a fallback inside delimiters still explains itself")
-        c.equal(r.insert, "1/2 ", "fallback text")
+        c.equal(r.insert, "a/b ", "fallback text")
     } else {
-        c.fail("expected a fallback for $\\frac{1}{2}$")
+        c.fail("expected a fallback for $\\frac{a}{b}$")
     }
 
     // The backslash path still works unchanged.

@@ -95,4 +95,32 @@ public enum ScriptTables {
         3:  "∛",    // U+221B CUBE ROOT
         4:  "∜",    // U+221C FOURTH ROOT
     ]
+
+    /// Precomposed fractions, keyed "numerator/denominator".
+    /// A single character here is an exact representation, not an
+    /// approximation, so it converts rather than falls back.
+    public static let vulgarFractions: [String: String] = [
+        "0/3":  "↉",    // U+2189 VULGAR FRACTION ZERO THIRDS
+        "1/2":  "½",    // U+00BD VULGAR FRACTION ONE HALF
+        "1/3":  "⅓",    // U+2153 VULGAR FRACTION ONE THIRD
+        "2/3":  "⅔",    // U+2154 VULGAR FRACTION TWO THIRDS
+        "1/4":  "¼",    // U+00BC VULGAR FRACTION ONE QUARTER
+        "3/4":  "¾",    // U+00BE VULGAR FRACTION THREE QUARTERS
+        "1/5":  "⅕",    // U+2155 VULGAR FRACTION ONE FIFTH
+        "2/5":  "⅖",    // U+2156 VULGAR FRACTION TWO FIFTHS
+        "3/5":  "⅗",    // U+2157 VULGAR FRACTION THREE FIFTHS
+        "4/5":  "⅘",    // U+2158 VULGAR FRACTION FOUR FIFTHS
+        "1/6":  "⅙",    // U+2159 VULGAR FRACTION ONE SIXTH
+        "5/6":  "⅚",    // U+215A VULGAR FRACTION FIVE SIXTHS
+        "1/7":  "⅐",    // U+2150 VULGAR FRACTION ONE SEVENTH
+        "1/8":  "⅛",    // U+215B VULGAR FRACTION ONE EIGHTH
+        "3/8":  "⅜",    // U+215C VULGAR FRACTION THREE EIGHTHS
+        "5/8":  "⅝",    // U+215D VULGAR FRACTION FIVE EIGHTHS
+        "7/8":  "⅞",    // U+215E VULGAR FRACTION SEVEN EIGHTHS
+        "1/9":  "⅑",    // U+2151 VULGAR FRACTION ONE NINTH
+        "1/10": "⅒",    // U+2152 VULGAR FRACTION ONE TENTH
+    ]
+
+    /// Joins a superscript numerator to a subscript denominator.
+    public static let fractionSlash: Character = "⁄"    // U+2044 FRACTION SLASH
 }

@@ -308,6 +308,27 @@ func runCodepointChecks(_ c: Checker) {
     scalar(c, ScriptTables.subscripts["v" as Character], 0x1D65, "LATIN SUBSCRIPT SMALL LETTER V")
     scalar(c, ScriptTables.subscripts["x" as Character], 0x2093, "LATIN SUBSCRIPT SMALL LETTER X")
 
+    // MARK: Vulgar fractions
+    scalar(c, ScriptTables.vulgarFractions["0/3"], [0x2189], "VULGAR FRACTION ZERO THIRDS")
+    scalar(c, ScriptTables.vulgarFractions["1/2"], [0x00BD], "VULGAR FRACTION ONE HALF")
+    scalar(c, ScriptTables.vulgarFractions["1/3"], [0x2153], "VULGAR FRACTION ONE THIRD")
+    scalar(c, ScriptTables.vulgarFractions["2/3"], [0x2154], "VULGAR FRACTION TWO THIRDS")
+    scalar(c, ScriptTables.vulgarFractions["1/4"], [0x00BC], "VULGAR FRACTION ONE QUARTER")
+    scalar(c, ScriptTables.vulgarFractions["3/4"], [0x00BE], "VULGAR FRACTION THREE QUARTERS")
+    scalar(c, ScriptTables.vulgarFractions["1/5"], [0x2155], "VULGAR FRACTION ONE FIFTH")
+    scalar(c, ScriptTables.vulgarFractions["2/5"], [0x2156], "VULGAR FRACTION TWO FIFTHS")
+    scalar(c, ScriptTables.vulgarFractions["3/5"], [0x2157], "VULGAR FRACTION THREE FIFTHS")
+    scalar(c, ScriptTables.vulgarFractions["4/5"], [0x2158], "VULGAR FRACTION FOUR FIFTHS")
+    scalar(c, ScriptTables.vulgarFractions["1/6"], [0x2159], "VULGAR FRACTION ONE SIXTH")
+    scalar(c, ScriptTables.vulgarFractions["5/6"], [0x215A], "VULGAR FRACTION FIVE SIXTHS")
+    scalar(c, ScriptTables.vulgarFractions["1/7"], [0x2150], "VULGAR FRACTION ONE SEVENTH")
+    scalar(c, ScriptTables.vulgarFractions["1/8"], [0x215B], "VULGAR FRACTION ONE EIGHTH")
+    scalar(c, ScriptTables.vulgarFractions["3/8"], [0x215C], "VULGAR FRACTION THREE EIGHTHS")
+    scalar(c, ScriptTables.vulgarFractions["5/8"], [0x215D], "VULGAR FRACTION FIVE EIGHTHS")
+    scalar(c, ScriptTables.vulgarFractions["7/8"], [0x215E], "VULGAR FRACTION SEVEN EIGHTHS")
+    scalar(c, ScriptTables.vulgarFractions["1/9"], [0x2151], "VULGAR FRACTION ONE NINTH")
+    scalar(c, ScriptTables.vulgarFractions["1/10"], [0x2152], "VULGAR FRACTION ONE TENTH")
+
     // MARK: Radicals
     scalar(c, ScriptTables.radicals[2], 0x221A, "SQUARE ROOT")
     scalar(c, ScriptTables.radicals[3], 0x221B, "CUBE ROOT")
