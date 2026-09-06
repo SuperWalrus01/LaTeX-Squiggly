@@ -16,6 +16,7 @@ public enum CheckSuite {
         CheckGroup(name: "Scripts", run: runScriptChecks),
         CheckGroup(name: "Fallbacks", run: runFallbackChecks),
         CheckGroup(name: "Conversion", run: runConversionChecks),
+        CheckGroup(name: "Input tracking", run: runInputTrackingChecks),
     ]
 
     /// Runs one group and returns its checker.

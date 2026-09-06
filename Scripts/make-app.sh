@@ -26,7 +26,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 APP_NAME="${APP_NAME:-LaTeXUnicode}"
-EXECUTABLE="${EXECUTABLE:-latex-unicode}"
+EXECUTABLE="${EXECUTABLE:-LaTeXUnicodeApp}"
 BUNDLE_ID="${BUNDLE_ID:-com.example.latexunicode}"
 VERSION="${VERSION:-0.1.0}"
 MIN_MACOS="${MIN_MACOS:-13.0}"

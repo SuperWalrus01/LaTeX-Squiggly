@@ -1,9 +1,35 @@
-# LaTeXUnicode — Phase 0
+# LaTeXUnicode
 
-The conversion engine for the inline LaTeX-to-Unicode menu bar app. No UI, no
-system APIs, no dependencies, no network. Pure Swift, testable in isolation.
+An inline LaTeX-to-Unicode menu bar app for macOS. Type `\alpha` or `\int_5^6`
+in any app and it becomes `α` or `∫₅⁶` in place — real text, never an image.
 
-Phases 1–3 (event tap, per-app suppression, menu bar UI) are **not** started.
+- **Phase 0 — conversion engine.** Done. Pure Swift, no system APIs.
+- **Phase 1 — text replacement.** Done. Event tap, replacement, permissions.
+- **Phase 2 — per-app suppression.** **Not started.** See the warning below.
+- **Phase 3 — full UI.** Not started.
+
+## ⚠️ Phase 2 has not landed
+
+There is no per-app exclusion list yet, so the app cannot tell a chat window
+from a `.tex` file. **Turn it off before editing LaTeX source or opening
+Overleaf**, or it will convert your `\alpha` into `α` and corrupt the document.
+
+That is why conversion **ships disabled** and has to be switched on from the
+menu bar each time you install. Do not hand this to a tester without saying so.
+
+## Running the app
+
+```
+Scripts/install.sh          build from source, install to /Applications
+open /Applications/LaTeXUnicode.app
+```
+
+Then grant **Accessibility** (to replace text) and **Input Monitoring** (to
+notice you typing) when the menu bar item asks, and tick *Enable conversion*.
+
+Nothing typed is stored or transmitted. The rolling buffer is 64 characters,
+in memory only, and is discarded on every command, Return, arrow key, click,
+app switch and shortcut.
 
 ## Running the tests
 
@@ -160,6 +186,32 @@ overrule.
 - **Spacing commands.** `\,` `\;` `\quad` currently `.unsupported`. U+2009 and
   friends exist if you want them.
 - **`\pmod`, `\overset`, `\underset`.**
+
+## How replacement works
+
+`InputTracking` holds the typing logic with no system APIs in it, so the part
+most likely to be wrong is unit-tested rather than only observable by typing
+into Slack. The app target is a thin shell over it.
+
+**A candidate must start with a backslash.** `\alpha_b` reports its missing
+subscript, but bare `x^2` never fires — otherwise `2^3` in prose, or `a_b` in an
+identifier, would rewrite itself.
+
+**Unknown commands stay silent.** `C:\Users ` contains a backslash but `Users`
+is nobody's command, so nothing happens and nothing is reported. You are only
+told about failures you plausibly meant to cause.
+
+**Space and tab terminate; Return does not.** In a chat app Return sends the
+message, and racing a replacement against a send is how you post half a symbol.
+
+**The terminator is suppressed and retyped.** The tap is `.defaultTap` rather
+than `.listenOnly` for exactly this reason, and the replacement is posted
+synchronously inside the callback — dispatching it leaves a window in which the
+next keystroke lands first and the delete count eats a character the user meant
+to keep.
+
+**Synthetic events are stamped** via `CGEventSource.userData` so the tap ignores
+its own output instead of feeding on it.
 
 ## Signing and distribution
 
