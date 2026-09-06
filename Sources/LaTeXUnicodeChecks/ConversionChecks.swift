@@ -55,7 +55,7 @@ func runConversionChecks(_ c: Checker) {
     c.converted("{{\\alpha}}", "α")
 
     c.converted("\\left(\\alpha\\right)", "(α)")
-    c.fallback("\\left(\\frac{a}{b}\\right)", "(a/b)")
+    c.fallback("\\left(\\frac{a}{b}\\right)", "(a\u{2215}b)")
 
     c.converted("\\text{if }x>0", "if x>0")
     c.converted("\\mathrm{d}x", "dx")
@@ -108,7 +108,7 @@ func runConversionChecks(_ c: Checker) {
     c.isNil(convert("\\alpha").reason, "a clean conversion has no reason")
     c.equal(convert("\\alpha").requiresUserNotice, false, "clean conversion needs no notice")
 
-    c.equal(convert("\\frac{a}{b}").text, "a/b", "fallback text")
+    c.equal(convert("\\frac{a}{b}").text, "a\u{2215}b", "fallback text")
     c.equal(convert("\\frac{a}{b}").requiresUserNotice, true, "fallback needs a notice")
     c.equal(convert("\\frac{1}{2}").requiresUserNotice, false, "an exact fraction needs none")
 

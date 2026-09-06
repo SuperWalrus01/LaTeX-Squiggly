@@ -57,7 +57,7 @@ func runInputTrackingChecks(_ c: Checker) {
 
     // A fallback still replaces, but must carry an explanation.
     if case .replace(let r) = outcome("\\frac{a}{b}") {
-        c.equal(r.insert, "a/b ", "fallback text")
+        c.equal(r.insert, "a\u{2215}b ", "fallback text")
         c.equal(r.deleteCount, 11, "fallback delete count")
         c.notNil(r.notice, "a fallback must carry a notice")
     } else {
@@ -154,7 +154,7 @@ func runInputTrackingChecks(_ c: Checker) {
     }
     if case .replace(let r) = outcome("$\\frac{a}{b}$") {
         c.notNil(r.notice, "a fallback inside delimiters still explains itself")
-        c.equal(r.insert, "a/b ", "fallback text")
+        c.equal(r.insert, "a\u{2215}b ", "fallback text")
     } else {
         c.fail("expected a fallback for $\\frac{a}{b}$")
     }

@@ -142,22 +142,31 @@ Superscripts: all ten digits, `+ - = ( )`, and every lowercase letter **except
 a missing letter returns `.unsupported`. Uppercase has no script forms in
 Unicode at all.
 
-Fractions convert properly rather than falling back, in two tiers. A
-precomposed character where one exists, otherwise a superscript numerator, a
-FRACTION SLASH and a subscript denominator:
+Fractions convert properly rather than falling back. Unicode has no stacked
+fraction — there is no vinculum and no way to put one expression above another —
+so the choice is between compact and legible, and the rule picks whichever suits
+the content:
 
 ```
-\frac{1}{2}      ->  ½      exact character
-\frac{5}{8}      ->  ⅝      exact character
-\frac{10}{17}    ->  ¹⁰⁄₁₇  composed
-\frac{n}{2}      ->  ⁿ⁄₂    composed
-\frac{a}{b}      ->  a/b    fallback — no subscript b exists
-\frac{x+1}{y-2}  ->  (x+1)/(y-2)
+\frac{1}{2}       ->  ½             precomposed character
+\frac{5}{8}       ->  ⅝             precomposed character
+\frac{10}{17}     ->  ¹⁰⁄₁₇         composed: superscript ⁄ subscript
+\frac{n}{2}       ->  ⁿ⁄₂           composed
+\frac{x+1}{2}     ->  (x+1)∕2       linear
+\frac{x-2}{x-4}   ->  (x−2)∕(x−4)   linear
+\frac{a}{b}       ->  a∕b           linear — no subscript b exists
 ```
 
-Composition needs every character to have its script form, and the subscript
-alphabet is missing `b c d f g q w y z`, so anything with those in the
-denominator still linearises and says so.
+Composition is capped at what stays readable: both sides all digits (legible at
+any length), or both sides at most two characters. Superscript `x` against
+subscript `x` is near-indistinguishable at text size, so longer alphabetic
+fractions read better on one line.
+
+Linear maths uses real mathematical characters — U+2212 MINUS SIGN and U+2215
+DIVISION SLASH, not the ASCII hyphen and solidus. A hyphen is shorter, sits
+lower, and reads as a word break. `\text{}` keeps its hyphens, so "well-known"
+is not mangled. One trade-off: the output is not ASCII, so it will not paste
+into a calculator or source code as-is.
 
 Remaining fallbacks: `\sqrt` (including `\sqrt[n]`) and `\binom`.
 

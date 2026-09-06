@@ -194,16 +194,31 @@ private struct Renderer {
             // denominator. This composes any fraction whose digits and letters
             // both have script forms, so 10/17 works even though no single
             // character for it exists.
-            if let composed = composedFraction(numerator: top.text, denominator: bottom.text) {
+            if worthComposing(numerator: top.text, denominator: bottom.text),
+               let composed = composedFraction(numerator: top.text, denominator: bottom.text) {
                 out.text += composed
                 return
             }
         }
 
-        out.text += parenthesised(top.text) + "/" + parenthesised(bottom.text)
+        out.text += mathematical(parenthesised(top.text))
+            + String(divisionSlash)
+            + mathematical(parenthesised(bottom.text))
         out.fallbacks += top.fallbacks + bottom.fallbacks
         out.fallbacks.append(
             "A fraction cannot be stacked in plain text, so it was written on one line with a slash.")
+    }
+
+    /// Whether a composed fraction would still be readable.
+    ///
+    /// Script characters are small, and superscript `x` against subscript `x`
+    /// is close to indistinguishable at text size. Digits stay legible at any
+    /// length, so `10/17` composes; anything longer than a couple of characters
+    /// with letters in it reads better on one line.
+    private func worthComposing(numerator: String, denominator: String) -> Bool {
+        let bothNumeric = numerator.allSatisfy(\.isNumber) && denominator.allSatisfy(\.isNumber)
+        let bothShort = numerator.count <= 2 && denominator.count <= 2
+        return bothNumeric || bothShort
     }
 
     /// Builds a diagonal fraction out of existing script characters.
@@ -256,11 +271,11 @@ private struct Renderer {
         out.fallbacks += radicand.fallbacks
 
         if let radical = ScriptTables.radicals[degree] {
-            out.text += String(radical) + parenthesised(radicand.text)
+            out.text += String(radical) + mathematical(parenthesised(radicand.text))
             out.fallbacks.append(
                 "A radical sign cannot extend over what is under it, so the root was written as \(radical)(\u{2026}).")
         } else {
-            out.text += parenthesised(radicand.text) + "^(1/" + degreeText + ")"
+            out.text += mathematical(parenthesised(radicand.text)) + "^(1/" + degreeText + ")"
             out.fallbacks.append(
                 "There is no Unicode radical sign for an index of \(degreeText), so the root was written as a fractional power.")
         }
@@ -276,7 +291,7 @@ private struct Renderer {
         guard !n.text.isEmpty, !k.text.isEmpty else {
             throw UnsupportedInput(reason: "\\\(name) has an empty argument.")
         }
-        out.text += "C(\(n.text), \(k.text))"
+        out.text += "C(\(mathematical(n.text)), \(mathematical(k.text)))"
         out.fallbacks += n.fallbacks + k.fallbacks
         out.fallbacks.append(
             "A binomial coefficient cannot be stacked in plain text, so it was written as C(n, k).")
@@ -315,8 +330,21 @@ private struct Renderer {
 
 // MARK: - Helpers
 
+/// U+2215, the mathematical division operator, rather than the ASCII solidus.
+private let divisionSlash: Character = "\u{2215}"
+
+/// Replaces the ASCII hyphen with U+2212 MINUS SIGN.
+///
+/// A hyphen is not a minus: it is shorter, sits lower, and reads as a word
+/// break. Only linear maths goes through here — composed fractions and scripts
+/// use their own precomposed minus characters, and `\text{}` keeps its hyphens
+/// so "well-known" is not mangled.
+private func mathematical(_ text: String) -> String {
+    String(text.map { $0 == "-" ? "\u{2212}" : $0 })
+}
+
 /// Wraps in parentheses unless it is a single character, so `\frac{1}{2}`
-/// gives `1/2` while `\frac{x+1}{y-2}` gives `(x+1)/(y-2)`.
+/// gives `½` while `\frac{x+1}{y-2}` gives `(x+1)∕(y−2)`.
 private func parenthesised(_ text: String) -> String {
     text.count == 1 ? text : "(" + text + ")"
 }
