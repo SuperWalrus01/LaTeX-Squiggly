@@ -1,4 +1,4 @@
-# LaTeXUnicode
+# LaTeX-Squigly
 
 An inline LaTeX-to-Unicode menu bar app for macOS. Type `\alpha` or `\int_5^6`
 in any app and it becomes `α` or `∫₅⁶` in place — real text, never an image.
@@ -20,8 +20,17 @@ menu bar each time you install. Do not hand this to a tester without saying so.
 ## Running the app
 
 ```
+Scripts/setup-signing.sh    once, BEFORE the first install
 Scripts/install.sh          build from source, install to /Applications
-open /Applications/LaTeXUnicode.app
+open /Applications/LaTeX-Squigly.app
+```
+
+Order matters. macOS ties the Accessibility grant to the code signature, so
+signing after you have granted permission invalidates the grant. If the app
+ever stops responding to what you type, ask it why:
+
+```
+/Applications/LaTeX-Squigly.app/Contents/MacOS/LaTeX-Squigly --diagnose
 ```
 
 Then grant **Accessibility** (to replace text) and **Input Monitoring** (to
@@ -34,7 +43,7 @@ app switch and shortcut.
 ## Running the tests
 
 ```
-swift run latex-unicode-check     # works with Command Line Tools alone
+swift run latex-squigly-check     # works with Command Line Tools alone
 swift test                        # requires Xcode
 ```
 
@@ -42,7 +51,7 @@ Both run the same suite. On macOS, XCTest *and* swift-testing ship inside
 `Xcode.app`, so `swift test` cannot work on a machine with only the Command
 Line Tools installed. The expectations therefore live in a plain-Swift target,
 `Sources/LaTeXUnicodeChecks`, with two thin front ends: the
-`latex-unicode-check` executable and a `Tests/LaTeXUnicodeTests` wrapper. There
+`latex-squigly-check` executable and a `Tests/LaTeXUnicodeTests` wrapper. There
 is exactly one copy of every expectation.
 
 Xcode is on the critical path for Phase 1 anyway (AppKit app bundle, code
@@ -53,10 +62,10 @@ Current status: **1479 checks passing.**
 ## Trying conversions by hand
 
 ```
-swift run latex-unicode '\int_5^6'          # one-shot
-swift run latex-unicode                      # interactive, one fragment per line
-echo '\alpha' | swift run latex-unicode      # pipe
-swift run latex-unicode -c '\R'              # also print U+ values
+swift run latex-squigly '\int_5^6'          # one-shot
+swift run latex-squigly                      # interactive, one fragment per line
+echo '\alpha' | swift run latex-squigly      # pipe
+swift run latex-squigly -c '\R'              # also print U+ values
 ```
 
 Replacement text goes to stdout and explanations to stderr, so the tool
@@ -267,9 +276,9 @@ Sources/LaTeXUnicode/          engine
   TextOperators.swift          \sin, \log, … → upright roman text
   UnsupportedCommands.swift    recognised-but-refused, with user-facing reasons
 Sources/LaTeXUnicodeChecks/    the test suite (no XCTest)
-Sources/latex-unicode-check/   CLI runner
+Sources/latex-squigly-check/   CLI runner
 Tests/LaTeXUnicodeTests/       swift test wrapper
 Tools/generate_tables.py       table generator
-Sources/latex-unicode/         convert CLI for trying things by hand
+Sources/latex-squigly/         convert CLI for trying things by hand
 Scripts/                       signing, bundling, install
 ```

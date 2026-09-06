@@ -22,7 +22,7 @@
 #
 set -euo pipefail
 
-NAME="${SIGN_IDENTITY_NAME:-LaTeX Unicode Dev}"
+NAME="${SIGN_IDENTITY_NAME:-LaTeX-Squigly Dev}"
 DAYS="${DAYS:-3650}"
 KEYCHAIN="${HOME}/Library/Keychains/login.keychain-db"
 

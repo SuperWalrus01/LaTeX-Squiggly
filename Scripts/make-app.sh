@@ -8,7 +8,7 @@
 # here instead of being produced by an .xcodeproj.
 #
 #   Scripts/make-app.sh                          ad-hoc signed, into build/
-#   SIGN_IDENTITY="LaTeX Unicode Dev" Scripts/make-app.sh
+#   SIGN_IDENTITY="LaTeX-Squigly Dev" Scripts/make-app.sh
 #   TARBALL=1 Scripts/make-app.sh                also produce a .tar.gz
 #
 # On the tarball: it is a convenience, NOT a Gatekeeper workaround. Tested on
@@ -25,9 +25,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="${APP_NAME:-LaTeXUnicode}"
-EXECUTABLE="${EXECUTABLE:-LaTeXUnicodeApp}"
-BUNDLE_ID="${BUNDLE_ID:-com.example.latexunicode}"
+APP_NAME="${APP_NAME:-LaTeX-Squigly}"
+EXECUTABLE="${EXECUTABLE:-LaTeXSquiglyApp}"
+BUNDLE_ID="${BUNDLE_ID:-com.keenanjusak.latex-squigly}"
 VERSION="${VERSION:-0.1.0}"
 MIN_MACOS="${MIN_MACOS:-13.0}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"   # "-" means ad-hoc

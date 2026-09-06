@@ -19,7 +19,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="${APP_NAME:-LaTeXUnicode}"
+APP_NAME="${APP_NAME:-LaTeX-Squigly}"
 INSTALL_DIR="${INSTALL_DIR:-/Applications}"
 TARGET="$INSTALL_DIR/$APP_NAME.app"
 
@@ -31,9 +31,20 @@ fi
 
 # Use the stable signing identity when it exists, so macOS keeps the
 # Accessibility grant across upgrades instead of asking again every time.
-IDENTITY_NAME="${SIGN_IDENTITY_NAME:-LaTeX Unicode Dev}"
+IDENTITY_NAME="${SIGN_IDENTITY_NAME:-LaTeX-Squigly Dev}"
 if security find-certificate -c "$IDENTITY_NAME" >/dev/null 2>&1; then
     export SIGN_IDENTITY="$IDENTITY_NAME"
+else
+    # Falling back to ad-hoc silently is how you end up re-granting
+    # Accessibility on every single build and blaming the app.
+    echo
+    echo "  No signing identity named \"$IDENTITY_NAME\" was found."
+    echo "  Falling back to ad-hoc signing, which means macOS will forget the"
+    echo "  Accessibility and Input Monitoring grants every time you rebuild."
+    echo
+    echo "  Fix it before granting permissions, not after:"
+    echo "      Scripts/setup-signing.sh && Scripts/install.sh"
+    echo
 fi
 
 Scripts/make-app.sh

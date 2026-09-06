@@ -4,20 +4,20 @@ import LaTeXUnicode
 // A thin front end on the Phase 0 engine, for trying conversions by hand.
 // No system APIs — this is a development tool, not the app.
 //
-//   latex-unicode '\int_5^6'      convert one fragment
-//   latex-unicode                 interactive, one fragment per line
-//   echo '\alpha' | latex-unicode read fragments from a pipe
+//   latex-squigly '\int_5^6'      convert one fragment
+//   latex-squigly                 interactive, one fragment per line
+//   echo '\alpha' | latex-squigly read fragments from a pipe
 //
 // stdout carries only the replacement text so the tool composes; reasons go to
 // stderr. Exit status answers "did I get something I can paste?" — 0 for
 // converted and fallback, 1 for unsupported.
 
 let usage = """
-usage: latex-unicode [-c|--codepoints] [fragment ...]
+usage: latex-squigly [-c|--codepoints] [fragment ...]
 
-  latex-unicode '\\int_5^6'        convert one fragment
-  latex-unicode                    interactive, one fragment per line
-  echo '\\alpha' | latex-unicode   read fragments from a pipe
+  latex-squigly '\\int_5^6'        convert one fragment
+  latex-squigly                    interactive, one fragment per line
+  echo '\\alpha' | latex-squigly   read fragments from a pipe
 
   -c, --codepoints  also print the U+ value of every character produced
 

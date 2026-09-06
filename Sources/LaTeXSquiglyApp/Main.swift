@@ -6,6 +6,11 @@ import AppKit
 enum Main {
     @MainActor
     static func main() {
+        if CommandLine.arguments.contains("--diagnose") {
+            Diagnostics.run()
+            return
+        }
+
         // LSUIElement in Info.plist already makes this a menu bar app; setting
         // the policy here too keeps it Dock-less when run straight from .build
         // during development, where there is no bundle to read.

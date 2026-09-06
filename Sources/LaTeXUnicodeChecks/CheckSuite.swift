@@ -5,7 +5,7 @@ public struct CheckGroup {
 }
 
 /// The whole Phase 0 test suite, in one place, runnable from either
-/// `latex-unicode-check` or `swift test`.
+/// `latex-squigly-check` or `swift test`.
 public enum CheckSuite {
 
     public static let groups: [CheckGroup] = [

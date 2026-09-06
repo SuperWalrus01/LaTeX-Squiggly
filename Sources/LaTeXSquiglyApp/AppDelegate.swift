@@ -42,6 +42,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if isEnabled { startTapIfPermitted() }
         rebuildMenu()
+
+        // A menu bar app that starts switched off looks identical to one that
+        // failed to launch. Say what happened and where to find it.
+        if isFirstRun { showWelcome() }
+    }
+
+    private var isFirstRun: Bool {
+        UserDefaults.standard.object(forKey: Self.enabledKey) == nil
+    }
+
+    private func showWelcome() {
+        // Recording the preference is what makes this the *first* run only.
+        isEnabled = false
+
+        let alert = NSAlert()
+        alert.messageText = "LaTeX-Squigly is running in your menu bar"
+        alert.informativeText =
+            "Look for the \u{0192} icon near the clock, at the top right of your screen.\n\n"
+            + "Conversion is switched OFF right now. It needs two macOS permissions "
+            + "before it can work, and there is no per-app exclusion list yet \u{2014} so "
+            + "turn it off before editing .tex files or Overleaf, or it will convert "
+            + "your source.\n\nNothing you type is stored or sent anywhere."
+        alert.addButton(withTitle: "Set Up Now")
+        alert.addButton(withTitle: "Later")
+        alert.alertStyle = .informational
+
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            isEnabled = true
+            startTapIfPermitted()
+            rebuildMenu()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -158,7 +190,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(quit)
 
         statusItem.menu = menu
-        statusItem.button?.appearsDisabled = !running
     }
 
     @objc private func openPermissionSettings(_ sender: NSMenuItem) {
