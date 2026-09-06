@@ -202,9 +202,25 @@ overrule.
 most likely to be wrong is unit-tested rather than only observable by typing
 into Slack. The app target is a thin shell over it.
 
-**A candidate must start with a backslash.** `\alpha_b` reports its missing
-subscript, but bare `x^2` never fires — otherwise `2^3` in prose, or `a_b` in an
-identifier, would rewrite itself.
+**Two things fire.** A `$...$` span converts whatever is inside it, and a
+candidate starting with a backslash converts itself:
+
+```
+\alpha          ->  α
+\int_5^6        ->  ∫₅⁶
+$x^2$           ->  x²
+$\alpha + x^2$  ->  α + x²
+```
+
+**Bare `x^2` deliberately does not fire.** Otherwise `2^3` in prose, or `a_b` in
+an identifier, would rewrite itself. Write `$x^2$` when you mean maths —
+nobody types that by accident. `\alpha_b` still reports its missing subscript,
+because it opens with a command.
+
+**A `$...$` span must contain a `\`, `^` or `_` to count as maths**, so `$5$`
+stays money. Failures inside a span are always reported, unlike the backslash
+path: wrapping something in delimiters is a clear statement of intent, so
+silence would be the wrong answer.
 
 **Unknown commands stay silent.** `C:\Users ` contains a backslash but `Users`
 is nobody's command, so nothing happens and nothing is reported. You are only

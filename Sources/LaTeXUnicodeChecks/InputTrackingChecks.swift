@@ -95,6 +95,67 @@ func runInputTrackingChecks(_ c: Checker) {
     c.expect(TriggerDetector.terminators.contains(" "), "space triggers")
     c.expect(TriggerDetector.terminators.contains("\t"), "tab triggers")
 
+
+    // MARK: $...$ maths delimiters
+
+    // The whole point: bare scripts become reachable without making every
+    // caret in prose dangerous.
+    c.equal(outcome("$x^2$"),
+            .replace(Replacement(deleteCount: 5, insert: "x\u{00B2} ", notice: nil)),
+            "$x^2$ converts, delimiters included in the delete count")
+    c.equal(outcome("$a_1$"),
+            .replace(Replacement(deleteCount: 5, insert: "a\u{2081} ", notice: nil)),
+            "subscripts too")
+    c.equal(outcome("$\\alpha$"),
+            .replace(Replacement(deleteCount: 8, insert: "\u{03B1} ", notice: nil)),
+            "commands work inside delimiters")
+
+    // Whitespace inside is fine; a whole expression is the point.
+    c.equal(outcome("$\\alpha + x^2$"),
+            .replace(Replacement(deleteCount: 14, insert: "\u{03B1} + x\u{00B2} ", notice: nil)),
+            "multi-token expressions convert in one go")
+
+    // Only the delimited span is touched, not the prose before it.
+    if case .replace(let r) = outcome("let me write $x^2$") {
+        c.equal(r.deleteCount, 5, "preceding prose survives")
+        c.equal(r.insert, "x\u{00B2} ", "preceding prose survives")
+    } else {
+        c.fail("expected a replacement after prose")
+    }
+
+    // Currency must never convert. This is why a span has to contain a
+    // backslash, caret or underscore to count as maths.
+    c.equal(outcome("$5$"), TriggerOutcome.none, "$5$ is money, not maths")
+    c.equal(outcome("I have $5$"), TriggerOutcome.none, "money in a sentence")
+    c.equal(outcome("$100$"), TriggerOutcome.none, "larger amounts too")
+    c.equal(outcome("it cost $5 and $10"), TriggerOutcome.none, "two amounts, no closing span")
+    c.equal(outcome("$x$"), TriggerOutcome.none, "nothing to convert, so nothing fires")
+
+    // Malformed spans stay quiet.
+    c.equal(outcome("$x^2"), TriggerOutcome.none, "unclosed span does not fire")
+    c.equal(outcome("$$"), TriggerOutcome.none, "empty span does not fire")
+    c.equal(outcome("$" + String(repeating: "x^2", count: 30) + "$"), TriggerOutcome.none,
+            "an over-long span is refused rather than swallowing the line")
+
+    // A delimited span states intent, so failures are always reported —
+    // unlike the backslash path, which stays silent on unknown commands.
+    if case .refuse = outcome("$x^q$") {
+        // No superscript q exists.
+    } else {
+        c.fail("expected a refusal for $x^q$")
+    }
+    if case .replace(let r) = outcome("$\\frac{1}{2}$") {
+        c.notNil(r.notice, "a fallback inside delimiters still explains itself")
+        c.equal(r.insert, "1/2 ", "fallback text")
+    } else {
+        c.fail("expected a fallback for $\\frac{1}{2}$")
+    }
+
+    // The backslash path still works unchanged.
+    c.equal(outcome("\\alpha"),
+            .replace(Replacement(deleteCount: 6, insert: "\u{03B1} ", notice: nil)),
+            "backslash commands are unaffected")
+
     // MARK: Delete counts are exact
 
     // The count must match the characters actually typed, or the app eats the
