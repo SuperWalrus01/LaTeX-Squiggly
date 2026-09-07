@@ -150,13 +150,70 @@ func writeMask(from path: String, keyingPaper: Bool, width: Int, as name: String
 writeMask(from: "Assets/app-icon.png", keyingPaper: true, width: 520, as: "wordmark.png")
 writeMask(from: "Assets/menu-icon.png", keyingPaper: false, width: 120, as: "mark.png")
 
-// The favicon is the app's own icon, so a tab and a Dock look like each other.
-let iconset = "Assets/AppIcon.iconset/icon_256x256.png"
-if FileManager.default.fileExists(atPath: iconset) {
-    writePNG(NSBitmapImageRep(cgImage: load(iconset)), "favicon.png")
-} else {
-    print("skipping favicon.png — run Scripts/make-icons.sh first for Assets/AppIcon.iconset")
+// The favicon is the LS mark, not the app icon.
+//
+// They are the same brand but they answer to different constraints: the app
+// icon is a wordmark, and a wordmark at the 16 px a browser tab actually draws
+// is an orange smudge. The mark was drawn for the menu bar, which is the same
+// problem, so it is the one that survives the shrink. It sits on the artwork's
+// own paper, on the same grid as the app icon, so the two still read as a set.
+func writeFavicon(side: Int, as name: String) {
+    let ctx = CGContext(data: nil, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 0,
+                        space: CGColorSpaceCreateDeviceRGB(),
+                        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    ctx.interpolationQuality = .high
+
+    // The same superellipse corner as the app icon, but full-bleed. The icon
+    // grid's margin is there to hold a Dock shadow; a favicon has no shadow
+    // and only 16 px to work with, so spending a fifth of it on air is waste.
+    let canvas = Double(side), body = canvas
+    let tile = CGRect(x: ((canvas - body) / 2).rounded(), y: ((canvas - body) / 2).rounded(),
+                      width: body, height: body)
+    let path = CGMutablePath()
+    let a = tile.width / 2, b = tile.height / 2, n = 5.0
+    for step in 0...720 {
+        let t = 2 * Double.pi * Double(step) / 720
+        let c = cos(t), sn = sin(t)
+        let x = tile.midX + a * pow(abs(c), 2 / n) * (c < 0 ? -1 : 1)
+        let y = tile.midY + b * pow(abs(sn), 2 / n) * (sn < 0 ? -1 : 1)
+        step == 0 ? path.move(to: CGPoint(x: x, y: y)) : path.addLine(to: CGPoint(x: x, y: y))
+    }
+    path.closeSubpath()
+
+    ctx.addPath(path)
+    ctx.setFillColor(CGColor(red: 250/255, green: 247/255, blue: 238/255, alpha: 1))
+    ctx.fillPath()
+
+    // The mark, inked and centred, filling most of the tile — a favicon is
+    // seen at 16 px, so it can carry far less margin than a Dock icon.
+    let (values, w, h, box) = coverage(of: load("Assets/menu-icon.png"), keyingPaper: false)
+    let markH = body * 0.62, markW = markH * box.width / box.height
+    let target = CGRect(x: tile.midX - markW / 2, y: tile.midY - markH / 2,
+                        width: markW, height: markH)
+
+    let cropped = greyImage(values, w, h).cropping(to: box)!
+    let (cov, covH) = resampledCoverage(cropped, width: Int(markW.rounded()))
+    let covW = Int(markW.rounded())
+    var ink = [UInt8](repeating: 0, count: covW * covH * 4)
+    for i in 0..<(covW * covH) {
+        let alpha = Double(cov[i]) / 255
+        ink[i*4]     = UInt8(226 * alpha)
+        ink[i*4 + 1] = UInt8(102 * alpha)
+        ink[i*4 + 2] = UInt8( 15 * alpha)
+        ink[i*4 + 3] = UInt8(255 * alpha)
+    }
+    ink.withUnsafeMutableBytes { buffer in
+        let markCtx = CGContext(data: buffer.baseAddress, width: covW, height: covH,
+                                bitsPerComponent: 8, bytesPerRow: covW * 4,
+                                space: CGColorSpaceCreateDeviceRGB(),
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.draw(markCtx.makeImage()!, in: target)
+    }
+
+    writePNG(NSBitmapImageRep(cgImage: ctx.makeImage()!), name)
 }
+
+writeFavicon(side: 256, as: "favicon.png")
 
 // The link card, at the 1.91:1 the scrapers crop to.
 let cardW = 1200, cardH = 630

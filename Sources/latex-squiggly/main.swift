@@ -14,16 +14,19 @@ import LaTeXUnicode
 // converted and fallback, 1 for unsupported.
 
 let usage = """
-usage: latex-squiggly [-c|--codepoints] [fragment ...]
+usage: latex-squiggly [-c|--codepoints] [-a|--app-only] [fragment ...]
 
   latex-squiggly '\\int_5^6'        convert one fragment
   latex-squiggly                    interactive, one fragment per line
   echo '\\alpha' | latex-squiggly   read fragments from a pipe
 
   -c, --codepoints  also print the U+ value of every character produced
+  -a, --app-only    report what the app would do and nothing more: a
+                    fragment the app would not fire on is "left alone"
+                    rather than run through the engine anyway
 
 Replacement text goes to stdout, explanations to stderr.
-Exit status: 0 converted or fallback, 1 unsupported.
+Exit status: 0 converted or fallback, 1 unsupported, 2 left alone.
 """
 
 func warn(_ message: String) {
@@ -46,7 +49,9 @@ func codepoints(of text: String) -> String {
 /// The `$...$` rule lives in the trigger layer, so calling `convert` directly
 /// would report `$x²$` for something the app turns into `x²`. A tool for trying
 /// things out has to agree with the thing it is standing in for.
-func appResult(for input: String) -> ConversionResult {
+/// - Returns: nil when the app would not fire on this at all, which only
+///   `--app-only` distinguishes; see the `.none` case below.
+func appResult(for input: String, appOnly: Bool) -> ConversionResult? {
     switch TriggerDetector.outcome(buffer: input, terminator: " ") {
     case .replace(let replacement):
         // Drop the terminator the app types back.
@@ -56,13 +61,22 @@ func appResult(for input: String) -> ConversionResult {
     case .refuse(_, let reason):
         return .unsupported(reason: reason)
     case .none:
-        // Not a trigger the app would fire on, so show the raw engine result.
-        return convert(input)
+        // Not a trigger the app would fire on. By default show the raw engine
+        // result anyway — trying `\frac12` without typing the space around it
+        // is the whole point of a tool for trying things by hand. Under
+        // --app-only, say so instead: `x^2` converts here and does nothing in
+        // the app, and anything quoting this tool as evidence of what the app
+        // does needs to be able to tell those apart.
+        return appOnly ? nil : convert(input)
     }
 }
 
-func report(_ input: String, labelled: Bool, showCodepoints: Bool) -> Int32 {
-    let result = appResult(for: input)
+func report(_ input: String, labelled: Bool, showCodepoints: Bool,
+            appOnly: Bool = false) -> Int32 {
+    guard let result = appResult(for: input, appOnly: appOnly) else {
+        labelled ? print("  left alone") : warn("left alone")
+        return 2
+    }
 
     if let text = result.text {
         print(labelled ? "  \(text)" : text)
@@ -94,8 +108,12 @@ if arguments.contains("-h") || arguments.contains("--help") {
 let showCodepoints = arguments.contains("-c") || arguments.contains("--codepoints")
 arguments.removeAll { $0 == "-c" || $0 == "--codepoints" }
 
+let appOnly = arguments.contains("-a") || arguments.contains("--app-only")
+arguments.removeAll { $0 == "-a" || $0 == "--app-only" }
+
 if !arguments.isEmpty {
-    exit(report(arguments.joined(separator: " "), labelled: false, showCodepoints: showCodepoints))
+    exit(report(arguments.joined(separator: " "), labelled: false,
+                showCodepoints: showCodepoints, appOnly: appOnly))
 }
 
 if isatty(FileHandle.standardInput.fileDescriptor) != 0 {
@@ -108,13 +126,14 @@ if isatty(FileHandle.standardInput.fileDescriptor) != 0 {
             break
         }
         guard !line.isEmpty else { continue }
-        _ = report(line, labelled: true, showCodepoints: showCodepoints)
+        _ = report(line, labelled: true, showCodepoints: showCodepoints, appOnly: appOnly)
     }
 } else {
     var status: Int32 = 0
     while let line = readLine() {
         guard !line.isEmpty else { continue }
-        if report(line, labelled: false, showCodepoints: showCodepoints) != 0 { status = 1 }
+        if report(line, labelled: false, showCodepoints: showCodepoints,
+                  appOnly: appOnly) != 0 { status = 1 }
     }
     exit(status)
 }

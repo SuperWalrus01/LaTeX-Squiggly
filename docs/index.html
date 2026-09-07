@@ -29,6 +29,7 @@
     <nav>
       <a href="#try">Try it</a>
       <a href="#quiet">Staying quiet</a>
+      <a href="#dollars">Dollars</a>
       <a href="#symbols">Symbols</a>
       <a href="#cost">Cost</a>
       <a href="#install">Install</a>
@@ -167,6 +168,28 @@ Try it here — type \theta then press space.</textarea>
           <span class="count" id="count"></span>
         </div>
         <div id="grid"></div>
+      </div>
+    </section>
+
+    <section id="dollars">
+      <p class="eyebrow">The dollar rule</p>
+      <h2>It knows the difference between maths and money</h2>
+      <p class="lede">Superscripts are the dangerous feature. <code>x^2</code> cannot convert on its own, because <code>2^3</code> in a sentence and <code>a_b</code> in a variable name would rewrite themselves the moment you hit space. So bare scripts are unreachable, and <code>$x^2$</code> — which nobody types by accident — is what turns them on.</p>
+      <p class="lede">That is not enough by itself. <b>I have $5$ left</b> is a pair of dollar signs around a number, and rewriting it would be worse than useless. So a span only converts when it contains a backslash, a caret or an underscore: an actual mathematical signal. Currency has none, and is left alone.</p>
+      <div class="pairs">
+        <!-- BEGIN generated: dollars (Tools/make_site.py) -->
+        <div class='pair'><div class='src'>I have $5$ left</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>that costs $20 and $30 more</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>$a$</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>x^2</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>2^3</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>$x^2$</div><div class='arrow'>&#8594;</div><div class='out'>x²</div></div>
+        <div class='pair'><div class='src'>$5x^2$</div><div class='arrow'>&#8594;</div><div class='out'>5x²</div></div>
+        <!-- END generated: dollars -->
+      </div>
+      <div class="cols" style="margin-top:2rem">
+        <div class="note"><h3>Capped at 48 characters</h3><p>So a stray dollar sign earlier in the sentence cannot reach forward and swallow half a line on its way to the one you just typed.</p></div>
+        <div class="note"><h3>Failure here is always reported</h3><p>Unlike the backslash path, where staying quiet is polite, wrapping something in <code>$…$</code> is a clear statement of intent — so if it cannot be converted, the app says so rather than doing nothing.</p></div>
       </div>
     </section>
 

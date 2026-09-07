@@ -178,6 +178,8 @@ h2 {
 .pair .out { font-size: 1.18rem; }
 .pair .out small { display: block; font-size: .78rem; color: var(--hedge); font-family: var(--body); line-height: 1.45; margin-top: .15rem; }
 .pair .out.refused { color: var(--ink-faint); font-size: .88rem; font-style: italic; }
+.pair .out.quiet { color: var(--quiet); font-size: .88rem; }
+.pair .out.quiet::before { content: "\2014\00a0"; }
 
 /* ---------- generic cards ---------- */
 .cols { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }

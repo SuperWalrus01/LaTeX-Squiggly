@@ -457,7 +457,16 @@ the real `latex-squiggly` binary, capturing what it actually printed:
 python3 Tools/make_site.py
 ```
 
-So the page cannot claim a conversion the app does not make. The examples sit
+So the page cannot claim a conversion the app does not make. Each example
+carries the outcome the page claims for it — converts, refuses, or is left
+alone — and the generator stops if the engine disagrees.
+
+That last outcome is why `latex-squiggly` grew `--app-only`. By default the
+tool falls through to the raw engine for anything the trigger would not fire
+on, because trying `\frac12` without typing a space around it is the point of a
+tool for trying things by hand. But it means `x^2` prints x-squared there while
+doing nothing at all in the app, and a page built from that output would have
+been advertising a conversion that never happens. The examples sit
 between `<!-- BEGIN generated: ... -->` markers in `docs/index.html`; the rest
 of that file, the stylesheet and the demo's own code are written by hand.
 

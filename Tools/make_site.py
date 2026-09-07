@@ -112,21 +112,35 @@ def binary():
 
 
 def convert(cli, fragment):
-    """What the app would do, straight from the app: text, status, explanation."""
-    done = subprocess.run([cli, fragment], capture_output=True, text=True)
+    """What the app would do, straight from the app: text, status, explanation.
+
+    --app-only matters here. Without it the tool falls through to the raw
+    engine for anything the app would not fire on, so `x^2` prints x-squared
+    even though typing it in the app does nothing at all — and a page built
+    from that output would be advertising a conversion that never happens.
+    """
+    done = subprocess.run([cli, "--app-only", fragment], capture_output=True, text=True)
     said = done.stderr.strip()
     return done.stdout.strip(), done.returncode, said.split(": ", 1)[1] if ": " in said else ""
 
 
-def rows(cli, fragments, refused):
+# What the exit status means, and how the page draws it.
+OUTCOMES = {0: "convert", 1: "refuse", 2: "quiet"}
+
+
+def rows(cli, examples):
     out = []
-    for fragment in fragments:
+    for fragment, expected in examples:
         text, status, note = convert(cli, fragment)
-        if (status == 1) != refused:
-            sys.exit("make_site: %r is %s, but the page has it in the other list"
-                     % (fragment, "refused" if status else "converted"))
-        if refused:
+        actual = OUTCOMES.get(status, "?")
+        if actual != expected:
+            sys.exit("make_site: %r now %ss, but the page says it should %s"
+                     % (fragment, actual, expected))
+
+        if actual == "refuse":
             right = "<div class='out refused'>%s</div>" % html.escape(note)
+        elif actual == "quiet":
+            right = "<div class='out quiet'>left exactly as typed</div>"
         else:
             right = "<div class='out'>%s%s</div>" % (
                 html.escape(text),
@@ -137,12 +151,21 @@ def rows(cli, fragments, refused):
     return "\n".join(out)
 
 
+# Each example carries the outcome the page claims for it, so a change in the
+# engine breaks the build rather than quietly rewriting the page's argument.
 EXAMPLES = {
-    "symbols": (False, [r"\alpha", r"\Rightarrow", r"\int", r"\subseteq", r"\mathbb{R}",
-                        r"$x^2$", r"$a_1$", r"$\int_0^1$", r"\sin", r"\infty"]),
-    "refusals": (True, [r"\vec{v}", r"\overbrace", r"\matrix", r"\mathbf{x}", r"$e^{i\pi}$"]),
-    "fallbacks": (False, [r"\frac{1}{2}", r"\frac{3}{7}", r"\frac{a}{b}", r"\sqrt{2}",
-                          r"\sqrt[3]{x}", r"\binom{n}{k}"]),
+    "symbols": [(r"\alpha", "convert"), (r"\Rightarrow", "convert"), (r"\int", "convert"),
+                (r"\subseteq", "convert"), (r"\mathbb{R}", "convert"), (r"$x^2$", "convert"),
+                (r"$a_1$", "convert"), (r"$\int_0^1$", "convert"), (r"\sin", "convert"),
+                (r"\infty", "convert")],
+    "refusals": [(r"\vec{v}", "refuse"), (r"\overbrace", "refuse"), (r"\matrix", "refuse"),
+                 (r"\mathbf{x}", "refuse"), (r"$e^{i\pi}$", "refuse")],
+    "fallbacks": [(r"\frac{1}{2}", "convert"), (r"\frac{3}{7}", "convert"),
+                  (r"\frac{a}{b}", "convert"), (r"\sqrt{2}", "convert"),
+                  (r"\sqrt[3]{x}", "convert"), (r"\binom{n}{k}", "convert")],
+    "dollars": [("I have $5$ left", "quiet"), ("that costs $20 and $30 more", "quiet"),
+                (r"$a$", "quiet"), (r"x^2", "quiet"), (r"2^3", "quiet"),
+                (r"$x^2$", "convert"), (r"$5x^2$", "convert")],
 }
 
 
@@ -159,15 +182,15 @@ def main():
 
     cli = binary()
     page = read("docs", "index.html")
-    for name, (refused, fragments) in EXAMPLES.items():
+    for name, examples in EXAMPLES.items():
         begin = "<!-- BEGIN generated: %s (Tools/make_site.py) -->" % name
         end = "<!-- END generated: %s -->" % name
         marker = re.escape(begin) + ".*?" + re.escape(end)
         if not re.search(marker, page, re.S):
             sys.exit("make_site: docs/index.html has no %s region" % name)
-        filled = begin + "\n" + rows(cli, fragments, refused) + "\n        " + end
+        filled = begin + "\n" + rows(cli, examples) + "\n        " + end
         page = re.sub(marker, lambda _: filled, page, flags=re.S)
-        print("docs/index.html: %d %s examples" % (len(fragments), name))
+        print("docs/index.html: %d %s examples" % (len(examples), name))
     write(page, "docs", "index.html")
 
 
