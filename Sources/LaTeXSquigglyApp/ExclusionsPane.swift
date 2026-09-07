@@ -11,12 +11,15 @@ import UniformTypeIdentifiers
 /// bundle instead of typed, and cannot be got wrong. A website is named by its
 /// host, which the user does have to type, so `normalisedHost` accepts a pasted
 /// URL and refuses anything that is not a host at all.
+///
+/// A pane rather than a window of its own: where the app stays quiet is a
+/// setting, and having it open in a second window meant the answer to "what is
+/// this app configured to do" lived in two places.
 @MainActor
-final class ExclusionEditor: NSObject, NSWindowDelegate {
+final class ExclusionsPane: NSViewController {
 
     private let store: ExclusionStore
 
-    private var window: NSWindow?
     private var appTable: NSTableView!
     private var siteTable: NSTableView!
     private var siteField: NSTextField!
@@ -24,36 +27,21 @@ final class ExclusionEditor: NSObject, NSWindowDelegate {
 
     init(store: ExclusionStore) {
         self.store = store
-        super.init()
+        super.init(nibName: nil, bundle: nil)
     }
 
-    func show() {
-        if let window {
-            NSApp.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
-            reload()
-            return
-        }
-        let window = makeWindow()
-        self.window = window
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewWillAppear() {
+        super.viewWillAppear()
         reload()
     }
 
     // MARK: Construction
 
-    private func makeWindow() -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 660, height: 420),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
-            backing: .buffered, defer: false)
-        window.title = "Excluded Apps and Sites"
-        window.delegate = self
-        window.center()
-        window.isReleasedWhenClosed = false
-        window.minSize = NSSize(width: 560, height: 340)
-
+    override func loadView() {
         let content = NSView()
 
         appTable = makeTable()
@@ -138,8 +126,14 @@ final class ExclusionEditor: NSObject, NSWindowDelegate {
             restore.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -gutter),
         ])
 
-        window.contentView = content
-        return window
+        // The tab controller sizes the window from the pane, so the pane has to
+        // have a size: two tables and a text field have no natural one.
+        NSLayoutConstraint.activate([
+            content.widthAnchor.constraint(equalToConstant: 620),
+            content.heightAnchor.constraint(equalToConstant: 400),
+        ])
+
+        view = content
     }
 
     private func makeTable() -> NSTableView {
@@ -188,7 +182,7 @@ final class ExclusionEditor: NSObject, NSWindowDelegate {
         panel.canChooseDirectories = false
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         panel.prompt = "Exclude"
-        panel.message = "Choose apps LaTeX-Squiggly should leave alone."
+        panel.message = "Choose apps LaTeX Squiggly should leave alone."
 
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK else { return }
@@ -247,7 +241,7 @@ final class ExclusionEditor: NSObject, NSWindowDelegate {
         alert.messageText = "Restore the default exclusions?"
         alert.informativeText =
             "Everything you have added or removed will be replaced by the apps and sites "
-            + "LaTeX-Squiggly ships with."
+            + "LaTeX Squiggly ships with."
         alert.addButton(withTitle: "Restore")
         alert.addButton(withTitle: "Cancel")
         alert.alertStyle = .warning
@@ -262,19 +256,15 @@ final class ExclusionEditor: NSObject, NSWindowDelegate {
         appTable?.reloadData()
         siteTable?.reloadData()
     }
-
-    func windowWillClose(_ notification: Notification) {
-        window = nil
-    }
 }
 
-extension ExclusionEditor: NSTableViewDataSource {
+extension ExclusionsPane: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
         tableView === appTable ? store.list.apps.count : store.list.sites.count
     }
 }
 
-extension ExclusionEditor: NSTableViewDelegate {
+extension ExclusionsPane: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView,
                    viewFor tableColumn: NSTableColumn?,
                    row: Int) -> NSView? {

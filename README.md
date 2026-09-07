@@ -1,4 +1,4 @@
-# LaTeX-Squiggly
+# LaTeX Squiggly
 
 An inline LaTeX-to-Unicode menu bar app for macOS. Type `\alpha` or `\int_5^6`
 in any app and it becomes `α` or `∫₅⁶` in place — real text, never an image.
@@ -61,7 +61,7 @@ app: a missed conversion costs a keystroke, a wrong one costs a document.
 Ask the app what it currently sees:
 
 ```
-/Applications/LaTeX-Squiggly.app/Contents/MacOS/LaTeX-Squiggly --diagnose
+"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose
 ```
 
 It lists every rule and, for each running browser, what it can read and what it
@@ -72,17 +72,23 @@ it too.
 ## Running the app
 
 ```
-Scripts/setup-signing.sh    once, BEFORE the first install
-Scripts/install.sh          build from source, install to /Applications
-open /Applications/LaTeX-Squiggly.app
+xcode-select --install                  # Apple's Command Line Tools, not Xcode
+git clone https://github.com/SuperWalrus01/LaTeX-Squiggly.git
+cd LaTeX-Squiggly
+Scripts/setup-signing.sh                # once, BEFORE the first install
+Scripts/install.sh                      # build from source, install to /Applications
+open "/Applications/LaTeX Squiggly.app"
 ```
 
 Order matters. macOS ties the Accessibility grant to the code signature, so
-signing after you have granted permission invalidates the grant. If the app
+signing after you have granted permission invalidates the grant. (The app was
+called LaTeX-Squiggly before; `install.sh` quits and removes that bundle on its
+way past. The signing identity keeps the old hyphenated name on purpose —
+renaming the certificate is what would reset the permissions.) If the app
 ever stops responding to what you type, ask it why:
 
 ```
-/Applications/LaTeX-Squiggly.app/Contents/MacOS/LaTeX-Squiggly --diagnose
+"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose
 ```
 
 Then grant **Accessibility** (to replace text) and **Input Monitoring** (to
@@ -322,15 +328,66 @@ its own output instead of feeding on it.
 
 ## The menu
 
-The status item shows state at a glance — a plain ƒ when converting, a
-struck-through one when not — and carries the enable toggle, permission
-shortcuts when something is missing, **Do not convert in ‹app›**,
-**Excluded Apps and Sites…** and **Symbols…**.
+The status item shows state at a glance — the LS mark when converting, a
+faded and struck-through one when not — and carries the enable toggle,
+permission shortcuts when something is missing, **Do not convert in ‹app›**,
+**Excluded Apps and Sites…**, **Settings…** and **Symbols…**.
 
 Two icon states, not three. The icon answers "is it converting right now",
 which has the same answer whether the app is switched off or merely staying
 quiet in Cursor; the menu answers "why not", naming the rule it is obeying. A
 third glyph meaning "off, but for another reason" would be read as neither.
+
+The mark is drawn as a **template image**: macOS keeps its alpha and supplies
+the colour itself, which is the only way one file reads correctly on a light
+menu bar, a dark one and a highlighted status item. Its orange survives in the
+app icon, where the background is ours to choose. Both are generated from the
+artwork in `Assets/` by `Scripts/make-icons.sh` — the app icon into
+`Assets/AppIcon.icns`, and the menu bar mark into a base64 literal in
+`Sources/LaTeXSquigglyApp/MenuBarIconData.swift`.
+
+Embedded in source, not bundled as a resource, because `swift run
+LaTeXSquigglyApp` has no `Resources` directory to read from: a project that
+promises to build with only the Command Line Tools should look the same however
+it was started.
+
+## Settings
+
+`Settings…` (⌘,) from the menu, or:
+
+```
+open -a "LaTeX Squiggly" --args --settings
+```
+
+Two panes, in the shape macOS has used for preferences since long before
+System Settings — `NSTabViewController` in `.toolbar` mode, which supplies the
+toolbar, the selection and the resize between panes.
+
+**General** carries the three switches and, unusually for a settings window,
+the permission state:
+
+| | |
+|---|---|
+| Convert LaTeX as you type | The same switch as the menu's, reading the same value. Off, the app keeps running and stops touching your typing. |
+| Open at login | `SMAppService.mainApp`. Disabled, with the reason shown, when the app is not running from a bundle — under `swift run` there is nothing to register, and registering would record a path that stops existing at the next build. |
+| Show a notice when a command is refused or falls back | Covers the notices a *conversion* produces. The app's own state messages are never silenced: "conversion stopped, permission was turned off" is the difference between quiet and broken. |
+| Accessibility / Input Monitoring | Granted or not, live, with a button to the only place either can be changed. |
+
+The permissions are here rather than only in the menu because the menu can only
+offer them while they are *missing* — it has nowhere to say "granted". An app
+that reads your keystrokes should be able to show you exactly what it currently
+holds, at any time, rather than asking you to read its silence correctly.
+
+**Exclusions** is the Phase 2 list editor, which used to be a window of its own.
+Where the app stays quiet is a setting, and having it open separately meant the
+answer to "what is this app configured to do" lived in two places.
+
+The window reads the app's state through a `SettingsHost` protocol instead of
+copying it, so the menu and the window cannot disagree about whether conversion
+is on: both ask the same object at the moment they draw. The permission poll
+that already runs every two seconds refreshes the pane when the answer actually
+changes, so a grant made in System Settings appears without reopening
+anything — and does nothing at all while the window is closed.
 
 The symbol browser searches all 202 symbols by command, Unicode name and
 category at once, so "greek capital" narrows to eleven rows and "double-struck"
@@ -338,7 +395,7 @@ finds the blackboard bold letters without knowing they are called that. Double-
 click copies the glyph; there is a button for the command.
 
 ```
-open -a LaTeX-Squiggly --args --symbols   # opens the browser directly
+open -a "LaTeX Squiggly" --args --symbols   # opens the browser directly
 ```
 
 ## Signing and distribution
@@ -347,6 +404,7 @@ open -a LaTeX-Squiggly --args --symbols   # opens the browser directly
 Scripts/setup-signing.sh    one-time: a stable self-signed identity
 Scripts/make-app.sh         assemble and sign the .app from SwiftPM output
 Scripts/install.sh          build from source and install to /Applications
+Scripts/make-icons.sh       regenerate the icons after changing Assets/
 ```
 
 **Signing is a development need before it is a distribution one.** macOS TCC
@@ -378,6 +436,25 @@ Developer ID certificate, which requires the paid Apple Developer Program.
 Until then: ship source, and `make-app.sh TARBALL=1` for anyone who won't build
 it — with honest instructions about what they'll see.
 
+## The site
+
+`docs/` is a plain static site — no build step, no framework, no dependencies —
+ready for GitHub Pages (**Settings -> Pages -> Deploy from a branch**, `main`,
+`/docs`). It carries a live demo of the converter that runs in the browser.
+
+The demo is not a recording and not a second implementation typed out by hand.
+`Tools/make_site.py` reads the tables straight out of `Sources/LaTeXUnicode`
+into `docs/assets/data.js`, and runs every worked example on the page through
+the real `latex-squiggly` binary, capturing what it actually printed:
+
+```
+python3 Tools/make_site.py
+```
+
+So the page cannot claim a conversion the app does not make. The examples sit
+between `<!-- BEGIN generated: ... -->` markers in `docs/index.html`; the rest
+of that file, the stylesheet and the demo's own code are written by hand.
+
 ## Non-goals
 
 No image rendering, cloud sync, accounts, text editor, note-taking, iOS,
@@ -406,11 +483,20 @@ Sources/LaTeXSquigglyApp/       the menu bar app
   BrowserPageReader.swift      the Accessibility reads; see the table above
   SuppressionGate.swift        cached per keystroke, verified before typing
   ExclusionStore.swift         persistence, defaults, on-disk discovery
-  ExclusionEditor.swift        the list editor
+  SettingsWindow.swift         the settings window, and what it may ask the app
+  GeneralPane.swift            switches, and the permissions stated plainly
+  ExclusionsPane.swift         the list editor
+  Preferences.swift            every switch's defaults key, in one place
+  LoginItem.swift              open at login, and when it cannot be offered
 Sources/LaTeXUnicodeChecks/    the test suite (no XCTest)
 Sources/latex-squiggly-check/   CLI runner
 Tests/LaTeXUnicodeTests/       swift test wrapper
 Tools/generate_tables.py       table generator
+Tools/make_icons.swift         icon generator, from Assets/ artwork
+Tools/make_site.py             regenerates the site's tables and examples
+Tools/make_site_images.swift   regenerates the site's images
+Assets/                        the artwork, and the generated .icns
+docs/                          the site; see docs/README.md
 Sources/latex-squiggly/         convert CLI for trying things by hand
-Scripts/                       signing, bundling, install
+Scripts/                       signing, bundling, install, icons
 ```

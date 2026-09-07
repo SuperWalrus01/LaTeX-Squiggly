@@ -2,7 +2,7 @@ import AppKit
 import AppSuppression
 import InputTracking
 
-/// `LaTeX-Squiggly.app/Contents/MacOS/LaTeX-Squiggly --diagnose`
+/// `"LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose`
 ///
 /// Answers "it isn't working" without guesswork. Every failure mode this app
 /// has looks the same from the outside — a menu bar app that is off, missing a
@@ -15,7 +15,7 @@ enum Diagnostics {
         let permissions = Permissions.current()
         let enabled = UserDefaults.standard.object(forKey: "conversionEnabled") as? Bool
 
-        print("LaTeX-Squiggly diagnostics")
+        print("LaTeX Squiggly diagnostics")
         print("  bundle id:         \(Bundle.main.bundleIdentifier ?? "none (running unbundled)")")
         print("  conversion:        \(enabled.map { $0 ? "enabled" : "disabled" } ?? "never configured (defaults to on)")")
         print("  Accessibility:     \(permissions.accessibility ? "granted" : "NOT GRANTED")")
@@ -53,7 +53,7 @@ enum Diagnostics {
             print("Next: grant \(permissions.missing.map(\.title).joined(separator: " and ")) in")
             print("System Settings > Privacy & Security, then tick Enable conversion in the menu bar.")
         } else if enabled == false {
-            print("Next: click the \u{0192} in the menu bar and tick Enable conversion.")
+            print("Next: click the LaTeX Squiggly mark in the menu bar and tick Enable conversion.")
         } else {
             print("Everything is set up. Type \\\\alpha followed by a space to test it.")
         }

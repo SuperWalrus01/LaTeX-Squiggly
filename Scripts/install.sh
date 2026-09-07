@@ -19,9 +19,14 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="${APP_NAME:-LaTeX-Squiggly}"
+APP_NAME="${APP_NAME:-LaTeX Squiggly}"
 INSTALL_DIR="${INSTALL_DIR:-/Applications}"
 TARGET="$INSTALL_DIR/$APP_NAME.app"
+
+# The app was called LaTeX-Squiggly until the rename. Left in place, the old
+# bundle keeps running from the menu bar and shows up a second time in System
+# Settings, which looks exactly like the new one failing to install.
+LEGACY_TARGET="$INSTALL_DIR/LaTeX-Squiggly.app"
 
 if ! xcode-select -p >/dev/null 2>&1; then
     echo "The Command Line Tools are not installed. Run:"
@@ -49,10 +54,23 @@ fi
 
 Scripts/make-app.sh
 
-if [ -e "$TARGET" ]; then
-    echo "Replacing $TARGET"
-    rm -rf "$TARGET"
-fi
+# Copying over a running app leaves the old executable live in memory, still
+# holding its status item and its event tap. Quitting first is the difference
+# between an upgrade and two copies fighting over your keystrokes.
+for RUNNING in "$TARGET" "$LEGACY_TARGET"; do
+    if pgrep -f "$RUNNING/Contents/MacOS/" >/dev/null 2>&1; then
+        echo "Quitting the running copy at $RUNNING"
+        pkill -f "$RUNNING/Contents/MacOS/" || true
+        sleep 1
+    fi
+done
+
+for OLD in "$TARGET" "$LEGACY_TARGET"; do
+    if [ -e "$OLD" ]; then
+        echo "Removing $OLD"
+        rm -rf "$OLD"
+    fi
+done
 
 mkdir -p "$INSTALL_DIR"
 cp -R "build/$APP_NAME.app" "$TARGET"

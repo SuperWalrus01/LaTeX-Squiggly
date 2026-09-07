@@ -8,7 +8,8 @@
 # here instead of being produced by an .xcodeproj.
 #
 #   Scripts/make-app.sh                          ad-hoc signed, into build/
-#   SIGN_IDENTITY="LaTeX-Squiggly Dev" Scripts/make-app.sh
+#   SIGN_IDENTITY="LaTeX-Squiggly Dev" Scripts/make-app.sh   (the identity name
+#                                                            keeps its hyphen)
 #   TARBALL=1 Scripts/make-app.sh                also produce a .tar.gz
 #
 # On the tarball: it is a convenience, NOT a Gatekeeper workaround. Tested on
@@ -25,7 +26,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="${APP_NAME:-LaTeX-Squiggly}"
+# The display name has a space; anything that becomes a file name off the
+# machine (the tarball) uses the hyphenated slug instead.
+APP_NAME="${APP_NAME:-LaTeX Squiggly}"
+APP_SLUG="${APP_SLUG:-${APP_NAME// /-}}"
 EXECUTABLE="${EXECUTABLE:-LaTeXSquigglyApp}"
 BUNDLE_ID="${BUNDLE_ID:-com.keenanjusak.latex-squiggly}"
 VERSION="${VERSION:-0.1.0}"
@@ -44,6 +48,17 @@ rm -rf "$APP"
 mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 cp "$BIN_PATH/$EXECUTABLE" "$CONTENTS/MacOS/$APP_NAME"
 
+# The icon is generated ahead of time and committed, so building the app needs
+# neither the artwork nor iconutil. Scripts/make-icons.sh rebuilds it from
+# Assets/ after the artwork changes.
+ICON_NAME="AppIcon"
+if [ -f "Assets/$ICON_NAME.icns" ]; then
+    cp "Assets/$ICON_NAME.icns" "$CONTENTS/Resources/$ICON_NAME.icns"
+else
+    echo "warning: Assets/$ICON_NAME.icns is missing; run Scripts/make-icons.sh"
+    ICON_NAME=""
+fi
+
 # LSUIElement is what makes this a menu bar app with no Dock icon.
 cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -59,6 +74,8 @@ cat > "$CONTENTS/Info.plist" <<PLIST
     <key>CFBundleVersion</key>              <string>$VERSION</string>
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
     <key>LSMinimumSystemVersion</key>       <string>$MIN_MACOS</string>
+    <key>CFBundleIconFile</key>             <string>$ICON_NAME</string>
+    <key>CFBundleIconName</key>             <string>$ICON_NAME</string>
     <key>LSUIElement</key>                  <true/>
     <key>NSHighResolutionCapable</key>      <true/>
 </dict>
@@ -81,7 +98,7 @@ codesign --verify --strict --verbose=1 "$APP"
 echo "Built $APP"
 
 if [ "${TARBALL:-0}" != "0" ]; then
-    ARCHIVE="$OUT/$APP_NAME-$VERSION-macos.tar.gz"
+    ARCHIVE="$OUT/$APP_SLUG-$VERSION-macos.tar.gz"
     rm -f "$ARCHIVE"
     tar -czf "$ARCHIVE" -C "$OUT" "$APP_NAME.app"
     echo "Built $ARCHIVE"

@@ -5,31 +5,34 @@ import InputTracking
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    /// On from the first launch, which only became a defensible default with
-    /// Phase 2: an always-on replacement with no exclusion list rewrites LaTeX
-    /// source as you type it, and the app used to have no way of knowing.
-    private static let enabledKey = "conversionEnabled"
-
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let tap = EventTapController()
     private let notices = NoticePanel()
     private let browser = SymbolBrowser()
     private let exclusions = ExclusionStore()
     private lazy var gate = SuppressionGate(store: exclusions)
-    private lazy var exclusionEditor = ExclusionEditor(store: exclusions)
+    private lazy var settings = SettingsWindow(store: exclusions)
 
     private var permissions = PermissionState()
     private var permissionTimer: Timer?
 
     private var isEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: Self.enabledKey) }
-        set { UserDefaults.standard.set(newValue, forKey: Self.enabledKey) }
+        get { Preferences.conversionEnabled }
+        set { Preferences.conversionEnabled = newValue }
     }
 
     // MARK: Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        tap.onNotice = { [weak self] message in self?.notices.show(message) }
+        Preferences.registerDefaults()
+        settings.host = self
+
+        // Read at the moment of the notice, not captured: the switch can be
+        // flipped in the settings window between one conversion and the next.
+        tap.onNotice = { [weak self] message in
+            guard Preferences.showNotices else { return }
+            self?.notices.show(message)
+        }
         tap.onTapDisabled = { [weak self] in self?.handleTapDisabled() }
         tap.suppression = gate
 
@@ -63,22 +66,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // A menu bar app that starts switched off looks identical to one that
         // failed to launch. Say what happened and where to find it.
-        if isFirstRun { showWelcome() }
+        if Preferences.isFirstRun { showWelcome() }
 
         // `--symbols` opens the browser straight away, which makes it
         // scriptable and gives the UI a smoke test that does not need a human
         // to click a menu bar icon.
         if CommandLine.arguments.contains("--symbols") { browser.show() }
+        if CommandLine.arguments.contains("--settings") { settings.show() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         permissionTimer?.invalidate()
         tap.stop()
         gate.stop()
-    }
-
-    private var isFirstRun: Bool {
-        UserDefaults.standard.object(forKey: Self.enabledKey) == nil
     }
 
     private func showWelcome() {
@@ -88,9 +88,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let excluded = exclusions.list.apps.count
 
         let alert = NSAlert()
-        alert.messageText = "LaTeX-Squiggly is running in your menu bar"
+        alert.messageText = "LaTeX Squiggly is running in your menu bar"
         alert.informativeText =
-            "Look for the \u{0192} icon near the clock, at the top right of your screen.\n\n"
+            "Look for the LaTeX Squiggly mark near the clock, at the top right of "
+            + "your screen.\n\n"
             + "It stays out of the way where LaTeX source is written: "
             + "\(excluded) app\(excluded == 1 ? "" : "s") on this Mac "
             + "\(excluded == 1 ? "is" : "are") already excluded, and so is Overleaf in any "
@@ -124,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             startTapIfPermitted()
         }
         rebuildMenu()
+        settings.refresh()
     }
 
     private func handleTapDisabled() {
@@ -135,13 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: Enable / disable
 
     @objc private func toggleEnabled() {
-        isEnabled.toggle()
-        if isEnabled {
-            startTapIfPermitted()
-        } else {
-            stopConverting()
-        }
-        rebuildMenu()
+        setConversionEnabled(!isEnabled)
     }
 
     private func startTapIfPermitted() {
@@ -188,8 +184,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: Status item
 
-    /// SF Symbols has no `function.slash`, so the inactive state is composited.
-    /// Dimming the icon instead was worse: a faded \u{0192} in the menu bar is
+    /// The height the mark draws at. The artwork is taller than it is wide, so
+    /// this is the dimension worth pinning: 18 pt is the usual ceiling for a
+    /// status item inside a 24 pt menu bar.
+    private static let markHeight: CGFloat = 18
+
+    /// The mark, sized for the menu bar. Loaded fresh each time because the
+    /// inactive state draws into it, and a shared NSImage would accumulate.
+    private func statusMark() -> NSImage? {
+        guard let mark = NSImage(data: MenuBarIconData.png), mark.size.height > 0 else { return nil }
+        let aspect = mark.size.width / mark.size.height
+        mark.size = NSSize(width: (Self.markHeight * aspect).rounded(),
+                           height: Self.markHeight)
+        // Template rendering is what lets one file sit on a light menu bar, a
+        // dark one and a highlighted status item: macOS keeps the alpha and
+        // supplies the colour. The mark's orange survives in the app icon,
+        // where the background is ours to choose.
+        mark.isTemplate = true
+        return mark
+    }
+
+    /// There is no struck-through mark to switch to, so the inactive state is
+    /// composited. Dimming alone was worse: a faded mark in the menu bar is
     /// invisible, which makes "off" indistinguishable from "crashed".
     ///
     /// Two states, not three. The icon answers "is it converting right now",
@@ -197,23 +213,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// staying quiet in Cursor; the menu answers "why not". A third glyph that
     /// meant "off, but for a different reason" would be read as neither.
     private func statusImage(active: Bool) -> NSImage? {
-        let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        guard let symbol = NSImage(systemSymbolName: "function",
-                                   accessibilityDescription: "LaTeX-Squiggly")?
-            .withSymbolConfiguration(configuration)
-        else { return nil }
+        guard let mark = statusMark() else { return nil }
+        guard !active else { return mark }
 
-        guard !active else {
-            symbol.isTemplate = true
-            return symbol
-        }
+        let composed = NSImage(size: mark.size, flipped: false) { rect in
+            mark.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.5)
 
-        let composed = NSImage(size: symbol.size, flipped: false) { rect in
-            symbol.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.55)
             let slash = NSBezierPath()
-            slash.move(to: NSPoint(x: rect.minX + 1.5, y: rect.minY + 1.5))
-            slash.line(to: NSPoint(x: rect.maxX - 1.5, y: rect.maxY - 1.5))
-            slash.lineWidth = 1.5
+            slash.move(to: NSPoint(x: rect.minX + 1, y: rect.minY + 1))
+            slash.line(to: NSPoint(x: rect.maxX - 1, y: rect.maxY - 1))
+            slash.lineCapStyle = .round
+
+            // The gap comes first. A bar laid straight onto a solid mark at
+            // 18 pt merges into it and reads as a thicker letter, not as a
+            // strike; clearing a little space around the bar is what makes the
+            // two shapes separate at that size.
+            if let cg = NSGraphicsContext.current?.cgContext {
+                cg.saveGState()
+                cg.setBlendMode(.clear)
+                slash.lineWidth = 3.5
+                slash.stroke()
+                cg.restoreGState()
+            }
+
+            slash.lineWidth = 1.6
             NSColor.black.setStroke()
             slash.stroke()
             return true
@@ -240,7 +263,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             statusTitle = "Converting as you type"
         }
-        statusItem.button?.toolTip = "LaTeX-Squiggly \u{2014} " + statusTitle.lowercased()
+        statusItem.button?.toolTip = "LaTeX Squiggly \u{2014} " + statusTitle.lowercased()
 
         let status = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
         status.isEnabled = false
@@ -265,7 +288,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         for permission in Permission.allCases where !permissions.isGranted(permission) {
             let item = NSMenuItem(title: "Grant \(permission.title)\u{2026}",
-                                  action: #selector(openPermissionSettings(_:)),
+                                  action: #selector(grantPermission(_:)),
                                   keyEquivalent: "")
             item.target = self
             item.representedObject = permission
@@ -295,6 +318,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
+        // The comma is what people reach for, so it is bound here even though a
+        // status menu only sees it while it is open.
+        let settingsItem = NSMenuItem(title: "Settings\u{2026}",
+                                      action: #selector(showSettings),
+                                      keyEquivalent: ",")
+        settingsItem.keyEquivalentModifierMask = .command
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+
         let symbols = NSMenuItem(title: "Symbols\u{2026}",
                                  action: #selector(showBrowser),
                                  keyEquivalent: "")
@@ -303,7 +335,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
-        menu.addItem(NSMenuItem(title: "Quit LaTeX-Squiggly",
+        menu.addItem(NSMenuItem(title: "Quit LaTeX Squiggly",
                                 action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: ""))
 
@@ -323,14 +355,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    @objc private func showExclusions() {
-        exclusionEditor.show()
+    @objc private func showSettings() {
+        settings.show(.general)
     }
 
-    @objc private func openPermissionSettings(_ sender: NSMenuItem) {
+    @objc private func showExclusions() {
+        settings.show(.exclusions)
+    }
+
+    @objc private func grantPermission(_ sender: NSMenuItem) {
         guard let permission = sender.representedObject as? Permission else { return }
-        Permissions.request(permission)
-        Permissions.openSettings(permission)
+        openPermissionSettings(permission)
     }
 
     @objc private func showBrowser() {
@@ -345,7 +380,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let appItem = NSMenuItem()
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit LaTeX-Squiggly",
+        appMenu.addItem(withTitle: "Settings\u{2026}",
+                        action: #selector(showSettings), keyEquivalent: ",").target = self
+        appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: "Quit LaTeX Squiggly",
                         action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
         mainMenu.addItem(appItem)
@@ -366,5 +404,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.addItem(windowItem)
 
         NSApp.mainMenu = mainMenu
+    }
+}
+
+// MARK: - SettingsHost
+
+/// The settings window reads the app's state through this instead of keeping a
+/// copy, which is what stops the menu and the window from disagreeing about
+/// whether conversion is on.
+extension AppDelegate: SettingsHost {
+
+    var conversionEnabled: Bool { isEnabled }
+
+    var permissionState: PermissionState { permissions }
+
+    func setConversionEnabled(_ enabled: Bool) {
+        guard enabled != isEnabled else { return }
+        isEnabled = enabled
+        if enabled {
+            startTapIfPermitted()
+        } else {
+            stopConverting()
+        }
+        rebuildMenu()
+        settings.refresh()
+    }
+
+    func openPermissionSettings(_ permission: Permission) {
+        Permissions.request(permission)
+        Permissions.openSettings(permission)
     }
 }
