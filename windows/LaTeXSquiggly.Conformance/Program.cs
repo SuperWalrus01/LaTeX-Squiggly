@@ -12,8 +12,12 @@ using LaTeXSquiggly.Core.Input;
 
 // Next to the binary when published, next to the source when run from a build
 // script whose working directory is the repository root.
-var candidates = args.Length > 0
-    ? new[] { args[0] }
+// Anything beginning with a dash is a switch that leaked through from the
+// build command, not a path. Taking it as one produced a confusing "no
+// reference found" for a file that was sitting right there.
+var given = args.FirstOrDefault(argument => !argument.StartsWith('-'));
+var candidates = given is not null
+    ? new[] { given }
     : new[]
     {
         "reference.json",
@@ -97,6 +101,18 @@ failures.AddRange(suppressionFailures);
 
 if (failures.Count == 0)
 {
+    // Written next to the reference so Tools/make_site.py can quote these
+    // numbers without a .NET SDK to run this with. A count typed into a web
+    // page by hand is a count that is wrong by the next release.
+    var summary = Path.Combine(Path.GetDirectoryName(path) ?? ".", "result.json");
+    File.WriteAllText(summary, JsonSerializer.Serialize(new
+    {
+        fragments = records.Count,
+        engineChecks = records.Count * 2,
+        suppressionChecks = suppressionPassed,
+        total = checks,
+    }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+
     Console.WriteLine($"PASS  engine       {records.Count * 2} checks over {records.Count} fragments,");
     Console.WriteLine("                   every answer identical to the Swift engine");
     Console.WriteLine($"PASS  suppression  {suppressionPassed} checks on the Windows rules");

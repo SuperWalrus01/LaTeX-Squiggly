@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LaTeX Squiggly — type LaTeX anywhere on macOS, get real characters</title>
-<meta name="description" content="A macOS menu bar app that turns \alpha into &#945; as you type, in any app, and knows to stay quiet in your TeX editor. Try it in the browser.">
+<title>LaTeX Squiggly — type LaTeX anywhere on macOS or Windows, get real characters</title>
+<meta name="description" content="A menu bar app for macOS and a tray app for Windows that turns \alpha into &#945; as you type, in any app, and knows to stay quiet in your TeX editor. Try it in the browser.">
 <meta name="theme-color" content="#FAF7EE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#17130F" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -13,7 +13,7 @@
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="LaTeX Squiggly">
-<meta property="og:description" content="Type \alpha, press space, get &#945; &#8212; in any app on your Mac. A macOS menu bar app that converts LaTeX to Unicode as you type.">
+<meta property="og:description" content="Type \alpha, press space, get &#945; &#8212; in any app, on macOS or Windows. Converts LaTeX to Unicode as you type, and stays quiet where LaTeX source is written.">
 <meta property="og:image" content="https://superwalrus01.github.io/LaTeX-Squiggly/assets/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -32,7 +32,7 @@
       <a href="#dollars">Dollars</a>
       <a href="#symbols">Symbols</a>
       <a href="#cost">Cost</a>
-      <a href="#install">Install</a>
+      <a href="#install">Get it</a>
     </nav>
   </header>
 
@@ -42,11 +42,11 @@
         <div>
           <h1 class="wordmark" role="img" aria-label="LaTeX Squiggly"></h1>
           <p class="thesis">You can't paste LaTeX into Slack. So type it anyway — and get <em>real characters</em> instead.</p>
-          <p class="sub">A macOS menu bar app. Type <code>\alpha</code>, press space, and the letters you just typed become <b>α</b> — in place, in whatever app you were already in.</p>
+          <p class="sub">A menu bar app on macOS, a tray app on Windows. Type <code>\alpha</code>, press space, and the letters you just typed become <b>α</b> — in place, in whatever app you were already in.</p>
           <div class="meta-row">
             <span class="chip">macOS 13+</span>
+            <span class="chip">Windows 10+</span>
             <span class="chip">202 symbols</span>
-            <span class="chip">no Xcode needed</span>
           </div>
         </div>
 
@@ -243,7 +243,16 @@ Try it here — type \theta then press space.</textarea>
 
     <section id="install">
       <p class="eyebrow">Getting it</p>
-      <h2>Build it yourself, in about a minute</h2>
+      <h2>Download it, or build it</h2>
+      <p class="lede">Both platforms run the same engine. Not a similar one: the Windows tables are generated from the tables the macOS engine uses at runtime, and the two are diffed against each other over <!-- BEGIN generated: corpus -->2,030<!-- END generated: corpus --> LaTeX fragments before anything is published, with both required to give the identical answer down to the number of backspaces. Only the parts that touch the operating system differ, and the <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/tree/main/windows">Windows README</a> says exactly which and why.</p>
+
+      <div class="downloads">
+        <p class="lede"><b>macOS 13+.</b> <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the disk image</a>, open it, and drag <b>LaTeX Squiggly</b> onto <b>Applications</b>. It is signed but not notarized — that needs a paid Apple Developer account — so the first time you open it macOS will refuse. Go to <b>System Settings → Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b>.</p>
+        <p class="lede"><b>Windows 10+.</b> <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the .exe</a> and double-click it. No installer, no admin rights, and Windows asks for no permission at all. It is not code-signed, so SmartScreen will say <em>Windows protected your PC</em>: click <b>More info</b>, then <b>Run anyway</b>. Your antivirus may also take an interest, because the app installs a low-level keyboard hook, which is the same mechanism a keylogger uses.</p>
+        <p class="lede" style="margin-bottom:0">You should be sceptical of any app that asks you to click past a security warning, particularly one that can see your keystrokes. So, plainly: <b>nothing you type is stored, logged, or sent anywhere.</b> The app holds the last 64 characters in memory only long enough to recognise a command, then forgets them — the instant one completes, and also whenever you click, press return, move the cursor, switch app, or change browser tab. There is no networking code in the project at all: it never opens a connection, so there is nowhere for anything you type to go. Nothing is written to disk except your own settings. You do not have to take that on trust; the source is right there, and on a Mac you can build it yourself in about a minute.</p>
+      </div>
+
+      <h3>Building it on a Mac</h3>
       <p class="lede">This is the primary path, not a fallback. An app built on the machine it runs on is never downloaded, so it never carries <code>com.apple.quarantine</code> and Gatekeeper never blocks it — no System Settings detour, and nobody has to weaken a security setting to run something that reads their keystrokes. It needs the Command Line Tools; Xcode's 15 GB is not required, which is why the bundle is assembled by hand rather than by an <code>.xcodeproj</code>.</p>
       <pre><span class="c"># 1. Apple's command line tools (not Xcode)</span>
 xcode-select --install
@@ -261,13 +270,25 @@ open "/Applications/LaTeX Squiggly.app"</pre>
       <p class="lede">Order matters: macOS ties the Accessibility grant to the code signature, so signing <em>after</em> you have granted permission invalidates the grant. Ad-hoc signatures key on a hash that changes with every build, which is how you end up re-granting Accessibility forever and blaming the app.</p>
       <pre><span class="c"># ask the app what it currently sees</span>
 "/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose</pre>
-      <p class="lede" style="margin-bottom:0">It prints every rule and, for each running browser, what it can read and what it would do. Hosts are printed rather than whole URLs — an Overleaf link carries a share token, and a diagnostic somebody pastes into a bug report should not carry it too.</p>
+      <p class="lede">It prints every rule and, for each running browser, what it can read and what it would do. Hosts are printed rather than whole URLs — an Overleaf link carries a share token, and a diagnostic somebody pastes into a bug report should not carry it too.</p>
+
+      <h3>Building the Windows app</h3>
+      <p class="lede">From a Mac or a Linux box, which is how it is actually built: the .NET SDK cross-compiles, so no Windows machine is needed to produce the binary. The pipeline generates the C# tables from the Swift engine, records what the Swift engine answers, checks the port against it, and only then publishes. If any of that disagrees, nothing is published.</p>
+      <pre><span class="c"># needs the .NET 8 SDK; nothing else</span>
+./windows/build.sh
+<span class="c">#   1/6  building the Swift engine</span>
+<span class="c">#   2/6  generating the C# tables from it</span>
+<span class="c">#   3/6  generating the icons</span>
+<span class="c">#   4/6  recording Swift's answers</span>
+<span class="c">#   5/6  checking the port against them</span>
+<span class="c">#   6/6  publishing for win-x64</span></pre>
+      <p class="lede" style="margin-bottom:0">The Windows app cannot be run on the machine it is built on, so agreement with the macOS engine is the only evidence available that the port is faithful. That is why it is checked before publishing rather than after shipping.</p>
     </section>
   </main>
 
   <footer>
     <p>The demo above runs the same tables the app does — 202 symbols, 40 superscripts, 32 subscripts and 19 vulgar fractions, all generated from official Unicode names. Its results were checked against the app's own converter.</p>
-    <p style="margin-bottom:0">LaTeX Squiggly is a macOS 13+ menu bar app. 1,674 checks, no XCTest required.</p>
+    <p style="margin-bottom:0">LaTeX Squiggly is a menu bar app on macOS 13+ and a tray app on Windows 10+. <!-- BEGIN generated: checks -->1,709<!-- END generated: checks --> checks on the macOS build, no XCTest required, and <!-- BEGIN generated: winchecks -->4,090<!-- END generated: winchecks --> more holding the Windows port to the same answers.</p>
   </footer>
 </div>
 <script src="assets/data.js"></script>

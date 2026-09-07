@@ -33,7 +33,10 @@ APP_NAME="${APP_NAME:-LaTeX Squiggly}"
 APP_SLUG="${APP_SLUG:-${APP_NAME// /-}}"
 EXECUTABLE="${EXECUTABLE:-LaTeXSquigglyApp}"
 BUNDLE_ID="${BUNDLE_ID:-com.keenanjusak.latex-squiggly}"
-VERSION="${VERSION:-0.1.0}"
+# Read from the VERSION file, never defaulted to a literal here: this line
+# used to say 0.1.0, so a release built without setting the variable was
+# stamped with the previous version and nothing caught it.
+VERSION="${VERSION:-$(cat VERSION)}"
 MIN_MACOS="${MIN_MACOS:-13.0}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"   # "-" means ad-hoc
 OUT="${OUT:-build}"
@@ -41,7 +44,9 @@ OUT="${OUT:-build}"
 APP="$OUT/$APP_NAME.app"
 CONTENTS="$APP/Contents"
 
-echo "Building $EXECUTABLE (release)"
+python3 Tools/check_version.py
+
+echo "Building $EXECUTABLE $VERSION (release)"
 swift build -c release --product "$EXECUTABLE"
 BIN_PATH="$(swift build -c release --show-bin-path)"
 

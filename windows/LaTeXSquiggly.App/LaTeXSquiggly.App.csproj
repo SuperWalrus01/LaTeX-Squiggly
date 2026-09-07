@@ -20,7 +20,10 @@
     <Product>LaTeX Squiggly</Product>
     <AssemblyTitle>LaTeX Squiggly</AssemblyTitle>
     <Company>LaTeX Squiggly</Company>
-    <Version>0.2.0</Version>
+    <!-- One source of truth, shared with the macOS build. app.manifest is the
+         only literal left, and Tools/check_version.py fails the build if it
+         disagrees with this. -->
+    <Version>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../../VERSION').Trim())</Version>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>

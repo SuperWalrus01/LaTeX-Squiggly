@@ -169,6 +169,27 @@ h2 {
 .lede { color: var(--ink-soft); max-width: 62ch; margin: 0 0 2rem; }
 .lede code, p code, li code, td code { font-family: var(--mono); font-size: .88em; color: var(--ink); }
 
+/* ---------- getting it ---------- */
+/* A subhead inside a section: smaller than the section's own h2, and set in
+   the display face so it reads as a heading rather than a bold paragraph. */
+h3 {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.05rem, .98rem + .3vw, 1.25rem);
+  letter-spacing: -.015em; line-height: 1.2; margin: 2.4rem 0 .7rem;
+}
+
+/* The two download paragraphs, boxed together so the security warnings read as
+   one piece of practical advice rather than as a caveat buried in prose. */
+.downloads {
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 1.15rem 1.25rem;
+  margin: 0 0 .4rem;
+}
+.downloads .lede { max-width: 68ch; margin-bottom: 1rem; }
+.downloads a { color: var(--ink); text-underline-offset: .18em; }
+
 /* ---------- before / after ---------- */
 .pairs { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
 .pair { display: grid; grid-template-columns: minmax(0,1fr) 2.2rem minmax(0,1fr); background: var(--card); align-items: center; gap: .5rem; padding: .85rem 1rem; }
