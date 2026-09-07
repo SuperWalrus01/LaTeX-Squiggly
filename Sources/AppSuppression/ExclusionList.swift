@@ -69,6 +69,26 @@ public struct ExclusionList: Codable, Equatable {
         self.declinedBundleIDs = declinedBundleIDs
     }
 
+    // MARK: Decoding
+
+    /// Written by hand because the synthesised one demands every key.
+    ///
+    /// Saved settings outlive the version that wrote them. A build that adds a
+    /// field cannot read what an older build saved, and the store swallows the
+    /// failure and hands back the shipped defaults, so the user silently gets
+    /// back every app they had removed and loses every site they had added.
+    /// Each field falls back to its own default instead, and a field dropped in
+    /// some future version is simply ignored rather than fatal.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        apps = try container.decodeIfPresent([ExcludedApp].self, forKey: .apps) ?? []
+        sites = try container.decodeIfPresent([ExcludedSite].self, forKey: .sites) ?? []
+        suppressUnidentifiedPages = try container.decodeIfPresent(
+            Bool.self, forKey: .suppressUnidentifiedPages) ?? true
+        declinedBundleIDs = try container.decodeIfPresent(
+            [String].self, forKey: .declinedBundleIDs) ?? []
+    }
+
     // MARK: Editing
 
     public func contains(bundleID: String) -> Bool {

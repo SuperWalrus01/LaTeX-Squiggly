@@ -98,12 +98,100 @@ func report(_ input: String, labelled: Bool, showCodepoints: Bool,
     }
 }
 
+/// Writes every table the engine holds, as JSON, for the C# port's generator.
+///
+/// Undocumented in `usage` because it is a build step, not something to run by
+/// hand. Dumping from the built binary rather than parsing the Swift source is
+/// what stops the Windows tables from drifting: they are generated from the
+/// tables this engine actually uses, so a symbol added here cannot be missing
+/// there.
+func dumpTables() -> Never {
+    let payload: [String: Any] = [
+        "entries": SymbolTable.entries.map {
+            ["command": $0.command, "glyph": $0.glyph,
+             "unicodeName": $0.unicodeName, "category": $0.category]
+        },
+        "superscripts": Dictionary(uniqueKeysWithValues:
+            ScriptTables.superscripts.map { (String($0.key), String($0.value)) }),
+        "subscripts": Dictionary(uniqueKeysWithValues:
+            ScriptTables.subscripts.map { (String($0.key), String($0.value)) }),
+        "radicals": Dictionary(uniqueKeysWithValues:
+            ScriptTables.radicals.map { (String($0.key), String($0.value)) }),
+        "vulgarFractions": ScriptTables.vulgarFractions,
+        "fractionSlash": String(ScriptTables.fractionSlash),
+        "operators": TextOperators.operators,
+        "unsupportedReasons": UnsupportedCommands.reasons,
+        "escapedLiterals": Dictionary(uniqueKeysWithValues:
+            UnsupportedCommands.escapedLiterals.map { (String($0.key), String($0.value)) }),
+        "symbolReasons": Dictionary(uniqueKeysWithValues:
+            UnsupportedCommands.symbolReasons.map { (String($0.key), $0.value) }),
+    ]
+    guard let data = try? JSONSerialization.data(
+        withJSONObject: payload, options: [.sortedKeys, .prettyPrinted]) else {
+        warn("could not serialise the tables")
+        exit(1)
+    }
+    FileHandle.standardOutput.write(data)
+    print("")
+    exit(0)
+}
+
 var arguments = Array(CommandLine.arguments.dropFirst())
 
 if arguments.contains("-h") || arguments.contains("--help") {
     print(usage)
     exit(0)
 }
+
+if arguments.contains("--dump-tables") { dumpTables() }
+
+/// Reads one fragment per line and prints, as JSON, exactly what both layers
+/// decided about it.
+///
+/// This is the reference the C# port is checked against. The Windows build
+/// cannot be run on this machine, so the only way to know its engine agrees
+/// with this one is to ask both the same few thousand questions and diff the
+/// answers. Undocumented in `usage` for the same reason as --dump-tables: it is
+/// a build step, not a thing to type.
+func runConformance() -> Never {
+    var records: [[String: Any]] = []
+    while let line = readLine(strippingNewline: true) {
+        let engine = convert(line)
+        var record: [String: Any] = ["input": line]
+
+        switch engine {
+        case .converted(let text):
+            record["engine"] = ["kind": "converted", "text": text]
+        case .fallback(let text, let reason):
+            record["engine"] = ["kind": "fallback", "text": text, "reason": reason]
+        case .unsupported(let reason):
+            record["engine"] = ["kind": "unsupported", "reason": reason]
+        }
+
+        switch TriggerDetector.outcome(buffer: line, terminator: " ") {
+        case .none:
+            record["trigger"] = ["kind": "none"]
+        case .replace(let r):
+            var replace: [String: Any] = ["kind": "replace",
+                                          "deleteCount": r.deleteCount,
+                                          "insert": r.insert]
+            if let notice = r.notice { replace["notice"] = notice }
+            record["trigger"] = replace
+        case .refuse(let source, let reason):
+            record["trigger"] = ["kind": "refuse", "source": source, "reason": reason]
+        }
+        records.append(record)
+    }
+    guard let data = try? JSONSerialization.data(
+        withJSONObject: records, options: [.sortedKeys]) else {
+        warn("could not serialise the results")
+        exit(1)
+    }
+    FileHandle.standardOutput.write(data)
+    exit(0)
+}
+
+if arguments.contains("--conformance") { runConformance() }
 
 let showCodepoints = arguments.contains("-c") || arguments.contains("--codepoints")
 arguments.removeAll { $0 == "-c" || $0 == "--codepoints" }

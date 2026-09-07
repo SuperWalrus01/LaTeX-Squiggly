@@ -82,8 +82,20 @@ final class NoticePanel {
         return panel
     }
 
+    /// The screen under the pointer, not `NSScreen.main`.
+    ///
+    /// `NSScreen.main` is the screen holding the key window, and an accessory
+    /// app has no key window while the user is typing in someone else's, so on
+    /// two displays the notice could appear on the one nobody was looking at.
+    private static func activeScreen() -> NSScreen? {
+        let pointer = NSEvent.mouseLocation
+        return NSScreen.screens.first { $0.frame.contains(pointer) }
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
+    }
+
     private func position(_ panel: NSPanel, size: NSSize) {
-        guard let screen = NSScreen.main else { return }
+        guard let screen = Self.activeScreen() else { return }
         let frame = screen.visibleFrame
         panel.setFrameOrigin(NSPoint(x: frame.maxX - size.width - 16,
                                      y: frame.maxY - size.height - 8))

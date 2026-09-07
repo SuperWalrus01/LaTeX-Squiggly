@@ -1,12 +1,28 @@
 # LaTeX Squiggly
 
-An inline LaTeX-to-Unicode menu bar app for macOS. Type `\alpha` or `\int_5^6`
-in any app and it becomes `α` or `∫₅⁶` in place — real text, never an image.
+An inline LaTeX-to-Unicode app for macOS and Windows. Type `\alpha` or
+`\int_5^6` in any app and it becomes `α` or `∫₅⁶` in place — real text, never
+an image.
 
 - **Phase 0 — conversion engine.** Done. Pure Swift, no system APIs.
 - **Phase 1 — text replacement.** Done. Event tap, replacement, permissions.
 - **Phase 2 — per-app suppression.** Done. Exclusion list, per-site rules.
 - **Phase 3 — menu bar UI.** Done. Symbol browser and exclusion editor.
+- **Phase 4 — Windows.** Done. The same engine, a native tray app.
+
+## Windows
+
+There is a Windows build, in [`windows/`](windows/), with its own
+[README](windows/README.md). It is one .exe, no installer, no admin rights, and
+Windows asks for no permission to run it.
+
+The engine is not a rewrite. Its tables are generated from the tables this Swift
+engine uses at runtime, and the port is checked fragment by fragment against
+this one: 2,030 LaTeX fragments, every symbol, every script character, every
+refusal message, every case that must stay silent, with both engines required to
+give the identical answer down to the delete count. Only the parts that touch
+the operating system are genuinely different, and `windows/README.md` says
+exactly which and why.
 
 ## Per-app suppression
 
@@ -294,11 +310,18 @@ into Slack. The app target is a thin shell over it.
 candidate starting with a backslash converts itself:
 
 ```
-\alpha          ->  α
-\int_5^6        ->  ∫₅⁶
-$x^2$           ->  x²
-$\alpha + x^2$  ->  α + x²
+\alpha             ->  α
+\int_5^6           ->  ∫₅⁶
+\frac{\alpha}{2}   ->  α∕2
+$x^2$              ->  x²
+$\alpha + x^2$     ->  α + x²
 ```
+
+**A candidate starts at the first backslash, not the last.** Everything typed
+since the last space is one fragment, so `\frac{\alpha}{2}` is replaced whole
+rather than having `\alpha` picked out of the middle of it. Reading from the
+last backslash left `\alpha}{2}`, which really is unbalanced, and said so about
+LaTeX that was written correctly.
 
 **Bare `x^2` deliberately does not fire.** Otherwise `2^3` in prose, or `a_b` in
 an identifier, would rewrite itself. Write `$x^2$` when you mean maths —
@@ -312,7 +335,9 @@ silence would be the wrong answer.
 
 **Unknown commands stay silent.** `C:\Users ` contains a backslash but `Users`
 is nobody's command, so nothing happens and nothing is reported. You are only
-told about failures you plausibly meant to cause.
+told about failures you plausibly meant to cause. A refusal needs *every*
+command in the fragment to be one the converter knows, which is what keeps
+`C:\path\to\file ` quiet even though `\to` is real.
 
 **Space and tab terminate; Return does not.** In a chat app Return sends the
 message, and racing a replacement against a send is how you post half a symbol.

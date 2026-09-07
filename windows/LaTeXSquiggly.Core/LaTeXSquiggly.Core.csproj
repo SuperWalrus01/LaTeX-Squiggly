@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The engine, the typing logic and the suppression rules: everything that is
+    not Windows. Targets plain net8.0 with no platform dependency, which is what
+    lets the conformance runner exercise it on a Mac and prove it agrees with
+    the Swift original before it is ever run on Windows.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>LaTeXSquiggly.Core</RootNamespace>
+  </PropertyGroup>
+
+</Project>

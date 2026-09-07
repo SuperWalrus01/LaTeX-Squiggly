@@ -258,6 +258,20 @@ private struct Renderer {
             }
             index = scan + 1
             degreeText = try Renderer.render(inner).text
+
+            // An index that is missing or not a root produced honest-looking
+            // nonsense: `\\sqrt[]{8}` came out as `8^(1/)` and `\\sqrt[0]{8}` as
+            // `8^(1/0)`. A letter index is fine and common, `\\sqrt[n]{x}` reads
+            // perfectly well as a fractional power; only a number below two is
+            // not a root at all.
+            guard !degreeText.isEmpty else {
+                throw UnsupportedInput(
+                    reason: "\\sqrt has an empty index, for example \\sqrt[3]{8}.")
+            }
+            if let written = Int(degreeText), written < 2 {
+                throw UnsupportedInput(
+                    reason: "A root needs an index of at least 2, so \\sqrt[\(written)] is not one.")
+            }
             degree = Int(degreeText) ?? -1
         }
 

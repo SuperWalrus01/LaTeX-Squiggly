@@ -107,5 +107,14 @@ func runFallbackChecks(_ c: Checker) {
     c.unsupported("\\sqrt", containing: "needs an argument")
     c.unsupported("\\sqrt{}", containing: "empty")
     c.unsupported("\\sqrt[3{x}", containing: "never closed")
+
+    // An index that is not a root produced honest-looking nonsense rather than
+    // a refusal: `8^(1/)` and `8^(1/0)` both looked like answers.
+    c.unsupported("\\sqrt[]{8}", containing: "empty index")
+    c.unsupported("\\sqrt[0]{8}", containing: "at least 2")
+    c.unsupported("\\sqrt[1]{8}", containing: "at least 2")
+    c.unsupported("\\sqrt[-2]{8}", containing: "at least 2")
+    // A letter index is a real fractional power and must survive.
+    c.fallback("\\sqrt[n]{x}", "x^(1/n)")
     c.unsupported("\\binom{n}", containing: "two arguments")
 }

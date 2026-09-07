@@ -87,6 +87,26 @@ public enum TriggerDetector {
         }
     }
 
+    /// Every point at which a candidate could begin, earliest first.
+    ///
+    /// Whitespace ends a command, so only the run of typing since the last
+    /// space can still be pending; within that run, every backslash is a
+    /// possible start.
+    ///
+    /// Earliest first is the whole fix for nested commands. Read from its
+    /// *last* backslash, `\\frac{\\alpha}{2}` is `\\alpha}{2}`, which really is
+    /// unbalanced, so the user was told their correct LaTeX had a stray brace.
+    /// Read from its first, it is the fragment they actually typed.
+    private static func candidateStarts(in buffer: String) -> [String] {
+        let run: Substring
+        if let lastSpace = buffer.lastIndex(where: { $0.isWhitespace }) {
+            run = buffer[buffer.index(after: lastSpace)...]
+        } else {
+            run = buffer[...]
+        }
+        return run.indices.filter { run[$0] == "\\" }.map { String(run[$0...]) }
+    }
+
     /// Decides what to do given the buffer and the terminator just typed.
     ///
     /// The terminator is assumed to have been suppressed by the caller, so
@@ -95,38 +115,46 @@ public enum TriggerDetector {
     ///
     /// Two things can fire. A `$...$` span, LaTeX's own inline maths
     /// delimiters, converts whatever is between them. Otherwise the candidate
-    /// must start with a backslash.
+    /// must start with a backslash, and the earliest start that converts wins,
+    /// so a command and its arguments are replaced together instead of the
+    /// innermost one being picked out of the middle of them.
     ///
-    /// Bare `x^2` deliberately does not fire — `2^3` in ordinary prose, or
+    /// Bare `x^2` deliberately does not fire: `2^3` in ordinary prose, or
     /// `a_b` in an identifier, would silently rewrite themselves. Write `$x^2$`
-    /// when you mean maths. `\alpha_b` still reports the missing subscript,
+    /// when you mean maths. `\\alpha_b` still reports the missing subscript,
     /// because it opens with a command.
     public static func outcome(buffer: String, terminator: Character) -> TriggerOutcome {
         // Explicit maths first: `$x^2$` is unambiguous where bare `x^2` is not.
         if let delimited = mathDelimited(buffer: buffer, terminator: terminator) {
             return delimited
         }
-        guard let start = buffer.lastIndex(of: "\\") else { return .none }
-        let candidate = String(buffer[start...])
 
-        // A lone backslash, or one already broken by whitespace, is not a
-        // pending command.
-        guard candidate.count > 1,
-              !candidate.contains(where: { $0.isWhitespace }),
-              KnownCommands.looksIntentional(candidate)
-        else { return .none }
+        // Held rather than returned, so a start that cannot convert does not
+        // stop a later one that can. `\\foo\\alpha` still converts its alpha.
+        var refusal: TriggerOutcome?
 
-        switch convert(candidate) {
-        case .converted(let text):
-            return .replace(Replacement(deleteCount: candidate.count,
-                                        insert: text + String(terminator),
-                                        notice: nil))
-        case .fallback(let text, let reason):
-            return .replace(Replacement(deleteCount: candidate.count,
-                                        insert: text + String(terminator),
-                                        notice: reason))
-        case .unsupported(let reason):
-            return .refuse(source: candidate, reason: reason)
+        for candidate in candidateStarts(in: buffer) {
+            // A lone backslash is not a pending command.
+            guard candidate.count > 1, KnownCommands.looksIntentional(candidate) else { continue }
+
+            switch convert(candidate) {
+            case .converted(let text):
+                return .replace(Replacement(deleteCount: candidate.count,
+                                            insert: text + String(terminator),
+                                            notice: nil))
+            case .fallback(let text, let reason):
+                return .replace(Replacement(deleteCount: candidate.count,
+                                            insert: text + String(terminator),
+                                            notice: reason))
+            case .unsupported(let reason):
+                // Say why only when the whole candidate is LaTeX the user
+                // plainly meant. A half-recognised run, `\\to\\file` inside a
+                // Windows path, stays as quiet as it was before.
+                if refusal == nil, KnownCommands.isWhollyIntentional(candidate) {
+                    refusal = .refuse(source: candidate, reason: reason)
+                }
+            }
         }
+        return refusal ?? .none
     }
 }

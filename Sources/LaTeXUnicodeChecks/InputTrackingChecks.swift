@@ -164,11 +164,83 @@ func runInputTrackingChecks(_ c: Checker) {
             .replace(Replacement(deleteCount: 6, insert: "\u{03B1} ", notice: nil)),
             "backslash commands are unaffected")
 
+    // MARK: Commands inside commands
+    //
+    // Every trigger check above is a single-command fragment, which is exactly
+    // why reading the candidate from the last backslash survived: it is only
+    // wrong once a command has another one inside it. `\\frac{\\alpha}{2}` read
+    // that way is `\\alpha}{2}`, and the user was told their correct LaTeX had
+    // a stray brace.
+
+    if case .replace(let r) = outcome("\\frac{\\alpha}{2}") {
+        c.equal(r.deleteCount, 16, "a nested command is replaced whole")
+        c.equal(r.insert, "\u{03B1}\u{2215}2 ", "nested fraction text")
+        c.notNil(r.notice, "the linear fraction still explains itself")
+    } else {
+        c.fail("expected a replacement for \\frac{\\alpha}{2}")
+    }
+
+    if case .replace(let r) = outcome("\\sqrt{\\alpha}") {
+        c.equal(r.deleteCount, 13, "\\sqrt takes its nested argument with it")
+    } else {
+        c.fail("expected a replacement for \\sqrt{\\alpha}")
+    }
+
+    // Two commands in a row are one fragment, not just the last one. Replacing
+    // only `\\beta` left `\\alphaβ`, which is the half-converted text the
+    // engine's all-or-nothing rule exists to prevent.
+    c.equal(outcome("\\alpha\\beta"),
+            .replace(Replacement(deleteCount: 11, insert: "\u{03B1}\u{03B2} ", notice: nil)),
+            "adjacent commands convert together")
+
+    c.equal(outcome("\\left(\\alpha\\right)"),
+            .replace(Replacement(deleteCount: 19, insert: "(\u{03B1}) ", notice: nil)),
+            "delimiters and their contents convert together")
+
+    // Prose in front is still untouched, and the count still starts at the
+    // backslash rather than at the beginning of the line.
+    if case .replace(let r) = outcome("we know \\frac{\\alpha}{2}") {
+        c.equal(r.deleteCount, 16, "preceding prose survives a nested command")
+    } else {
+        c.fail("expected a replacement after prose")
+    }
+
+    // A failure inside a nested command must say what is actually wrong.
+    if case .refuse(_, let reason) = outcome("\\frac{\\alpha_b}{2}") {
+        c.expect(reason.lowercased().contains("subscript"),
+                 "a nested failure names the real cause: \(reason)")
+    } else {
+        c.fail("expected a refusal for \\frac{\\alpha_b}{2}")
+    }
+
+    // Earliest start that converts wins, but a start that cannot convert must
+    // not block a later one that can.
+    if case .replace(let r) = outcome("\\foo\\alpha") {
+        c.equal(r.deleteCount, 6, "an unknown leading command does not swallow a real one")
+    } else {
+        c.fail("expected a replacement for \\foo\\alpha")
+    }
+
+    // The silence that pays for all of this. `\\to` is a real command, so a rule
+    // that only checked the first one would announce "Unknown command \\file"
+    // at somebody typing a Windows path.
+    c.equal(outcome("C:\\path\\to\\file"), .none, "a Windows path is still left alone")
+    c.equal(outcome("C:\\Users\\me"), .none, "and so is a shorter one")
+
+    c.expect(KnownCommands.isWhollyIntentional("\\frac{\\alpha}{2}"),
+             "every command known and braces balanced")
+    c.expect(KnownCommands.isWhollyIntentional("\\vec{v}"), "a refused command is still known")
+    c.expect(!KnownCommands.isWhollyIntentional("\\to\\file"), "one unknown command is enough")
+    c.expect(!KnownCommands.isWhollyIntentional("\\alpha}{2}"), "unbalanced braces are not intentional")
+    c.expect(!KnownCommands.isWhollyIntentional("{a}"), "no command at all")
+    c.expect(!KnownCommands.isWhollyIntentional("\\alpha\\"), "a trailing backslash is still being typed")
+
     // MARK: Delete counts are exact
 
     // The count must match the characters actually typed, or the app eats the
     // user's other text.
-    for source in ["\\alpha", "\\int_5^6", "\\sum_{i=1}^{n}", "\\R", "\\leq"] {
+    for source in ["\\alpha", "\\int_5^6", "\\sum_{i=1}^{n}", "\\R", "\\leq",
+                   "\\frac{\\alpha}{2}", "\\alpha\\beta", "\\left(\\alpha\\right)"] {
         if case .replace(let r) = outcome(source) {
             c.equal(r.deleteCount, source.count, "delete count for \(source)")
         } else {

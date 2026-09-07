@@ -14,6 +14,10 @@ final class EventTapController {
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var buffer = InputBuffer()
+    /// The block-based observer API hands back a token, and that token is the
+    /// only thing `removeObserver` will accept. Passing `self` instead removed
+    /// nothing, so every stop/start cycle left another observer behind.
+    private var activationObserver: NSObjectProtocol?
 
     /// Called with an explanation the user needs to see.
     var onNotice: ((String) -> Void)?
@@ -32,7 +36,12 @@ final class EventTapController {
     func start() -> Bool {
         guard !isRunning else { return true }
 
+        // Mouse-down is watched purely to forget: see `handle`. Only the down
+        // events, never movement, which is a firehose and moves no caret.
         let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
+            | CGEventMask(1 << CGEventType.leftMouseDown.rawValue)
+            | CGEventMask(1 << CGEventType.rightMouseDown.rawValue)
+            | CGEventMask(1 << CGEventType.otherMouseDown.rawValue)
         // .defaultTap rather than .listenOnly: completing a trigger has to
         // suppress the terminator keystroke, which a listen-only tap cannot do.
         guard let tap = CGEvent.tapCreate(
@@ -73,7 +82,10 @@ final class EventTapController {
         runLoopSource = nil
         isRunning = false
         buffer.reset()
-        NSWorkspace.shared.notificationCenter.removeObserver(self)
+        if let activationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(activationObserver)
+        }
+        activationObserver = nil
     }
 
     /// Switching apps moves the cursor somewhere we know nothing about.
@@ -84,7 +96,8 @@ final class EventTapController {
     }
 
     private func observeApplicationSwitches() {
-        NSWorkspace.shared.notificationCenter.addObserver(
+        guard activationObserver == nil else { return }
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
@@ -109,6 +122,18 @@ final class EventTapController {
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
             onTapDisabled?()
             return nil
+        }
+
+        // A click puts the caret somewhere the buffer knows nothing about, so
+        // the buffer stops describing the text in front of it. Without this,
+        // typing `\alpha`, clicking elsewhere and pressing space fired six
+        // backspaces at the new position and ate the user's text.
+        switch type {
+        case .leftMouseDown, .rightMouseDown, .otherMouseDown:
+            buffer.reset()
+            return passthrough
+        default:
+            break
         }
 
         guard type == .keyDown else { return passthrough }
@@ -139,7 +164,16 @@ final class EventTapController {
         // as a terminator, not as navigation.
         switch Int(event.getIntegerValueField(.keyboardEventKeycode)) {
         case kVK_Delete:
-            buffer.deleteBackward()
+            // Option-backspace deletes a whole word, and Command-backspace the
+            // whole line, which the buffer has no way to model. The Command
+            // case is already gone by here; this is the Option one. Forgetting
+            // is the only honest answer, because guessing one character leaves
+            // the delete count larger than the text actually in front of it.
+            if event.flags.contains(.maskAlternate) {
+                buffer.reset()
+            } else {
+                buffer.deleteBackward()
+            }
             return passthrough
         case kVK_ForwardDelete:
             // Deletes ahead of the cursor, which the buffer does not model.

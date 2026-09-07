@@ -180,6 +180,33 @@ func runSuppressionChecks(_ c: Checker) {
     c.expect(!KnownBrowsers.isBrowser("net.whatsapp.WhatsApp"), "WhatsApp is not a browser")
     c.expect(!KnownBrowsers.isBrowser(nil), "no bundle id is not a browser")
 
+    // MARK: Saved settings outlive the version that wrote them
+
+    // The synthesised decoder demands every key, so a build that added a field
+    // could not read what an older one saved. The store swallows that failure
+    // and hands back the shipped defaults, which silently restores every app
+    // the user removed and loses every site they added.
+    let olderSchema = #"{"apps":[{"bundleID":"com.example.editor","name":"Editor"}],"sites":[]}"#
+    if let restored = try? JSONDecoder().decode(ExclusionList.self,
+                                                from: Data(olderSchema.utf8)) {
+        c.equal(restored.apps.count, 1, "an older payload still decodes")
+        c.equal(restored.apps.first?.bundleID, "com.example.editor", "and keeps what it held")
+        c.expect(restored.suppressUnidentifiedPages, "a missing field takes its default")
+        c.equal(restored.declinedBundleIDs, [], "and so does a missing list")
+    } else {
+        c.fail("an exclusion list saved by an older build must still decode")
+    }
+
+    // A payload from some future build with a field we have dropped is data we
+    // do not understand, not a reason to throw the rest away.
+    let newerSchema = #"{"apps":[],"sites":[],"suppressUnidentifiedPages":false,"declinedBundleIDs":[],"somethingLater":7}"#
+    if let restored = try? JSONDecoder().decode(ExclusionList.self,
+                                                from: Data(newerSchema.utf8)) {
+        c.expect(!restored.suppressUnidentifiedPages, "an unknown field is ignored, not fatal")
+    } else {
+        c.fail("an unknown field must not lose the whole list")
+    }
+
     // MARK: Reasons are sentences a person can act on
 
     for reason: SuppressionReason in [.excludedApp(name: "Cursor"),

@@ -16,3 +16,9 @@ Icon?
 # Note-to-self, not part of the app.
 latex-unicode-app-build-prompt.md
 ARCHITECTURE.md
+
+# Windows port build output
+windows/**/bin/
+windows/**/obj/
+windows/dist/
+windows/LaTeXSquiggly.App/Assets/preview/
