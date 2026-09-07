@@ -88,7 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let excluded = exclusions.list.apps.count
 
         let alert = NSAlert()
-        alert.messageText = "LaTeX-Squigly is running in your menu bar"
+        alert.messageText = "LaTeX-Squiggly is running in your menu bar"
         alert.informativeText =
             "Look for the \u{0192} icon near the clock, at the top right of your screen.\n\n"
             + "It stays out of the way where LaTeX source is written: "
@@ -199,7 +199,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func statusImage(active: Bool) -> NSImage? {
         let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         guard let symbol = NSImage(systemSymbolName: "function",
-                                   accessibilityDescription: "LaTeX-Squigly")?
+                                   accessibilityDescription: "LaTeX-Squiggly")?
             .withSymbolConfiguration(configuration)
         else { return nil }
 
@@ -240,7 +240,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             statusTitle = "Converting as you type"
         }
-        statusItem.button?.toolTip = "LaTeX-Squigly \u{2014} " + statusTitle.lowercased()
+        statusItem.button?.toolTip = "LaTeX-Squiggly \u{2014} " + statusTitle.lowercased()
 
         let status = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
         status.isEnabled = false
@@ -303,7 +303,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
-        menu.addItem(NSMenuItem(title: "Quit LaTeX-Squigly",
+        menu.addItem(NSMenuItem(title: "Quit LaTeX-Squiggly",
                                 action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: ""))
 
@@ -345,7 +345,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let appItem = NSMenuItem()
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit LaTeX-Squigly",
+        appMenu.addItem(withTitle: "Quit LaTeX-Squiggly",
                         action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
         mainMenu.addItem(appItem)

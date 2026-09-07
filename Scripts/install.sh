@@ -19,7 +19,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="${APP_NAME:-LaTeX-Squigly}"
+APP_NAME="${APP_NAME:-LaTeX-Squiggly}"
 INSTALL_DIR="${INSTALL_DIR:-/Applications}"
 TARGET="$INSTALL_DIR/$APP_NAME.app"
 
@@ -31,7 +31,7 @@ fi
 
 # Use the stable signing identity when it exists, so macOS keeps the
 # Accessibility grant across upgrades instead of asking again every time.
-IDENTITY_NAME="${SIGN_IDENTITY_NAME:-LaTeX-Squigly Dev}"
+IDENTITY_NAME="${SIGN_IDENTITY_NAME:-LaTeX-Squiggly Dev}"
 if security find-certificate -c "$IDENTITY_NAME" >/dev/null 2>&1; then
     export SIGN_IDENTITY="$IDENTITY_NAME"
 else

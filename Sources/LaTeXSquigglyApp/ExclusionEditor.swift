@@ -188,7 +188,7 @@ final class ExclusionEditor: NSObject, NSWindowDelegate {
         panel.canChooseDirectories = false
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         panel.prompt = "Exclude"
-        panel.message = "Choose apps LaTeX-Squigly should leave alone."
+        panel.message = "Choose apps LaTeX-Squiggly should leave alone."
 
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK else { return }
@@ -247,7 +247,7 @@ final class ExclusionEditor: NSObject, NSWindowDelegate {
         alert.messageText = "Restore the default exclusions?"
         alert.informativeText =
             "Everything you have added or removed will be replaced by the apps and sites "
-            + "LaTeX-Squigly ships with."
+            + "LaTeX-Squiggly ships with."
         alert.addButton(withTitle: "Restore")
         alert.addButton(withTitle: "Cancel")
         alert.alertStyle = .warning

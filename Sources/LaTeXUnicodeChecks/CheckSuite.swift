@@ -5,7 +5,7 @@ public struct CheckGroup {
 }
 
 /// The whole test suite, in one place, runnable from either
-/// `latex-squigly-check` or `swift test`.
+/// `latex-squiggly-check` or `swift test`.
 public enum CheckSuite {
 
     public static let groups: [CheckGroup] = [

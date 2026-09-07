@@ -1,4 +1,4 @@
-# LaTeX-Squigly
+# LaTeX-Squiggly
 
 An inline LaTeX-to-Unicode menu bar app for macOS. Type `\alpha` or `\int_5^6`
 in any app and it becomes `α` or `∫₅⁶` in place — real text, never an image.
@@ -61,7 +61,7 @@ app: a missed conversion costs a keystroke, a wrong one costs a document.
 Ask the app what it currently sees:
 
 ```
-/Applications/LaTeX-Squigly.app/Contents/MacOS/LaTeX-Squigly --diagnose
+/Applications/LaTeX-Squiggly.app/Contents/MacOS/LaTeX-Squiggly --diagnose
 ```
 
 It lists every rule and, for each running browser, what it can read and what it
@@ -74,7 +74,7 @@ it too.
 ```
 Scripts/setup-signing.sh    once, BEFORE the first install
 Scripts/install.sh          build from source, install to /Applications
-open /Applications/LaTeX-Squigly.app
+open /Applications/LaTeX-Squiggly.app
 ```
 
 Order matters. macOS ties the Accessibility grant to the code signature, so
@@ -82,7 +82,7 @@ signing after you have granted permission invalidates the grant. If the app
 ever stops responding to what you type, ask it why:
 
 ```
-/Applications/LaTeX-Squigly.app/Contents/MacOS/LaTeX-Squigly --diagnose
+/Applications/LaTeX-Squiggly.app/Contents/MacOS/LaTeX-Squiggly --diagnose
 ```
 
 Then grant **Accessibility** (to replace text) and **Input Monitoring** (to
@@ -95,7 +95,7 @@ app switch and shortcut.
 ## Running the tests
 
 ```
-swift run latex-squigly-check     # works with Command Line Tools alone
+swift run latex-squiggly-check     # works with Command Line Tools alone
 swift test                        # requires Xcode
 ```
 
@@ -103,7 +103,7 @@ Both run the same suite. On macOS, XCTest *and* swift-testing ship inside
 `Xcode.app`, so `swift test` cannot work on a machine with only the Command
 Line Tools installed. The expectations therefore live in a plain-Swift target,
 `Sources/LaTeXUnicodeChecks`, with two thin front ends: the
-`latex-squigly-check` executable and a `Tests/LaTeXUnicodeTests` wrapper. There
+`latex-squiggly-check` executable and a `Tests/LaTeXUnicodeTests` wrapper. There
 is exactly one copy of every expectation.
 
 Xcode is on the critical path for Phase 1 anyway (AppKit app bundle, code
@@ -114,10 +114,10 @@ Current status: **1674 checks passing.**
 ## Trying conversions by hand
 
 ```
-swift run latex-squigly '\int_5^6'          # one-shot
-swift run latex-squigly                      # interactive, one fragment per line
-echo '\alpha' | swift run latex-squigly      # pipe
-swift run latex-squigly -c '\R'              # also print U+ values
+swift run latex-squiggly '\int_5^6'          # one-shot
+swift run latex-squiggly                      # interactive, one fragment per line
+echo '\alpha' | swift run latex-squiggly      # pipe
+swift run latex-squiggly -c '\R'              # also print U+ values
 ```
 
 Replacement text goes to stdout and explanations to stderr, so the tool
@@ -338,7 +338,7 @@ finds the blackboard bold letters without knowing they are called that. Double-
 click copies the glyph; there is a button for the command.
 
 ```
-open -a LaTeX-Squigly --args --symbols   # opens the browser directly
+open -a LaTeX-Squiggly --args --symbols   # opens the browser directly
 ```
 
 ## Signing and distribution
@@ -400,7 +400,7 @@ Sources/AppSuppression/        Phase 2 rules, pure
   DefaultExclusions.swift      what ships excluded, and what is found on disk
   KnownBrowsers.swift          which apps get asked about their page
 Sources/InputTracking/         Phase 1 typing logic, pure
-Sources/LaTeXSquiglyApp/       the menu bar app
+Sources/LaTeXSquigglyApp/       the menu bar app
   EventTapController.swift     the tap; buffering, terminators, suppression
   FrontmostAppMonitor.swift    which app is in front, and which page
   BrowserPageReader.swift      the Accessibility reads; see the table above
@@ -408,9 +408,9 @@ Sources/LaTeXSquiglyApp/       the menu bar app
   ExclusionStore.swift         persistence, defaults, on-disk discovery
   ExclusionEditor.swift        the list editor
 Sources/LaTeXUnicodeChecks/    the test suite (no XCTest)
-Sources/latex-squigly-check/   CLI runner
+Sources/latex-squiggly-check/   CLI runner
 Tests/LaTeXUnicodeTests/       swift test wrapper
 Tools/generate_tables.py       table generator
-Sources/latex-squigly/         convert CLI for trying things by hand
+Sources/latex-squiggly/         convert CLI for trying things by hand
 Scripts/                       signing, bundling, install
 ```

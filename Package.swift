@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "LaTeXSquigly",
+    name: "LaTeXSquiggly",
     platforms: [.macOS(.v13)],
     products: [
         .library(name: "LaTeXUnicode", targets: ["LaTeXUnicode"]),
         .library(name: "InputTracking", targets: ["InputTracking"]),
         .library(name: "AppSuppression", targets: ["AppSuppression"]),
-        .executable(name: "LaTeXSquiglyApp", targets: ["LaTeXSquiglyApp"]),
-        .executable(name: "latex-squigly", targets: ["latex-squigly"]),
-        .executable(name: "latex-squigly-check", targets: ["latex-squigly-check"]),
+        .executable(name: "LaTeXSquigglyApp", targets: ["LaTeXSquigglyApp"]),
+        .executable(name: "latex-squiggly", targets: ["latex-squiggly"]),
+        .executable(name: "latex-squiggly-check", targets: ["latex-squiggly-check"]),
     ],
     targets: [
         // Phase 0: the conversion engine. No UI, no system APIs, no dependencies.
@@ -26,19 +26,19 @@ let package = Package(
         .target(name: "AppSuppression"),
 
         // Phase 1: the menu bar app. Bundle it with Scripts/make-app.sh.
-        .executableTarget(name: "LaTeXSquiglyApp",
+        .executableTarget(name: "LaTeXSquigglyApp",
                           dependencies: ["LaTeXUnicode", "InputTracking", "AppSuppression"]),
 
-        // Try conversions by hand: `swift run latex-squigly`.
-        .executableTarget(name: "latex-squigly", dependencies: ["LaTeXUnicode", "InputTracking"]),
+        // Try conversions by hand: `swift run latex-squiggly`.
+        .executableTarget(name: "latex-squiggly", dependencies: ["LaTeXUnicode", "InputTracking"]),
 
         // The test suite proper, written without XCTest so it can run on a
         // machine that has only the Command Line Tools installed.
         .target(name: "LaTeXUnicodeChecks",
                 dependencies: ["LaTeXUnicode", "InputTracking", "AppSuppression"]),
 
-        // Runs the suite: `swift run latex-squigly-check`.
-        .executableTarget(name: "latex-squigly-check", dependencies: ["LaTeXUnicodeChecks"]),
+        // Runs the suite: `swift run latex-squiggly-check`.
+        .executableTarget(name: "latex-squiggly-check", dependencies: ["LaTeXUnicodeChecks"]),
 
         // The same suite under `swift test`. Needs Xcode; see README.
         .testTarget(name: "LaTeXUnicodeTests", dependencies: ["LaTeXUnicodeChecks"]),

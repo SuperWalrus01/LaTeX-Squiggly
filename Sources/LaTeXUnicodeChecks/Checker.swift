@@ -13,7 +13,7 @@ public struct CheckFailure {
 /// be verifiable with only the Command Line Tools installed.
 ///
 /// `Tests/LaTeXUnicodeTests` wraps this for `swift test`, and
-/// `latex-squigly-check` runs it directly. There is only ever one copy of the
+/// `latex-squiggly-check` runs it directly. There is only ever one copy of the
 /// expectations.
 public final class Checker {
 
