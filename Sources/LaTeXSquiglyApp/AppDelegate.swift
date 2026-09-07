@@ -1,18 +1,22 @@
 import AppKit
+import AppSuppression
 import InputTracking
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    /// Off on first launch, deliberately. There is no per-app suppression, so
-    /// an always-on replacement rewrites LaTeX source as you type it. The
-    /// choice to enable it is the user's.
+    /// On from the first launch, which only became a defensible default with
+    /// Phase 2: an always-on replacement with no exclusion list rewrites LaTeX
+    /// source as you type it, and the app used to have no way of knowing.
     private static let enabledKey = "conversionEnabled"
 
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let tap = EventTapController()
     private let notices = NoticePanel()
     private let browser = SymbolBrowser()
+    private let exclusions = ExclusionStore()
+    private lazy var gate = SuppressionGate(store: exclusions)
+    private lazy var exclusionEditor = ExclusionEditor(store: exclusions)
 
     private var permissions = PermissionState()
     private var permissionTimer: Timer?
@@ -27,6 +31,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         tap.onNotice = { [weak self] message in self?.notices.show(message) }
         tap.onTapDisabled = { [weak self] in self?.handleTapDisabled() }
+        tap.suppression = gate
+
+        // A change of app or of tab means the buffer describes text somewhere
+        // we can no longer see, and may describe text we are no longer allowed
+        // to touch.
+        // Rebuilding the menu is deferred: this fires from inside the event
+        // tap callback on the path that re-reads the page before typing, and
+        // AppKit work there is exactly what disables a tap.
+        gate.onChange = { [weak self] _ in
+            self?.tap.resetBuffer()
+            DispatchQueue.main.async { self?.rebuildMenu() }
+        }
+
+        // Picks up a TeX editor installed since the last launch. Anything the
+        // user has deleted from the list stays deleted.
+        exclusions.discoverInstalledApplications()
+        gate.start()
 
         installMainMenu()
         permissions = Permissions.current()
@@ -53,6 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         permissionTimer?.invalidate()
         tap.stop()
+        gate.stop()
     }
 
     private var isFirstRun: Bool {
@@ -61,24 +83,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showWelcome() {
         // Recording the preference is what makes this the *first* run only.
-        isEnabled = false
+        isEnabled = true
+
+        let excluded = exclusions.list.apps.count
 
         let alert = NSAlert()
         alert.messageText = "LaTeX-Squigly is running in your menu bar"
         alert.informativeText =
             "Look for the \u{0192} icon near the clock, at the top right of your screen.\n\n"
-            + "Conversion is switched OFF right now. It needs two macOS permissions "
-            + "before it can work, and there is no per-app exclusion list \u{2014} so turn it "
-            + "off before writing .tex files or using Overleaf, or it will convert your "
-            + "source as you type it.\n\nNothing you type is stored or sent anywhere."
+            + "It stays out of the way where LaTeX source is written: "
+            + "\(excluded) app\(excluded == 1 ? "" : "s") on this Mac "
+            + "\(excluded == 1 ? "is" : "are") already excluded, and so is Overleaf in any "
+            + "browser. Add your own from the menu.\n\n"
+            + "Two macOS permissions are needed before it can type for you. "
+            + "Nothing you type is stored or sent anywhere."
         alert.addButton(withTitle: "Set Up Now")
         alert.addButton(withTitle: "Later")
         alert.alertStyle = .informational
 
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
-            isEnabled = true
             startTapIfPermitted()
+        } else {
+            isEnabled = false
             rebuildMenu()
         }
     }
@@ -91,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         permissions = latest
 
         if isEnabled, !latest.allGranted, tap.isRunning {
-            tap.stop()
+            stopConverting()
             notices.show("Conversion stopped: \(latest.missing.map(\.title).joined(separator: " and ")) permission was turned off.")
         } else if isEnabled, latest.allGranted, !tap.isRunning {
             startTapIfPermitted()
@@ -112,7 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if isEnabled {
             startTapIfPermitted()
         } else {
-            tap.stop()
+            stopConverting()
         }
         rebuildMenu()
     }
@@ -123,10 +150,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             promptForMissingPermissions()
             return
         }
-        if !tap.start() {
+        if tap.start() {
+            // Browser pages are only read while conversion is actually
+            // running: see FrontmostAppMonitor.readsPages.
+            gate.readsPages = true
+        } else {
             notices.show("Could not start the keyboard listener. Check Accessibility and Input Monitoring in System Settings.")
         }
         rebuildMenu()
+    }
+
+    private func stopConverting() {
+        tap.stop()
+        gate.readsPages = false
     }
 
     private func promptForMissingPermissions() {
@@ -152,9 +188,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: Status item
 
-    /// SF Symbols has no `function.slash`, so the off state is composited.
+    /// SF Symbols has no `function.slash`, so the inactive state is composited.
     /// Dimming the icon instead was worse: a faded \u{0192} in the menu bar is
     /// invisible, which makes "off" indistinguishable from "crashed".
+    ///
+    /// Two states, not three. The icon answers "is it converting right now",
+    /// which is the same answer whether the app is switched off or merely
+    /// staying quiet in Cursor; the menu answers "why not". A third glyph that
+    /// meant "off, but for a different reason" would be read as neither.
     private func statusImage(active: Bool) -> NSImage? {
         let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         guard let symbol = NSImage(systemSymbolName: "function",
@@ -182,19 +223,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func rebuildMenu() {
-        let running = tap.isRunning
-        statusItem.button?.image = statusImage(active: running)
-        statusItem.button?.toolTip = running
-            ? "LaTeX-Squigly \u{2014} converting as you type"
-            : "LaTeX-Squigly \u{2014} off"
+        let suppression = gate.cached
+        let converting = tap.isRunning && !suppression.isSuppressed
+
+        statusItem.button?.image = statusImage(active: converting)
 
         let menu = NSMenu()
 
-        let status = NSMenuItem(
-            title: running ? "Converting as you type" : (isEnabled ? "Paused \u{2014} permission needed" : "Off"),
-            action: nil, keyEquivalent: "")
+        let statusTitle: String
+        if !isEnabled {
+            statusTitle = "Off"
+        } else if !tap.isRunning {
+            statusTitle = "Paused \u{2014} permission needed"
+        } else if let reason = suppression.reason {
+            statusTitle = reason.summary
+        } else {
+            statusTitle = "Converting as you type"
+        }
+        statusItem.button?.toolTip = "LaTeX-Squigly \u{2014} " + statusTitle.lowercased()
+
+        let status = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
         status.isEnabled = false
         menu.addItem(status)
+
+        // Staying quiet looks exactly like being broken unless the app says
+        // which rule it is obeying.
+        if tap.isRunning, let reason = suppression.reason {
+            let detail = NSMenuItem(title: reason.explanation, action: nil, keyEquivalent: "")
+            detail.isEnabled = false
+            menu.addItem(detail)
+        }
+
         menu.addItem(.separator())
 
         let toggle = NSMenuItem(title: "Enable conversion",
@@ -215,6 +274,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
+        // One click to fix a miss. A default list cannot know about every TeX
+        // editor, and the moment the user notices is the moment they are
+        // looking at the wrong app.
+        if gate.context.bundleID != nil {
+            let name = gate.context.displayName
+            let item = NSMenuItem(title: "Do not convert in \(name)",
+                                  action: #selector(toggleFrontmostApplication),
+                                  keyEquivalent: "")
+            item.target = self
+            item.state = gate.frontmostApplicationIsExcluded ? .on : .off
+            menu.addItem(item)
+        }
+
+        let editor = NSMenuItem(title: "Excluded Apps and Sites\u{2026}",
+                                action: #selector(showExclusions),
+                                keyEquivalent: "")
+        editor.target = self
+        menu.addItem(editor)
+
+        menu.addItem(.separator())
+
         let symbols = NSMenuItem(title: "Symbols\u{2026}",
                                  action: #selector(showBrowser),
                                  keyEquivalent: "")
@@ -223,19 +303,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
-        // No per-app suppression exists. A tester who does not know that will
-        // find out by corrupting a document, so say it where they will look.
-        let warning = NSMenuItem(title: "Turn off before writing .tex or Overleaf",
-                                 action: nil, keyEquivalent: "")
-        warning.isEnabled = false
-        menu.addItem(warning)
-        menu.addItem(.separator())
-
         menu.addItem(NSMenuItem(title: "Quit LaTeX-Squigly",
                                 action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: ""))
 
         statusItem.menu = menu
+    }
+
+    /// The frontmost app is whatever was in front before the menu opened:
+    /// `FrontmostAppMonitor` ignores our own activation for exactly this.
+    @objc private func toggleFrontmostApplication() {
+        guard let bundleID = gate.context.bundleID else { return }
+        if gate.frontmostApplicationIsExcluded {
+            exclusions.removeApp(bundleID: bundleID)
+        } else {
+            exclusions.exclude(bundleID: bundleID, name: gate.context.displayName)
+        }
+        tap.resetBuffer()
+        rebuildMenu()
+    }
+
+    @objc private func showExclusions() {
+        exclusionEditor.show()
     }
 
     @objc private func openPermissionSettings(_ sender: NSMenuItem) {

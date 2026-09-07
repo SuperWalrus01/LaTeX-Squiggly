@@ -4,7 +4,7 @@ public struct CheckGroup {
     public let run: (Checker) -> Void
 }
 
-/// The whole Phase 0 test suite, in one place, runnable from either
+/// The whole test suite, in one place, runnable from either
 /// `latex-squigly-check` or `swift test`.
 public enum CheckSuite {
 
@@ -17,6 +17,7 @@ public enum CheckSuite {
         CheckGroup(name: "Fallbacks", run: runFallbackChecks),
         CheckGroup(name: "Conversion", run: runConversionChecks),
         CheckGroup(name: "Input tracking", run: runInputTrackingChecks),
+        CheckGroup(name: "Suppression", run: runSuppressionChecks),
     ]
 
     /// Runs one group and returns its checker.

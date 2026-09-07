@@ -5,17 +5,69 @@ in any app and it becomes `α` or `∫₅⁶` in place — real text, never an i
 
 - **Phase 0 — conversion engine.** Done. Pure Swift, no system APIs.
 - **Phase 1 — text replacement.** Done. Event tap, replacement, permissions.
-- **Phase 2 — per-app suppression.** **Not started.** See the warning below.
-- **Phase 3 — menu bar UI.** Done, minus the exclusion editor (needs Phase 2).
+- **Phase 2 — per-app suppression.** Done. Exclusion list, per-site rules.
+- **Phase 3 — menu bar UI.** Done. Symbol browser and exclusion editor.
 
-## ⚠️ Phase 2 has not landed
+## Per-app suppression
 
-There is no per-app exclusion list yet, so the app cannot tell a chat window
-from a `.tex` file. **Turn it off before editing LaTeX source or opening
-Overleaf**, or it will convert your `\alpha` into `α` and corrupt the document.
+In a `.tex` file or on Overleaf, `\alpha` has to stay `\alpha`. An app that
+corrupts LaTeX source is worse than no app, so this is core behaviour rather
+than a preference, and it is why conversion can now be on by default.
 
-That is why conversion **ships disabled** and has to be switched on from the
-menu bar each time you install. Do not hand this to a tester without saying so.
+**Applications** are matched by bundle identifier. The shipped defaults cover
+terminals, code editors and the TeX editors, but only produce a rule for
+software you actually have — the list in the editor is short and true rather
+than a wall of apps you have never installed. Identifiers are never written
+from memory: the well-known ones are checked against LaunchServices, and the
+TeX editors are found by name in `/Applications` and have their real identifier
+read off the bundle. Anything missed is one click to fix, from **Do not convert
+in ‹app›** in the menu.
+
+**Websites** are the case the phase exists for: Overleaf is not an app, it is a
+tab in the same browser you chat in. The frontmost browser's page is read
+through the Accessibility API — the permission the app already needs in order
+to type, so there is no extra prompt — and matched against a host list that
+ships with `overleaf.com` and its cousins. A host rule matches subdomains, so
+`www.` and `fr.` are covered; `notoverleaf.com` is not.
+
+The URL is compared and dropped. It is never stored, logged or transmitted, and
+page contents are never read. Pages are only read while conversion is actually
+running.
+
+### What browsers actually expose
+
+Measured on macOS 15.6, against Safari 26 and Chrome 152 — not assumed, because
+the received wisdom here is wrong in both directions:
+
+| | Page URL | Cost | How |
+|---|---|---|---|
+| Chrome, Chromium family | Yes | 2.8 ms avg | `AXDocument` on the focused window, and an `AXWebArea` under the caret |
+| Safari | Yes | 12 ms avg, 109 ms worst | `AXWebArea` six levels down; it does **not** answer `AXDocument`, contrary to the usual claim |
+| Firefox family | No | — | Window title only |
+
+Two consequences are baked into the code. Safari's descent is skipped on the
+path that runs inside the event tap callback, where 109 ms would be felt as a
+stuck keystroke — that path relies on the caret being inside the page, which it
+is whenever there is something to convert. And `AXManualAccessibility`, the
+supposed Chromium opt-in, returns `kAXErrorAttributeUnsupported` on both
+browsers; it is not set, because neither needs it.
+
+Where only the title can be read, site rules fall back to matching it — an
+Overleaf tab is titled "Overleaf" whatever the browser. A browser that will say
+nothing at all is suppressed, and that is a setting you can turn off if you
+never open Overleaf. The reasoning is the same one that runs through the whole
+app: a missed conversion costs a keystroke, a wrong one costs a document.
+
+Ask the app what it currently sees:
+
+```
+/Applications/LaTeX-Squigly.app/Contents/MacOS/LaTeX-Squigly --diagnose
+```
+
+It lists every rule and, for each running browser, what it can read and what it
+would do. Hosts are printed rather than whole URLs — an Overleaf link carries a
+share token, and a diagnostic people paste into a bug report should not carry
+it too.
 
 ## Running the app
 
@@ -34,7 +86,7 @@ ever stops responding to what you type, ask it why:
 ```
 
 Then grant **Accessibility** (to replace text) and **Input Monitoring** (to
-notice you typing) when the menu bar item asks, and tick *Enable conversion*.
+notice you typing) when the menu bar item asks.
 
 Nothing typed is stored or transmitted. The rolling buffer is 64 characters,
 in memory only, and is discarded on every command, Return, arrow key, click,
@@ -57,7 +109,7 @@ is exactly one copy of every expectation.
 Xcode is on the critical path for Phase 1 anyway (AppKit app bundle, code
 signing), so this is a stopgap, not a permanent shape.
 
-Current status: **1479 checks passing.**
+Current status: **1674 checks passing.**
 
 ## Trying conversions by hand
 
@@ -271,8 +323,14 @@ its own output instead of feeding on it.
 ## The menu
 
 The status item shows state at a glance — a plain ƒ when converting, a
-struck-through one when off — and carries the enable toggle, permission
-shortcuts when something is missing, and **Symbols…**.
+struck-through one when not — and carries the enable toggle, permission
+shortcuts when something is missing, **Do not convert in ‹app›**,
+**Excluded Apps and Sites…** and **Symbols…**.
+
+Two icon states, not three. The icon answers "is it converting right now",
+which has the same answer whether the app is switched off or merely staying
+quiet in Cursor; the menu answers "why not", naming the rule it is obeying. A
+third glyph meaning "off, but for another reason" would be read as neither.
 
 The symbol browser searches all 202 symbols by command, Unicode name and
 category at once, so "greek capital" narrows to eleven rows and "double-struck"
@@ -336,6 +394,19 @@ Sources/LaTeXUnicode/          engine
   ScriptTables.swift           generated
   TextOperators.swift          \sin, \log, … → upright roman text
   UnsupportedCommands.swift    recognised-but-refused, with user-facing reasons
+Sources/AppSuppression/        Phase 2 rules, pure
+  AppContext.swift             what is frontmost, and which page if a browser
+  ExclusionList.swift          the rules, the decision, host matching
+  DefaultExclusions.swift      what ships excluded, and what is found on disk
+  KnownBrowsers.swift          which apps get asked about their page
+Sources/InputTracking/         Phase 1 typing logic, pure
+Sources/LaTeXSquiglyApp/       the menu bar app
+  EventTapController.swift     the tap; buffering, terminators, suppression
+  FrontmostAppMonitor.swift    which app is in front, and which page
+  BrowserPageReader.swift      the Accessibility reads; see the table above
+  SuppressionGate.swift        cached per keystroke, verified before typing
+  ExclusionStore.swift         persistence, defaults, on-disk discovery
+  ExclusionEditor.swift        the list editor
 Sources/LaTeXUnicodeChecks/    the test suite (no XCTest)
 Sources/latex-squigly-check/   CLI runner
 Tests/LaTeXUnicodeTests/       swift test wrapper

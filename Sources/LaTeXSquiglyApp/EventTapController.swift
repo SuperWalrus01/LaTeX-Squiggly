@@ -1,4 +1,5 @@
 import AppKit
+import AppSuppression
 import Carbon.HIToolbox
 import InputTracking
 
@@ -18,6 +19,10 @@ final class EventTapController {
     var onNotice: ((String) -> Void)?
     /// Called when macOS disabled the tap under us, usually a revoked permission.
     var onTapDisabled: (() -> Void)?
+
+    /// Decides whether conversion is allowed wherever the user is typing.
+    /// Nil only in tests and in the diagnostics path, where it means "allowed".
+    var suppression: SuppressionGate?
 
     private(set) var isRunning = false
 
@@ -72,6 +77,12 @@ final class EventTapController {
     }
 
     /// Switching apps moves the cursor somewhere we know nothing about.
+    /// The buffer describes text in front of a cursor that has since moved, or
+    /// text in a place we are no longer allowed to touch.
+    func resetBuffer() {
+        buffer.reset()
+    }
+
     private func observeApplicationSwitches() {
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
@@ -105,6 +116,16 @@ final class EventTapController {
         // Our own synthetic keystrokes come back around; ignore them or the
         // replacement feeds itself.
         if event.getIntegerValueField(.eventSourceUserData) == TextReplacer.syntheticMarker {
+            return passthrough
+        }
+
+        // Per-app suppression, checked before anything is remembered: in an
+        // excluded app no buffer accumulates, so a replacement there is not
+        // declined late, it is structurally impossible. The cached answer is
+        // used because this runs on every keystroke; the fresh one is taken
+        // below, once, on the path that actually types.
+        if suppression?.cached.isSuppressed == true {
+            if !buffer.isEmpty { buffer.reset() }
             return passthrough
         }
 
@@ -159,6 +180,18 @@ final class EventTapController {
 
         case .replace(let replacement):
             buffer.reset()
+
+            // A browser tab can change without the frontmost application
+            // changing, so the cached answer above may describe the page the
+            // user was on a moment ago. This is the last instant at which
+            // asking again is still free of consequences.
+            if let decision = suppression?.verified(), let reason = decision.reason {
+                DispatchQueue.main.async { [weak self] in
+                    self?.onNotice?("Left as you typed it \u{2014} \(reason.explanation).")
+                }
+                return passthrough
+            }
+
             TextReplacer.perform(replacement)
             if let notice = replacement.notice {
                 // UI work must not run inside the callback.
