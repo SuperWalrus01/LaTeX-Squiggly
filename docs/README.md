@@ -9,7 +9,7 @@ docs/
   assets/styles.css   one stylesheet, tokens for light and dark
   assets/app.js       the live demo and the symbol browser
   assets/data.js      generated — the app's own tables
-  assets/*.png        the artwork, the favicon, the link card
+  assets/*.png        the artwork, the favicon, the link cards
 ```
 
 ## Publishing it
@@ -39,6 +39,11 @@ Nor are the four images, which come out of the artwork in `Assets/`:
 Scripts/make-icons.sh                  # for the iconset the favicon is cut from
 swift Tools/make_site_images.swift
 ```
+
+`github-card.png` is not used by the site. It is the 1280x640 image GitHub
+wants for a repository's social preview, uploaded by hand in **Settings ->
+General -> Social preview**, and it is generated here so it stays in step with
+the artwork.
 
 `wordmark.png` and `mark.png` are alpha masks, not pictures — the page inks
 them from a CSS custom property, so one file serves both themes. Their grey

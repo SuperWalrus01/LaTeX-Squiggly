@@ -215,51 +215,57 @@ func writeFavicon(side: Int, as name: String) {
 
 writeFavicon(side: 256, as: "favicon.png")
 
-// The link card, at the 1.91:1 the scrapers crop to.
-let cardW = 1200, cardH = 630
-let card = CGContext(data: nil, width: cardW, height: cardH, bitsPerComponent: 8, bytesPerRow: 0,
-                     space: CGColorSpaceCreateDeviceRGB(),
-                     bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-card.interpolationQuality = .high
-card.setFillColor(CGColor(red: 250/255, green: 247/255, blue: 238/255, alpha: 1))
-card.fill(CGRect(x: 0, y: 0, width: cardW, height: cardH))
+// The link card. Two sizes, because the two places that show one disagree:
+// Open Graph scrapers crop to roughly 1.91:1, and GitHub's social preview
+// wants a flat 2:1. Same drawing, different canvas.
+func drawCard(width cardW: Int, height cardH: Int, as name: String) {
+    let card = CGContext(data: nil, width: cardW, height: cardH, bitsPerComponent: 8, bytesPerRow: 0,
+                         space: CGColorSpaceCreateDeviceRGB(),
+                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    card.interpolationQuality = .high
+    card.setFillColor(CGColor(red: 250/255, green: 247/255, blue: 238/255, alpha: 1))
+    card.fill(CGRect(x: 0, y: 0, width: cardW, height: cardH))
 
-// Painted through the coverage rather than through the mask file: Core
-// Graphics reads a clipping mask the other way up from CSS, and one artwork
-// that means two opposite things is a trap worth not setting.
-let art = load("Assets/app-icon.png")
-let (values, w, h, box) = coverage(of: art, keyingPaper: true)
-let inkW = 560.0, inkH = inkW * box.height / box.width
-let inkRect = CGRect(x: (Double(cardW) - inkW) / 2, y: Double(cardH) / 2 - inkH / 2 + 14,
-                     width: inkW, height: inkH)
+    // Painted through the coverage rather than through the mask file: Core
+    // Graphics reads a clipping mask the other way up from CSS, and one artwork
+    // that means two opposite things is a trap worth not setting.
+    let art = load("Assets/app-icon.png")
+    let (values, w, h, box) = coverage(of: art, keyingPaper: true)
+    let inkW = 560.0, inkH = inkW * box.height / box.width
+    let inkRect = CGRect(x: (Double(cardW) - inkW) / 2, y: Double(cardH) / 2 - inkH / 2 + 14,
+                         width: inkW, height: inkH)
 
-let cropped = greyImage(values, w, h).cropping(to: box)!
-let (cardCoverage, coverageH) = resampledCoverage(cropped, width: Int(inkW))
-var inkBytes = [UInt8](repeating: 0, count: Int(inkW) * coverageH * 4)
-for i in 0..<(Int(inkW) * coverageH) {
-    let a = Double(cardCoverage[i]) / 255
-    inkBytes[i*4]     = UInt8(226 * a)
-    inkBytes[i*4 + 1] = UInt8(102 * a)
-    inkBytes[i*4 + 2] = UInt8( 15 * a)
-    inkBytes[i*4 + 3] = UInt8(255 * a)
+    let cropped = greyImage(values, w, h).cropping(to: box)!
+    let (cardCoverage, coverageH) = resampledCoverage(cropped, width: Int(inkW))
+    var inkBytes = [UInt8](repeating: 0, count: Int(inkW) * coverageH * 4)
+    for i in 0..<(Int(inkW) * coverageH) {
+        let a = Double(cardCoverage[i]) / 255
+        inkBytes[i*4]     = UInt8(226 * a)
+        inkBytes[i*4 + 1] = UInt8(102 * a)
+        inkBytes[i*4 + 2] = UInt8( 15 * a)
+        inkBytes[i*4 + 3] = UInt8(255 * a)
+    }
+    inkBytes.withUnsafeMutableBytes { buffer in
+        let ctx = CGContext(data: buffer.baseAddress, width: Int(inkW), height: coverageH,
+                            bitsPerComponent: 8, bytesPerRow: Int(inkW) * 4,
+                            space: CGColorSpaceCreateDeviceRGB(),
+                            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        card.draw(ctx.makeImage()!, in: inkRect)
+    }
+
+    let caption = "Type \\alpha, press space, get \u{03B1}. In any app on your Mac."
+    let centred = NSMutableParagraphStyle(); centred.alignment = .center
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(cgContext: card, flipped: false)
+    caption.draw(in: NSRect(x: 100, y: 92, width: Double(cardW) - 200, height: 60),
+                 withAttributes: [
+                    .font: NSFont.systemFont(ofSize: 30, weight: .medium),
+                    .foregroundColor: NSColor(red: 92/255, green: 81/255, blue: 71/255, alpha: 1),
+                    .paragraphStyle: centred,
+                 ])
+    NSGraphicsContext.restoreGraphicsState()
+    writePNG(NSBitmapImageRep(cgImage: card.makeImage()!), name)
 }
-inkBytes.withUnsafeMutableBytes { buffer in
-    let ctx = CGContext(data: buffer.baseAddress, width: Int(inkW), height: coverageH,
-                        bitsPerComponent: 8, bytesPerRow: Int(inkW) * 4,
-                        space: CGColorSpaceCreateDeviceRGB(),
-                        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-    card.draw(ctx.makeImage()!, in: inkRect)
-}
 
-let caption = "Type \\alpha, press space, get \u{03B1} \u{2014} in any app on your Mac."
-let centred = NSMutableParagraphStyle(); centred.alignment = .center
-NSGraphicsContext.saveGraphicsState()
-NSGraphicsContext.current = NSGraphicsContext(cgContext: card, flipped: false)
-caption.draw(in: NSRect(x: 100, y: 92, width: Double(cardW) - 200, height: 60),
-             withAttributes: [
-                .font: NSFont.systemFont(ofSize: 30, weight: .medium),
-                .foregroundColor: NSColor(red: 92/255, green: 81/255, blue: 71/255, alpha: 1),
-                .paragraphStyle: centred,
-             ])
-NSGraphicsContext.restoreGraphicsState()
-writePNG(NSBitmapImageRep(cgImage: card.makeImage()!), "og-card.png")
+drawCard(width: 1200, height: 630, as: "og-card.png")        // the website
+drawCard(width: 1280, height: 640, as: "github-card.png")    // GitHub's social preview
