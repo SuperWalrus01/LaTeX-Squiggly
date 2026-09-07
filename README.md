@@ -515,3 +515,16 @@ docs/                          the site; see docs/README.md
 Sources/latex-squiggly/         convert CLI for trying things by hand
 Scripts/                       signing, bundling, install, icons
 ```
+
+## Licence
+
+[MIT](LICENSE). Use it for anything, including commercially; keep the copyright
+notice.
+
+There is no third-party code in it. The package declares no dependencies, and
+the symbol table was not copied from `unicode-math` or the W3C entity tables:
+`Tools/generate_tables.py` holds its own list of commands paired with Unicode
+*character names*, and resolves each name against the Unicode database at
+generation time. The command names themselves are of course Knuth's, Lamport's
+and the AMS's, and the characters are Unicode's, but names and codepoint
+assignments are facts rather than anyone's property.
