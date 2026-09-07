@@ -71,6 +71,10 @@ swift run latex-squigly -c '\R'              # also print U+ values
 Replacement text goes to stdout and explanations to stderr, so the tool
 composes. Exit status is 0 for converted and fallback, 1 for unsupported.
 
+It reports what the *app* would do, not just what the engine would do, so
+`$x^2$` shows `x²` rather than `$x²$`. Input the app would not fire on falls
+through to the raw engine result, which keeps the engine directly testable.
+
 ## API
 
 ```swift

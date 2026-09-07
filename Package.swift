@@ -24,7 +24,7 @@ let package = Package(
         .executableTarget(name: "LaTeXSquiglyApp", dependencies: ["LaTeXUnicode", "InputTracking"]),
 
         // Try conversions by hand: `swift run latex-squigly`.
-        .executableTarget(name: "latex-squigly", dependencies: ["LaTeXUnicode"]),
+        .executableTarget(name: "latex-squigly", dependencies: ["LaTeXUnicode", "InputTracking"]),
 
         // The test suite proper, written without XCTest so it can run on a
         // machine that has only the Command Line Tools installed.

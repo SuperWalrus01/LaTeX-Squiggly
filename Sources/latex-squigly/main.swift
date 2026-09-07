@@ -1,4 +1,5 @@
 import Foundation
+import InputTracking
 import LaTeXUnicode
 
 // A thin front end on the Phase 0 engine, for trying conversions by hand.
@@ -40,8 +41,28 @@ func codepoints(of text: String) -> String {
 
 /// - Parameter labelled: true in the interactive prompt, where readability
 ///   matters more than composability.
+/// What the app would do, not just what the engine would do.
+///
+/// The `$...$` rule lives in the trigger layer, so calling `convert` directly
+/// would report `$x²$` for something the app turns into `x²`. A tool for trying
+/// things out has to agree with the thing it is standing in for.
+func appResult(for input: String) -> ConversionResult {
+    switch TriggerDetector.outcome(buffer: input, terminator: " ") {
+    case .replace(let replacement):
+        // Drop the terminator the app types back.
+        let text = String(replacement.insert.dropLast())
+        if let notice = replacement.notice { return .fallback(text, reason: notice) }
+        return .converted(text)
+    case .refuse(_, let reason):
+        return .unsupported(reason: reason)
+    case .none:
+        // Not a trigger the app would fire on, so show the raw engine result.
+        return convert(input)
+    }
+}
+
 func report(_ input: String, labelled: Bool, showCodepoints: Bool) -> Int32 {
-    let result = convert(input)
+    let result = appResult(for: input)
 
     if let text = result.text {
         print(labelled ? "  \(text)" : text)
