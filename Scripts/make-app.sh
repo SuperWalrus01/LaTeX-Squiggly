@@ -10,6 +10,7 @@
 #   Scripts/make-app.sh                          ad-hoc signed, into build/
 #   SIGN_IDENTITY="LaTeX-Squiggly Dev" Scripts/make-app.sh   (the identity name
 #                                                            keeps its hyphen)
+#   DMG=1 Scripts/make-app.sh                    also produce a .dmg
 #   TARBALL=1 Scripts/make-app.sh                also produce a .tar.gz
 #
 # On the tarball: it is a convenience, NOT a Gatekeeper workaround. Tested on
@@ -102,4 +103,32 @@ if [ "${TARBALL:-0}" != "0" ]; then
     rm -f "$ARCHIVE"
     tar -czf "$ARCHIVE" -C "$OUT" "$APP_NAME.app"
     echo "Built $ARCHIVE"
+fi
+
+# A disk image is what a Mac user expects a Mac app to arrive in, and the
+# Applications symlink turns "where do I put this" into a drag. It buys no
+# Gatekeeper relief whatsoever — see the quarantine table in the README, where
+# a downloaded .dmg fares exactly as badly as a downloaded .tar.gz. This is
+# about the twenty seconds after the download, not about the warning.
+if [ "${DMG:-0}" != "0" ]; then
+    IMAGE="$OUT/$APP_SLUG-$VERSION.dmg"
+    STAGE="$(mktemp -d)"
+    trap 'rm -rf "$STAGE"' EXIT
+
+    cp -R "$APP" "$STAGE/"
+    ln -s /Applications "$STAGE/Applications"
+
+    rm -f "$IMAGE"
+    # UDZO is compressed and read-only, which is what a released image should
+    # be: nobody should be able to edit the copy they were sent.
+    hdiutil create -quiet \
+        -volname "$APP_NAME" \
+        -srcfolder "$STAGE" \
+        -format UDZO \
+        -ov "$IMAGE"
+
+    # The image is signed too. Without this the very first thing macOS says
+    # about the download is that it is damaged, rather than that it is unsigned.
+    codesign --force --sign "$SIGN_IDENTITY" --timestamp=none "$IMAGE"
+    echo "Built $IMAGE"
 fi

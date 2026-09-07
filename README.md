@@ -433,8 +433,14 @@ shortcut.
 
 Notarization is the only thing that removes that step, and it requires a
 Developer ID certificate, which requires the paid Apple Developer Program.
-Until then: ship source, and `make-app.sh TARBALL=1` for anyone who won't build
-it — with honest instructions about what they'll see.
+Until then: ship source, and `DMG=1 Scripts/make-app.sh` for anyone who won't
+build it — with honest instructions about what they'll see.
+
+The disk image carries an `Applications` symlink, so installing is a drag
+rather than a question, and is itself signed: an unsigned image makes the first
+thing macOS says about the download "damaged", which is both alarming and
+untrue. It buys no Gatekeeper relief — see the table above. `TARBALL=1` still
+produces a `.tar.gz` for anyone who prefers one.
 
 ## The site
 
