@@ -14,7 +14,7 @@ import LaTeXUnicode
 // converted and fallback, 1 for unsupported.
 
 let usage = """
-usage: latex-squiggly [-c|--codepoints] [-a|--app-only] [fragment ...]
+usage: latex-squiggly [-c|--codepoints] [-a|--app-only] [-k|--keep-scripts] [fragment ...]
 
   latex-squiggly '\\int_5^6'        convert one fragment
   latex-squiggly                    interactive, one fragment per line
@@ -24,6 +24,10 @@ usage: latex-squiggly [-c|--codepoints] [-a|--app-only] [fragment ...]
   -a, --app-only    report what the app would do and nothing more: a
                     fragment the app would not fire on is "left alone"
                     rather than run through the engine anyway
+  -k, --keep-scripts  keep a superscript or subscript Unicode cannot make,
+                    written the way it was typed, instead of refusing the
+                    whole fragment. The app's Scripts setting, on the
+                    command line.
 
 Replacement text goes to stdout, explanations to stderr.
 Exit status: 0 converted or fallback, 1 unsupported, 2 left alone.
@@ -51,8 +55,9 @@ func codepoints(of text: String) -> String {
 /// things out has to agree with the thing it is standing in for.
 /// - Returns: nil when the app would not fire on this at all, which only
 ///   `--app-only` distinguishes; see the `.none` case below.
-func appResult(for input: String, appOnly: Bool) -> ConversionResult? {
-    switch TriggerDetector.outcome(buffer: input, terminator: " ") {
+func appResult(for input: String, appOnly: Bool,
+               options: ConversionOptions) -> ConversionResult? {
+    switch TriggerDetector.outcome(buffer: input, terminator: " ", options: options) {
     case .replace(let replacement):
         // Drop the terminator the app types back.
         let text = String(replacement.insert.dropLast())
@@ -67,13 +72,14 @@ func appResult(for input: String, appOnly: Bool) -> ConversionResult? {
         // --app-only, say so instead: `x^2` converts here and does nothing in
         // the app, and anything quoting this tool as evidence of what the app
         // does needs to be able to tell those apart.
-        return appOnly ? nil : convert(input)
+        return appOnly ? nil : convert(input, options: options)
     }
 }
 
 func report(_ input: String, labelled: Bool, showCodepoints: Bool,
-            appOnly: Bool = false) -> Int32 {
-    guard let result = appResult(for: input, appOnly: appOnly) else {
+            appOnly: Bool = false,
+            options: ConversionOptions = .default) -> Int32 {
+    guard let result = appResult(for: input, appOnly: appOnly, options: options) else {
         labelled ? print("  left alone") : warn("left alone")
         return 2
     }
@@ -199,9 +205,13 @@ arguments.removeAll { $0 == "-c" || $0 == "--codepoints" }
 let appOnly = arguments.contains("-a") || arguments.contains("--app-only")
 arguments.removeAll { $0 == "-a" || $0 == "--app-only" }
 
+let keepScripts = arguments.contains("-k") || arguments.contains("--keep-scripts")
+arguments.removeAll { $0 == "-k" || $0 == "--keep-scripts" }
+let options = ConversionOptions(keepUnrenderableScripts: keepScripts)
+
 if !arguments.isEmpty {
     exit(report(arguments.joined(separator: " "), labelled: false,
-                showCodepoints: showCodepoints, appOnly: appOnly))
+                showCodepoints: showCodepoints, appOnly: appOnly, options: options))
 }
 
 if isatty(FileHandle.standardInput.fileDescriptor) != 0 {
@@ -214,14 +224,15 @@ if isatty(FileHandle.standardInput.fileDescriptor) != 0 {
             break
         }
         guard !line.isEmpty else { continue }
-        _ = report(line, labelled: true, showCodepoints: showCodepoints, appOnly: appOnly)
+        _ = report(line, labelled: true, showCodepoints: showCodepoints,
+                   appOnly: appOnly, options: options)
     }
 } else {
     var status: Int32 = 0
     while let line = readLine() {
         guard !line.isEmpty else { continue }
         if report(line, labelled: false, showCodepoints: showCodepoints,
-                  appOnly: appOnly) != 0 { status = 1 }
+                  appOnly: appOnly, options: options) != 0 { status = 1 }
     }
     exit(status)
 }

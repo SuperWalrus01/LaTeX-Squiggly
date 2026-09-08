@@ -3,15 +3,18 @@
 /// Accepts a whole fragment, not just a single command: literal text passes
 /// through untouched, so `convert("x^2 + \\alpha")` yields `x² + α`.
 ///
-/// The result is all-or-nothing. If any part of the input has no faithful
-/// Unicode form, the whole call returns `.unsupported` — a half-converted
-/// string is never produced.
-public func convert(_ latex: String) -> ConversionResult {
+/// The result is all-or-nothing by default. If any part of the input has no
+/// faithful Unicode form, the whole call returns `.unsupported` rather than a
+/// half-converted string.
+///
+/// `options.keepUnrenderableScripts` is the single exception, and it reports
+/// itself as a `.fallback` so the caller still has to explain it.
+public func convert(_ latex: String, options: ConversionOptions = .default) -> ConversionResult {
     guard !latex.isEmpty else {
         return .unsupported(reason: "There is nothing to convert.")
     }
     do {
-        let rendered = try Renderer.render(try Tokenizer.tokenize(latex))
+        let rendered = try Renderer.render(try Tokenizer.tokenize(latex), options: options)
         guard !rendered.fallbacks.isEmpty else {
             return .converted(rendered.text)
         }
@@ -53,11 +56,12 @@ private enum ScriptKind {
 
 private struct Renderer {
     let tokens: [Token]
+    let options: ConversionOptions
     var index = 0
     var out = Rendered()
 
-    static func render(_ tokens: [Token]) throws -> Rendered {
-        var renderer = Renderer(tokens: tokens)
+    static func render(_ tokens: [Token], options: ConversionOptions) throws -> Rendered {
+        var renderer = Renderer(tokens: tokens, options: options)
         try renderer.run()
         return renderer.out
     }
@@ -68,7 +72,7 @@ private struct Renderer {
             index += 1
             switch token {
             case .character(let c):     out.text.append(c)
-            case .group(let inner):     out.append(try Renderer.render(inner))
+            case .group(let inner):     out.append(try Renderer.render(inner, options: options))
             case .sup:                  try applyScript(.sup)
             case .sub:                  try applyScript(.sub)
             case .controlSymbol(let c): try emit(controlSymbol: c)
@@ -105,20 +109,56 @@ private struct Renderer {
         guard !unit.isEmpty else {
             throw UnsupportedInput(reason: "The \(kind.name) is empty.")
         }
-        guard !containsScript(unit) else {
-            throw UnsupportedInput(
-                reason: "Nested superscripts and subscripts have no Unicode form.")
+        // There is one size of raised character, so a script inside a script
+        // cannot be made smaller than the one around it.
+        if containsScript(unit) {
+            let reason = "Nested superscripts and subscripts have no Unicode form"
+            guard options.keepUnrenderableScripts else {
+                throw UnsupportedInput(reason: reason + ".")
+            }
+            keepAsTyped(kind, try Renderer.render(unit, options: options), because: reason)
+            return
         }
 
-        let inner = try Renderer.render(unit)
+        let inner = try Renderer.render(unit, options: options)
+
+        // Built whole before any of it is emitted. A script is all or nothing:
+        // half of `^{10}` raised and half of it not reads as a typo, and the
+        // fallback below needs an `out.text` with none of it written yet.
+        var raised = ""
         for character in inner.text {
             guard let mapped = kind.table[character] else {
-                throw UnsupportedInput(
-                    reason: "There is no Unicode \(kind.name) for \u{201C}\(character)\u{201D}.")
+                let reason = "There is no Unicode \(kind.name) for \u{201C}\(character)\u{201D}"
+                guard options.keepUnrenderableScripts else {
+                    throw UnsupportedInput(reason: reason + ".")
+                }
+                keepAsTyped(kind, inner, because: reason)
+                return
             }
-            out.text.append(mapped)
+            raised.append(mapped)
         }
+
+        out.text += raised
         out.fallbacks += inner.fallbacks
+    }
+
+    /// Writes a script that has no Unicode form back in the notation it was
+    /// typed in, rather than failing the fragment that contains it.
+    ///
+    /// Only reached with `keepUnrenderableScripts` on. Nothing around the
+    /// script is affected, so `\Sigma_{i=1}^\infty{a_i}` keeps every part that
+    /// does convert and loses only the one that cannot: `Σᵢ₌₁^∞aᵢ`.
+    ///
+    /// The argument is parenthesised unless it is a single character, for the
+    /// reason `\frac` parenthesises: `x^(n+1)` is unambiguous where `x^n+1`
+    /// says something else.
+    private mutating func keepAsTyped(_ kind: ScriptKind,
+                                      _ inner: Rendered,
+                                      because reason: String) {
+        let asTyped = String(kind.marker) + mathematical(parenthesised(inner.text))
+        out.text += asTyped
+        out.fallbacks += inner.fallbacks
+        out.fallbacks.append("\(reason), so it was left as \(asTyped).")
     }
 
     // MARK: Commands
@@ -176,8 +216,8 @@ private struct Renderer {
             throw UnsupportedInput(
                 reason: "\\\(name) needs two arguments, for example \\\(name){a}{b}.")
         }
-        let top = try Renderer.render(numerator)
-        let bottom = try Renderer.render(denominator)
+        let top = try Renderer.render(numerator, options: options)
+        let bottom = try Renderer.render(denominator, options: options)
         guard !top.text.isEmpty, !bottom.text.isEmpty else {
             throw UnsupportedInput(reason: "\\\(name) has an empty argument.")
         }
@@ -257,7 +297,7 @@ private struct Renderer {
                 throw UnsupportedInput(reason: "\\sqrt has a `[` that is never closed.")
             }
             index = scan + 1
-            degreeText = try Renderer.render(inner).text
+            degreeText = try Renderer.render(inner, options: options).text
 
             // An index that is missing or not a root produced honest-looking
             // nonsense: `\\sqrt[]{8}` came out as `8^(1/)` and `\\sqrt[0]{8}` as
@@ -278,7 +318,7 @@ private struct Renderer {
         guard let argument = nextUnit() else {
             throw UnsupportedInput(reason: "\\sqrt needs an argument, for example \\sqrt{2}.")
         }
-        let radicand = try Renderer.render(argument)
+        let radicand = try Renderer.render(argument, options: options)
         guard !radicand.text.isEmpty else {
             throw UnsupportedInput(reason: "\\sqrt has an empty argument.")
         }
@@ -300,8 +340,8 @@ private struct Renderer {
             throw UnsupportedInput(
                 reason: "\\\(name) needs two arguments, for example \\\(name){n}{k}.")
         }
-        let n = try Renderer.render(upper)
-        let k = try Renderer.render(lower)
+        let n = try Renderer.render(upper, options: options)
+        let k = try Renderer.render(lower, options: options)
         guard !n.text.isEmpty, !k.text.isEmpty else {
             throw UnsupportedInput(reason: "\\\(name) has an empty argument.")
         }
@@ -317,14 +357,14 @@ private struct Renderer {
         guard let unit = nextUnit() else {
             throw UnsupportedInput(reason: "\\\(name) needs an argument.")
         }
-        out.append(try Renderer.render(unit))
+        out.append(try Renderer.render(unit, options: options))
     }
 
     private mutating func emitBlackboardBold() throws {
         guard let unit = nextUnit() else {
             throw UnsupportedInput(reason: "\\mathbb needs a letter, for example \\mathbb{R}.")
         }
-        let letter = try Renderer.render(unit).text
+        let letter = try Renderer.render(unit, options: options).text
         guard letter.count == 1, let symbol = SymbolTable.symbols[letter] else {
             throw UnsupportedInput(
                 reason: "There is no double-struck Unicode letter for \u{201C}\(letter)\u{201D}.")
@@ -333,7 +373,7 @@ private struct Renderer {
     }
 
     private mutating func rejectEnvironment() throws {
-        guard let unit = nextUnit(), let name = try? Renderer.render(unit).text, !name.isEmpty else {
+        guard let unit = nextUnit(), let name = try? Renderer.render(unit, options: options).text, !name.isEmpty else {
             throw UnsupportedInput(
                 reason: "LaTeX environments need two-dimensional layout, which has no inline Unicode form.")
         }

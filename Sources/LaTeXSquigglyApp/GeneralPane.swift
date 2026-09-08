@@ -1,6 +1,6 @@
 import AppKit
 
-/// What the settings window shows first: the three switches, and the two
+/// What the settings window shows first: the four switches, and the two
 /// permissions everything else depends on.
 ///
 /// The permissions are here rather than only in the menu because the menu can
@@ -16,6 +16,7 @@ final class GeneralPane: NSViewController {
     private var conversionCheckbox: NSButton!
     private var loginCheckbox: NSButton!
     private var noticesCheckbox: NSButton!
+    private var scriptsCheckbox: NSButton!
     private var loginNote: NSTextField!
     private var permissionRows: [Permission: PermissionRow] = [:]
 
@@ -26,6 +27,8 @@ final class GeneralPane: NSViewController {
         loginCheckbox = checkbox("Open at login", #selector(toggleLogin))
         noticesCheckbox = checkbox("Show a notice when a command is refused or falls back",
                                    #selector(toggleNotices))
+        scriptsCheckbox = checkbox("Keep superscripts and subscripts that have no Unicode form",
+                                   #selector(toggleScripts))
 
         loginNote = note("")
         loginNote.isHidden = true
@@ -45,6 +48,14 @@ final class GeneralPane: NSViewController {
              note("The brief message under the menu bar that says a command was "
                   + "left as you typed it, and why. Messages about the app's own "
                   + "state are always shown.")],
+
+            [label("Scripts:"), scriptsCheckbox],
+            [NSGridCell.emptyContentView,
+             note("Unicode has no raised \u{221E}, so \\Sigma_{i=1}^\\infty{a_i} "
+                  + "cannot be converted and is normally left alone entirely. On, "
+                  + "the parts that have a form get one and the part that does not "
+                  + "keeps its caret: \u{03A3}\u{1D62}\u{208C}\u{2081}^\u{221E}a\u{1D62}. "
+                  + "The cost is converted characters and raw LaTeX on the same line.")],
 
             [label("Permissions:"), row(for: .accessibility)],
             [NSGridCell.emptyContentView, row(for: .inputMonitoring)],
@@ -82,7 +93,7 @@ final class GeneralPane: NSViewController {
             // Both panes are one size, so switching tabs moves nothing. A
             // settings window that resizes under the pointer is hard to aim at.
             content.widthAnchor.constraint(equalToConstant: 620),
-            content.heightAnchor.constraint(equalToConstant: 400),
+            content.heightAnchor.constraint(equalToConstant: 480),
         ])
 
         view = content
@@ -100,6 +111,7 @@ final class GeneralPane: NSViewController {
 
         conversionCheckbox.state = host?.conversionEnabled == true ? .on : .off
         noticesCheckbox.state = Preferences.showNotices ? .on : .off
+        scriptsCheckbox.state = Preferences.keepUnrenderableScripts ? .on : .off
 
         loginCheckbox.isEnabled = LoginItem.isAvailable
         loginCheckbox.state = LoginItem.isEnabled ? .on : .off
@@ -131,6 +143,12 @@ final class GeneralPane: NSViewController {
 
     @objc private func toggleNotices() {
         Preferences.showNotices = noticesCheckbox.state == .on
+    }
+
+    /// Nothing to notify: the event tap reads `Preferences` on each keystroke
+    /// rather than holding a copy, so the next command already sees this.
+    @objc private func toggleScripts() {
+        Preferences.keepUnrenderableScripts = scriptsCheckbox.state == .on
     }
 
     @objc private func toggleLogin() {

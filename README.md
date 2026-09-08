@@ -16,6 +16,15 @@ There is a Windows build, in [`windows/`](windows/), with its own
 [README](windows/README.md). It is one .exe, no installer, no admin rights, and
 Windows asks for no permission to run it.
 
+The parts that touch the operating system are where a port earns its keep or
+fails. On Windows that means the low-level keyboard hook, and the one thing to
+know about a low-level hook is that the thread which installs it is part of the
+path every keystroke on the machine takes. The first build installed it from the
+UI thread, which made the whole system stutter behind the settings window and let
+Windows silently drop the hook for being slow. It now runs on a thread of its
+own that does nothing else, allocates nothing per keystroke and never waits on
+the UI. `windows/README.md` explains the design and what follows from it.
+
 The engine is not a rewrite. Its tables are generated from the tables this Swift
 engine uses at runtime, and the port is checked fragment by fragment against
 this one: 2,030 LaTeX fragments, every symbol, every script character, every
@@ -114,6 +123,55 @@ Nothing typed is stored or transmitted. The rolling buffer is 64 characters,
 in memory only, and is discarded on every command, Return, arrow key, click,
 app switch and shortcut.
 
+## Replacing it with a newer build
+
+The app is running while you try to replace it, on both platforms, and on both
+platforms that is what goes wrong if you do it in the wrong order.
+
+**Windows.** Quit from the tray menu first — right-click the mark near the clock,
+**Quit LaTeX Squiggly** — because Windows will not let you overwrite a running
+`.exe`. Then delete the old file, put the new one in the same place, and
+double-click it. SmartScreen warns again, because it is a different unsigned
+file: **More info**, **Run anyway**. Settings and exclusions live in
+`%APPDATA%\LaTeXSquiggly\` and are read by the new version on purpose; delete
+that folder only if you want it to forget everything. **Open at login** stores
+the path, so it keeps working if the new exe is in the same place, and needs
+un-ticking and re-ticking if you moved it. See
+[`windows/README.md`](windows/README.md) for the long version.
+
+**macOS.** Quit from the menu bar item, drag `/Applications/LaTeX Squiggly.app`
+to the Trash, then install the new one. `Scripts/install.sh` already does this
+for you.
+
+There is one macOS-specific trap worth knowing about, because the symptom is
+that the new build silently does nothing. macOS ties the Accessibility and Input
+Monitoring grants to the app's **code signature**, and a build signed by a
+different identity is, as far as the system is concerned, a different app that
+happens to be sitting at the same path. The old entry stays in the list, still
+ticked, and grants nothing:
+
+```
+System Settings -> Privacy & Security -> Accessibility
+                                      -> Input Monitoring
+```
+
+Remove **LaTeX Squiggly** from both lists with the minus button *before*
+installing the new build, then let the new one ask again. If you are building
+from source with `Scripts/setup-signing.sh`'s stable identity, the signature does
+not change between builds and none of this applies. If a build is not responding
+to what you type and you want to know which of these it is:
+
+```
+"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose
+```
+
+Settings live in `UserDefaults` under `com.keenanjusak.latex-squiggly`, so they
+survive a reinstall too. To wipe them:
+
+```
+defaults delete com.keenanjusak.latex-squiggly
+```
+
 ## Running the tests
 
 ```
@@ -140,6 +198,7 @@ swift run latex-squiggly '\int_5^6'          # one-shot
 swift run latex-squiggly                      # interactive, one fragment per line
 echo '\alpha' | swift run latex-squiggly      # pipe
 swift run latex-squiggly -c '\R'              # also print U+ values
+swift run latex-squiggly -k '\int_0^\infty'   # keep a script Unicode cannot make
 ```
 
 Replacement text goes to stdout and explanations to stderr, so the tool
@@ -158,7 +217,12 @@ public enum ConversionResult: Equatable {
     case unsupported(reason: String)       // leave the input alone; tell the user why
 }
 
-public func convert(_ latex: String) -> ConversionResult
+public func convert(_ latex: String,
+                    options: ConversionOptions = .default) -> ConversionResult
+
+public struct ConversionOptions: Equatable, Sendable {
+    public var keepUnrenderableScripts: Bool   // default false
+}
 ```
 
 `ConversionResult` also exposes `.text`, `.reason`, and `.requiresUserNotice`
@@ -182,7 +246,8 @@ convert("\\begin{matrix}")     // .unsupported("The matrix environment needs …
 **All or nothing.** If any part of the input has no faithful Unicode form, the
 whole call returns `.unsupported`. A half-converted string is never produced —
 this is the failure mode the app exists to avoid. `.unsupported` beats
-`.fallback`, which beats `.converted`.
+`.fallback`, which beats `.converted`. The single exception is opt-in and
+reports itself as a fallback: see below.
 
 **Longest match on command names.** A command name is a backslash followed by
 the longest run of ASCII letters, so the `\in` / `\inf` / `\infty` / `\int`
@@ -206,6 +271,43 @@ so never hit this path.
 cannot be drawn over other characters in plain text", not "Unknown command
 \vec". The first tells the user the truth about the constraint; the second
 suggests a typo.
+
+## Scripts Unicode cannot make
+
+Unicode has raised forms for some characters and not others. There is a
+superscript `n` and a superscript `2`; there is no superscript `∞`, no
+superscript `α`, and no way to nest one raised character inside another. So
+`\Sigma_{i=1}^\infty{a_i}` is correct LaTeX that has no honest inline form, and
+by default the app refuses it whole and says why.
+
+The **Scripts** switch in Settings offers the other answer. On, every part that
+has a Unicode form gets one and only the script that has none keeps the way it
+was typed:
+
+```
+\Sigma_{i=1}^\infty{a_i}   off →  refused: "There is no Unicode superscript for ∞."
+                            on →  Σᵢ₌₁^∞aᵢ
+\int_0^\infty               on →  ∫₀^∞
+x^{a^b}                     on →  x^(aᵇ)
+```
+
+It reports itself as a `.fallback`, so the notice still fires and nothing is
+substituted silently. The rules it keeps:
+
+- **All or nothing within one script.** `x^{1q}` gives `x^(1q)`, not `x¹q`.
+  Half a script raised and half not reads as a typo.
+- **Parenthesised past one character**, for the reason `\frac` parenthesises:
+  `x^(n+1)` says something `x^n+1` does not.
+- **Scripts only.** `\vec{v}` and `\begin{matrix}` are still refused. A script
+  can be written back in the notation it was typed in; an accent over a letter
+  and a two-dimensional layout cannot.
+
+Off by default, and worth understanding before turning it on: the output puts
+converted characters and raw LaTeX on the same line. Text left alone is always
+honest about what happened. Mixed text is only sometimes what was wanted.
+
+On the command line it is `-k` / `--keep-scripts`; in the engine it is
+`ConversionOptions.keepUnrenderableScripts`.
 
 ## Coverage
 
@@ -356,7 +458,15 @@ its own output instead of feeding on it.
 The status item shows state at a glance — the LS mark when converting, a
 faded and struck-through one when not — and carries the enable toggle,
 permission shortcuts when something is missing, **Do not convert in ‹app›**,
-**Excluded Apps and Sites…**, **Settings…** and **Symbols…**.
+**Settings…** and **Symbols…**.
+
+**Do not convert in ‹app›** is the only exclusion the menu carries, because it
+is the only one that needs the app in front of you to mean anything: a default
+list cannot know about every TeX editor, and the moment you notice a miss is the
+moment you are looking at the wrong app. The list itself lives in Settings and
+nowhere else. Where the app stays quiet is a setting, and a second front door to
+the same editor only made "what is this configured to do" a question with two
+places to look.
 
 Two icon states, not three. The icon answers "is it converting right now",
 which has the same answer whether the app is switched off or merely staying
@@ -388,7 +498,7 @@ Two panes, in the shape macOS has used for preferences since long before
 System Settings — `NSTabViewController` in `.toolbar` mode, which supplies the
 toolbar, the selection and the resize between panes.
 
-**General** carries the three switches and, unusually for a settings window,
+**General** carries the four switches and, unusually for a settings window,
 the permission state:
 
 | | |
@@ -396,6 +506,7 @@ the permission state:
 | Convert LaTeX as you type | The same switch as the menu's, reading the same value. Off, the app keeps running and stops touching your typing. |
 | Open at login | `SMAppService.mainApp`. Disabled, with the reason shown, when the app is not running from a bundle — under `swift run` there is nothing to register, and registering would record a path that stops existing at the next build. |
 | Show a notice when a command is refused or falls back | Covers the notices a *conversion* produces. The app's own state messages are never silenced: "conversion stopped, permission was turned off" is the difference between quiet and broken. |
+| Keep superscripts and subscripts that have no Unicode form | Off by default. See [Scripts Unicode cannot make](#scripts-unicode-cannot-make). |
 | Accessibility / Input Monitoring | Granted or not, live, with a button to the only place either can be changed. |
 
 The permissions are here rather than only in the menu because the menu can only
@@ -505,6 +616,7 @@ Windows, Linux, web version, telemetry, or auto-update. Not now, not later.
 ```
 Sources/LaTeXUnicode/          engine
   ConversionResult.swift       the result type
+  ConversionOptions.swift      the one setting the engine takes
   Tokenizer.swift              string → tokens; longest match, terminator rules
   Converter.swift              public convert(); assembly and strictness
   SymbolTable.swift            generated

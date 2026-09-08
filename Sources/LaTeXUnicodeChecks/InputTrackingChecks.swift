@@ -34,8 +34,9 @@ func runInputTrackingChecks(_ c: Checker) {
 
     // MARK: Trigger outcomes
 
-    func outcome(_ buffer: String, _ terminator: Character = " ") -> TriggerOutcome {
-        TriggerDetector.outcome(buffer: buffer, terminator: terminator)
+    func outcome(_ buffer: String, _ terminator: Character = " ",
+                 options: ConversionOptions = .default) -> TriggerOutcome {
+        TriggerDetector.outcome(buffer: buffer, terminator: terminator, options: options)
     }
 
     c.equal(outcome("\\alpha"),
@@ -247,4 +248,40 @@ func runInputTrackingChecks(_ c: Checker) {
             c.fail("expected a replacement for \(source)")
         }
     }
+
+    // MARK: Keeping a script Unicode cannot make
+
+    let keep = ConversionOptions(keepUnrenderableScripts: true)
+
+    // Unicode has no raised infinity, so by default this whole expression is a
+    // refusal, and the earliest candidate that does convert is the
+    // `\infty{a_i}` tail of it. The user is left with the tail replaced inside
+    // source that was not: this is the case the option below exists for.
+    c.equal(outcome("\\Sigma_{i=1}^\\infty{a_i}"),
+            .replace(Replacement(deleteCount: 11, insert: "∞aᵢ ", notice: nil)),
+            "by default only the tail that converts is replaced")
+
+    // With the option on the earliest candidate converts, so it wins outright
+    // and the tail is never reached.
+    if case .replace(let r) = outcome("\\Sigma_{i=1}^\\infty{a_i}", options: keep) {
+        c.equal(r.deleteCount, 24, "the whole expression is replaced, not its tail")
+        c.equal(r.insert, "Σᵢ₌₁^∞aᵢ ", "every part with a Unicode form gets one")
+        c.notNil(r.notice, "a kept script has to be explained")
+    } else {
+        c.fail("a kept script should still replace")
+    }
+
+    // The $...$ path takes the same option, and keeps the spaces inside it.
+    if case .replace(let r) = outcome("$\\Sigma_{i=1}^\\infty a_i$", options: keep) {
+        c.equal(r.deleteCount, 25, "both delimiters are deleted too")
+        c.equal(r.insert, "Σᵢ₌₁^∞ aᵢ ", "a delimited span converts whole")
+    } else {
+        c.fail("a kept script should replace inside $...$ as well")
+    }
+
+    // Off, both paths behave exactly as they did.
+    c.equal(outcome("$\\int_0^\\infty$"),
+            .refuse(source: "$\\int_0^\\infty$",
+                    reason: "There is no Unicode superscript for “∞”."),
+            "the default is still a refusal, with its reason")
 }

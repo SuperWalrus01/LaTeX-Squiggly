@@ -1,9 +1,14 @@
 /// The outcome of converting a LaTeX fragment to inline Unicode.
 ///
 /// The app never produces an image, so some LaTeX has no faithful Unicode form.
-/// Every such case is reported explicitly. A half-converted string is never
-/// returned: if any part of the input cannot be represented, the whole
-/// conversion is `.unsupported` and the caller must leave the user's text alone.
+/// Every such case is reported explicitly.
+///
+/// A fragment is all or nothing by default: if any part of it cannot be
+/// represented, the whole conversion is `.unsupported` and the caller must
+/// leave the user's text alone. `ConversionOptions` relaxes that for scripts
+/// alone, which turns the same case into a `.fallback` the caller still has to
+/// explain. Nothing is ever substituted silently that the user would not
+/// recognise as what they typed.
 public enum ConversionResult: Equatable {
 
     /// Every token had a faithful Unicode representation. Safe to substitute

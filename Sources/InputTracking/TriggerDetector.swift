@@ -59,7 +59,9 @@ public enum TriggerDetector {
     ///
     /// - Returns: nil when this is not a delimited span at all, so the caller
     ///   can fall through to the backslash rule.
-    private static func mathDelimited(buffer: String, terminator: Character) -> TriggerOutcome? {
+    private static func mathDelimited(buffer: String,
+                                      terminator: Character,
+                                      options: ConversionOptions) -> TriggerOutcome? {
         guard buffer.last == "$" else { return nil }
         let beforeClosing = buffer.dropLast()
         guard let opening = beforeClosing.lastIndex(of: "$") else { return nil }
@@ -73,7 +75,7 @@ public enum TriggerDetector {
         // Both delimiters are typed source and have to be deleted too.
         let deleteCount = content.count + 2
 
-        switch convert(content) {
+        switch convert(content, options: options) {
         case .converted(let text):
             return .replace(Replacement(deleteCount: deleteCount,
                                         insert: text + String(terminator),
@@ -123,9 +125,17 @@ public enum TriggerDetector {
     /// `a_b` in an identifier, would silently rewrite themselves. Write `$x^2$`
     /// when you mean maths. `\\alpha_b` still reports the missing subscript,
     /// because it opens with a command.
-    public static func outcome(buffer: String, terminator: Character) -> TriggerOutcome {
+    ///
+    /// `options` is passed straight to the engine and read fresh by the caller
+    /// on every keystroke, so a switch flipped in the settings window applies to
+    /// the next command rather than the next launch.
+    public static func outcome(buffer: String,
+                               terminator: Character,
+                               options: ConversionOptions = .default) -> TriggerOutcome {
         // Explicit maths first: `$x^2$` is unambiguous where bare `x^2` is not.
-        if let delimited = mathDelimited(buffer: buffer, terminator: terminator) {
+        if let delimited = mathDelimited(buffer: buffer,
+                                         terminator: terminator,
+                                         options: options) {
             return delimited
         }
 
@@ -137,7 +147,7 @@ public enum TriggerDetector {
             // A lone backslash is not a pending command.
             guard candidate.count > 1, KnownCommands.looksIntentional(candidate) else { continue }
 
-            switch convert(candidate) {
+            switch convert(candidate, options: options) {
             case .converted(let text):
                 return .replace(Replacement(deleteCount: candidate.count,
                                             insert: text + String(terminator),

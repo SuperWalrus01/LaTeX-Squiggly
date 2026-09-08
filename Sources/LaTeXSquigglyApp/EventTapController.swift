@@ -207,7 +207,12 @@ final class EventTapController {
 
     private func handleTerminator(_ character: Character,
                                   passthrough: Unmanaged<CGEvent>) -> Unmanaged<CGEvent>? {
-        switch TriggerDetector.outcome(buffer: buffer.text, terminator: character) {
+        // Options are read here, not captured at start: `handle` runs on the
+        // main thread, so this is the same read the settings window writes, and
+        // a switch flipped between two commands applies to the second one.
+        switch TriggerDetector.outcome(buffer: buffer.text,
+                                       terminator: character,
+                                       options: Preferences.conversionOptions) {
         case .none:
             buffer.insert(String(character))
             return passthrough

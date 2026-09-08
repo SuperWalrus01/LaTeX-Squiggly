@@ -130,7 +130,7 @@ final class ExclusionsPane: NSViewController {
         // have a size: two tables and a text field have no natural one.
         NSLayoutConstraint.activate([
             content.widthAnchor.constraint(equalToConstant: 620),
-            content.heightAnchor.constraint(equalToConstant: 400),
+            content.heightAnchor.constraint(equalToConstant: 480),
         ])
 
         view = content

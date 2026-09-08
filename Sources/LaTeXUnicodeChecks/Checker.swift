@@ -58,8 +58,9 @@ public final class Checker {
 public extension Checker {
 
     func converted(_ input: String, _ expected: String,
+                   options: ConversionOptions = .default,
                    file: StaticString = #filePath, line: UInt = #line) {
-        switch convert(input) {
+        switch convert(input, options: options) {
         case .converted(let text):
             equal(text, expected, "convert(\(display(input)))", file: file, line: line)
         case let other:
@@ -69,8 +70,9 @@ public extension Checker {
     }
 
     func fallback(_ input: String, _ expected: String,
+                  options: ConversionOptions = .default,
                   file: StaticString = #filePath, line: UInt = #line) {
-        switch convert(input) {
+        switch convert(input, options: options) {
         case .fallback(let text, let reason):
             equal(text, expected, "convert(\(display(input)))", file: file, line: line)
             expect(!reason.isEmpty, "convert(\(display(input))): a fallback must explain itself",
@@ -84,8 +86,9 @@ public extension Checker {
     /// `fragment` is matched case-insensitively, so a check pins the substance
     /// of the message without freezing its wording.
     func unsupported(_ input: String, containing fragment: String? = nil,
+                     options: ConversionOptions = .default,
                      file: StaticString = #filePath, line: UInt = #line) {
-        switch convert(input) {
+        switch convert(input, options: options) {
         case .unsupported(let reason):
             expect(!reason.isEmpty, "convert(\(display(input))): .unsupported must explain itself",
                    file: file, line: line)

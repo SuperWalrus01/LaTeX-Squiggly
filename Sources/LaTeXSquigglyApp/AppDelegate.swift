@@ -95,7 +95,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             + "It stays out of the way where LaTeX source is written: "
             + "\(excluded) app\(excluded == 1 ? "" : "s") on this Mac "
             + "\(excluded == 1 ? "is" : "are") already excluded, and so is Overleaf in any "
-            + "browser. Add your own from the menu.\n\n"
+            + "browser. Add your own in Settings, or exclude whatever is in front of "
+            + "you straight from the menu.\n\n"
             + "Two macOS permissions are needed before it can type for you. "
             + "Nothing you type is stored or sent anywhere."
         alert.addButton(withTitle: "Set Up Now")
@@ -295,12 +296,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(item)
         }
 
-        menu.addItem(.separator())
-
         // One click to fix a miss. A default list cannot know about every TeX
         // editor, and the moment the user notices is the moment they are
-        // looking at the wrong app.
+        // looking at the wrong app. This is the only exclusion the menu carries:
+        // it is the one that needs the app in front of you to mean anything.
+        //
+        // The list itself lives in Settings and nowhere else. Where the app
+        // stays quiet is a setting, and a second front door to the same editor
+        // only made "what is this configured to do" a question with two places
+        // to look.
         if gate.context.bundleID != nil {
+            menu.addItem(.separator())
             let name = gate.context.displayName
             let item = NSMenuItem(title: "Do not convert in \(name)",
                                   action: #selector(toggleFrontmostApplication),
@@ -309,12 +315,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             item.state = gate.frontmostApplicationIsExcluded ? .on : .off
             menu.addItem(item)
         }
-
-        let editor = NSMenuItem(title: "Excluded Apps and Sites\u{2026}",
-                                action: #selector(showExclusions),
-                                keyEquivalent: "")
-        editor.target = self
-        menu.addItem(editor)
 
         menu.addItem(.separator())
 
@@ -357,10 +357,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func showSettings() {
         settings.show(.general)
-    }
-
-    @objc private func showExclusions() {
-        settings.show(.exclusions)
     }
 
     @objc private func grantPermission(_ sender: NSMenuItem) {
