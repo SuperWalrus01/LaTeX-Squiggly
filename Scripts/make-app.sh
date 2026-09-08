@@ -39,6 +39,11 @@ BUNDLE_ID="${BUNDLE_ID:-com.keenanjusak.latex-squiggly}"
 VERSION="${VERSION:-$(cat VERSION)}"
 MIN_MACOS="${MIN_MACOS:-13.0}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"   # "-" means ad-hoc
+# The mounted volume's name, which is the window title and the label under the
+# disk on the desktop. Deliberately not the app's name: while it was, opening
+# the image left you with two things on screen both called "LaTeX Squiggly",
+# one of which you keep and one of which you eject.
+VOLUME_NAME="${VOLUME_NAME:-$APP_NAME Installer}"
 OUT="${OUT:-build}"
 
 APP="$OUT/$APP_NAME.app"
@@ -147,14 +152,14 @@ if [ "${DMG:-0}" != "0" ]; then
     if [ "$STYLED" = "0" ]; then
         # UDZO is compressed and read-only, which is what a released image
         # should be: nobody should be able to edit the copy they were sent.
-        hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$STAGE" \
+        hdiutil create -quiet -volname "$VOLUME_NAME" -srcfolder "$STAGE" \
             -format UDZO -ov "$IMAGE"
     else
         # Window layout lives in the volume's .DS_Store, which only Finder
         # writes and only on a volume it can write to. So: build a read-write
         # image, mount it, let Finder arrange it, then flatten the result to
         # the compressed read-only image that actually ships.
-        hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$STAGE" \
+        hdiutil create -quiet -volname "$VOLUME_NAME" -srcfolder "$STAGE" \
             -format UDRW -ov "$WRITABLE"
 
         MOUNT="$(hdiutil attach "$WRITABLE" -readwrite -noverify \
@@ -165,7 +170,7 @@ if [ "${DMG:-0}" != "0" ]; then
         # which drew the background to match them. Change them there.
         osascript >/dev/null <<APPLESCRIPT
 tell application "Finder"
-    tell disk "$APP_NAME"
+    tell disk "$VOLUME_NAME"
         open
         set current view of container window to icon view
         set toolbar visible of container window to false
