@@ -118,19 +118,88 @@ fi
 if [ "${DMG:-0}" != "0" ]; then
     IMAGE="$OUT/$APP_SLUG-$VERSION.dmg"
     STAGE="$(mktemp -d)"
-    trap 'rm -rf "$STAGE"' EXIT
+    WRITABLE="$(mktemp -u)-rw.dmg"
+    trap 'rm -rf "$STAGE" "$WRITABLE"' EXIT
 
     cp -R "$APP" "$STAGE/"
     ln -s /Applications "$STAGE/Applications"
 
+    # The window dressing, both committed so this script needs no artwork.
+    # Missing either one is not fatal: an unstyled image still installs.
+    STYLED=1
+    if [ -f "Assets/dmg-background.tiff" ]; then
+        mkdir -p "$STAGE/.background"
+        cp "Assets/dmg-background.tiff" "$STAGE/.background/background.tiff"
+    else
+        echo "warning: Assets/dmg-background.tiff is missing; run Scripts/make-icons.sh"
+        STYLED=0
+    fi
+    # The volume icon is deliberately NOT staged here. Finder deletes a
+    # .VolumeIcon.icns it finds on a volume it is opening, so anything put in
+    # the staging folder is gone by the time the window has been arranged.
+    # It goes on after Finder has finished, below.
+    if [ ! -f "Assets/VolumeIcon.icns" ]; then
+        echo "warning: Assets/VolumeIcon.icns is missing; run Scripts/make-icons.sh"
+    fi
+
     rm -f "$IMAGE"
-    # UDZO is compressed and read-only, which is what a released image should
-    # be: nobody should be able to edit the copy they were sent.
-    hdiutil create -quiet \
-        -volname "$APP_NAME" \
-        -srcfolder "$STAGE" \
-        -format UDZO \
-        -ov "$IMAGE"
+
+    if [ "$STYLED" = "0" ]; then
+        # UDZO is compressed and read-only, which is what a released image
+        # should be: nobody should be able to edit the copy they were sent.
+        hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$STAGE" \
+            -format UDZO -ov "$IMAGE"
+    else
+        # Window layout lives in the volume's .DS_Store, which only Finder
+        # writes and only on a volume it can write to. So: build a read-write
+        # image, mount it, let Finder arrange it, then flatten the result to
+        # the compressed read-only image that actually ships.
+        hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$STAGE" \
+            -format UDRW -ov "$WRITABLE"
+
+        MOUNT="$(hdiutil attach "$WRITABLE" -readwrite -noverify \
+                 | grep -o '/Volumes/.*' | head -1)"
+        [ -n "$MOUNT" ] || { echo "could not mount the staging image"; exit 1; }
+
+        # Positions and window size come from Tools/make_dmg_images.swift,
+        # which drew the background to match them. Change them there.
+        osascript >/dev/null <<APPLESCRIPT
+tell application "Finder"
+    tell disk "$APP_NAME"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to {200, 140, 860, 560}
+        set options to the icon view options of container window
+        set arrangement of options to not arranged
+        set icon size of options to 128
+        set text size of options to 13
+        set background picture of options to file ".background:background.tiff"
+        set position of item "$APP_NAME.app" of container window to {178, 196}
+        set position of item "Applications" of container window to {482, 196}
+        update without registering applications
+        delay 2
+        close
+    end tell
+end tell
+APPLESCRIPT
+
+        # Only now, with Finder done: it removes a .VolumeIcon.icns from a
+        # volume it opens, so staging one before this point loses it. The flag
+        # matters as much as the file, since .VolumeIcon.icns on its own does
+        # nothing until the volume is marked as having a custom icon.
+        if [ -f "Assets/VolumeIcon.icns" ]; then
+            cp "Assets/VolumeIcon.icns" "$MOUNT/.VolumeIcon.icns"
+            SetFile -a C "$MOUNT" 2>/dev/null || \
+                echo "warning: could not set the custom-icon flag on the volume"
+        fi
+
+        sync
+        hdiutil detach "$MOUNT" -quiet || hdiutil detach "$MOUNT" -force -quiet
+        hdiutil convert "$WRITABLE" -quiet -format UDZO -imagekey zlib-level=9 \
+            -o "$IMAGE"
+    fi
 
     # The image is signed too. Without this the very first thing macOS says
     # about the download is that it is damaged, rather than that it is unsigned.
