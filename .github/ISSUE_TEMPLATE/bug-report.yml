@@ -1,0 +1,71 @@
+name: Bug report
+description: Something converted wrongly, did not convert, or changed text it should have left alone.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. The details below are what make a typing bug reproducible, so please fill in as many as you can.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS app
+        - Windows app
+        - Chrome extension
+        - Website demo
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The release you downloaded. On macOS, Finder's Get Info on the app shows it; the extension shows it at the bottom of its settings page.
+      placeholder: "0.2.1"
+    validations:
+      required: true
+
+  - type: input
+    id: typed
+    attributes:
+      label: What you typed
+      description: Exactly, including the key you pressed after it.
+      placeholder: "\\frac{\\alpha}{2} then space"
+    validations:
+      required: true
+
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Where you were typing
+      description: The app, or the website for the extension.
+      placeholder: "Slack, Gmail in Chrome, Notepad…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: |
+        macOS: the output of `"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose`.
+        Windows: `%APPDATA%\LaTeXSquiggly\log.txt`, if there is one; it records crashes.
+        The macOS output names websites by host only, never whole addresses. Read anything before pasting it here.
+      render: text

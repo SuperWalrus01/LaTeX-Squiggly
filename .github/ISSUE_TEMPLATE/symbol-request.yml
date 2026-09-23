@@ -1,0 +1,31 @@
+name: Symbol request
+description: A LaTeX command you would like converted.
+labels: ["symbol"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [symbol list](https://superwalrus01.github.io/LaTeX-Squiggly/#symbols) first. Some things are left out on purpose, and [docs/engine.md](https://github.com/SuperWalrus01/LaTeX-Squiggly/blob/main/docs/engine.md#not-supported-on-purpose) says which and why; a request to reconsider one is still welcome.
+
+  - type: input
+    id: command
+    attributes:
+      label: LaTeX command
+      placeholder: "\\nparallel"
+    validations:
+      required: true
+
+  - type: input
+    id: character
+    attributes:
+      label: The character it should become
+      description: The character itself, and its Unicode name or code point if you know it.
+      placeholder: "∦  NOT PARALLEL TO  U+2226"
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Where you would use it
+      description: Optional, but it helps decide between competing requests.
