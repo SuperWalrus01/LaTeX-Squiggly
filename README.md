@@ -1,676 +1,88 @@
-# LaTeX Squiggly
-
-An inline LaTeX-to-Unicode app for macOS and Windows. Type `\alpha` or
-`\int_5^6` in any app and it becomes `α` or `∫₅⁶` in place — real text, never
-an image.
-
-- **Phase 0 — conversion engine.** Done. Pure Swift, no system APIs.
-- **Phase 1 — text replacement.** Done. Event tap, replacement, permissions.
-- **Phase 2 — per-app suppression.** Done. Exclusion list, per-site rules.
-- **Phase 3 — menu bar UI.** Done. Symbol browser and exclusion editor.
-- **Phase 4 — Windows.** Done. The same engine, a native tray app.
-
-## Windows
-
-There is a Windows build, in [`windows/`](windows/), with its own
-[README](windows/README.md). It is one .exe, no installer, no admin rights, and
-Windows asks for no permission to run it.
-
-The parts that touch the operating system are where a port earns its keep or
-fails. On Windows that means the low-level keyboard hook, and the one thing to
-know about a low-level hook is that the thread which installs it is part of the
-path every keystroke on the machine takes. The first build installed it from the
-UI thread, which made the whole system stutter behind the settings window and let
-Windows silently drop the hook for being slow. It now runs on a thread of its
-own that does nothing else, allocates nothing per keystroke and never waits on
-the UI. `windows/README.md` explains the design and what follows from it.
-
-The engine is not a rewrite. Its tables are generated from the tables this Swift
-engine uses at runtime, and the port is checked fragment by fragment against
-this one: 2,030 LaTeX fragments, every symbol, every script character, every
-refusal message, every case that must stay silent, with both engines required to
-give the identical answer down to the delete count. Only the parts that touch
-the operating system are genuinely different, and `windows/README.md` says
-exactly which and why.
-
-## Chrome
-
-There is a Chrome extension, in [`chrome/`](chrome/), with its own
-[README](chrome/README.md). It reaches only the browser, so it is for
-Chromebooks and for computers where software cannot be installed. The engine is
-the same one again, held to the same 2,030-fragment reference. What differs is
-that a web page lets it read the text it is about to replace, so it confirms
-the characters in front of the caret before it deletes anything.
-
-## Per-app suppression
-
-In a `.tex` file or on Overleaf, `\alpha` has to stay `\alpha`. An app that
-corrupts LaTeX source is worse than no app, so this is core behaviour rather
-than a preference, and it is why conversion can now be on by default.
-
-**Applications** are matched by bundle identifier. The shipped defaults cover
-terminals, code editors and the TeX editors, but only produce a rule for
-software you actually have — the list in the editor is short and true rather
-than a wall of apps you have never installed. Identifiers are never written
-from memory: the well-known ones are checked against LaunchServices, and the
-TeX editors are found by name in `/Applications` and have their real identifier
-read off the bundle. Anything missed is one click to fix, from **Do not convert
-in ‹app›** in the menu.
-
-**Websites** are the case the phase exists for: Overleaf is not an app, it is a
-tab in the same browser you chat in. The frontmost browser's page is read
-through the Accessibility API — the permission the app already needs in order
-to type, so there is no extra prompt — and matched against a host list that
-ships with `overleaf.com` and its cousins. A host rule matches subdomains, so
-`www.` and `fr.` are covered; `notoverleaf.com` is not.
-
-The URL is compared and dropped. It is never stored, logged or transmitted, and
-page contents are never read. Pages are only read while conversion is actually
-running.
-
-### What browsers actually expose
-
-Measured on macOS 15.6, against Safari 26 and Chrome 152 — not assumed, because
-the received wisdom here is wrong in both directions:
-
-| | Page URL | Cost | How |
-|---|---|---|---|
-| Chrome, Chromium family | Yes | 2.8 ms avg | `AXDocument` on the focused window, and an `AXWebArea` under the caret |
-| Safari | Yes | 12 ms avg, 109 ms worst | `AXWebArea` six levels down; it does **not** answer `AXDocument`, contrary to the usual claim |
-| Firefox family | No | — | Window title only |
-
-Two consequences are baked into the code. Safari's descent is skipped on the
-path that runs inside the event tap callback, where 109 ms would be felt as a
-stuck keystroke — that path relies on the caret being inside the page, which it
-is whenever there is something to convert. And `AXManualAccessibility`, the
-supposed Chromium opt-in, returns `kAXErrorAttributeUnsupported` on both
-browsers; it is not set, because neither needs it.
-
-Where only the title can be read, site rules fall back to matching it — an
-Overleaf tab is titled "Overleaf" whatever the browser. A browser that will say
-nothing at all is suppressed, and that is a setting you can turn off if you
-never open Overleaf. The reasoning is the same one that runs through the whole
-app: a missed conversion costs a keystroke, a wrong one costs a document.
-
-Ask the app what it currently sees:
-
-```
-"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose
-```
-
-It lists every rule and, for each running browser, what it can read and what it
-would do. Hosts are printed rather than whole URLs — an Overleaf link carries a
-share token, and a diagnostic people paste into a bug report should not carry
-it too.
-
-## Running the app
-
-```
-xcode-select --install                  # Apple's Command Line Tools, not Xcode
-git clone https://github.com/SuperWalrus01/LaTeX-Squiggly.git
-cd LaTeX-Squiggly
-scripts/setup-mac-signing.sh                # once, BEFORE the first install
-scripts/install-mac-app.sh                      # build from source, install to /Applications
-open "/Applications/LaTeX Squiggly.app"
-```
-
-Order matters. macOS ties the Accessibility grant to the code signature, so
-signing after you have granted permission invalidates the grant. (The app was
-called LaTeX-Squiggly before; `install.sh` quits and removes that bundle on its
-way past. The signing identity keeps the old hyphenated name on purpose —
-renaming the certificate is what would reset the permissions.) If the app
-ever stops responding to what you type, ask it why:
-
-```
-"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose
-```
-
-Then grant **Accessibility** (to replace text) and **Input Monitoring** (to
-notice you typing) when the menu bar item asks.
-
-Nothing typed is stored or transmitted. The rolling buffer is 64 characters,
-in memory only, and is discarded on every command, Return, arrow key, click,
-app switch and shortcut.
-
-## Replacing it with a newer build
-
-The app is running while you try to replace it, on both platforms, and on both
-platforms that is what goes wrong if you do it in the wrong order.
-
-**Windows.** Quit from the tray menu first — right-click the mark near the clock,
-**Quit LaTeX Squiggly** — because Windows will not let you overwrite a running
-`.exe`. Then delete the old file, put the new one in the same place, and
-double-click it. SmartScreen warns again, because it is a different unsigned
-file: **More info**, **Run anyway**. Settings and exclusions live in
-`%APPDATA%\LaTeXSquiggly\` and are read by the new version on purpose; delete
-that folder only if you want it to forget everything. **Open at login** stores
-the path, so it keeps working if the new exe is in the same place, and needs
-un-ticking and re-ticking if you moved it. See
-[`windows/README.md`](windows/README.md) for the long version.
-
-**macOS.** Quit from the menu bar item, drag `/Applications/LaTeX Squiggly.app`
-to the Trash, then install the new one. `scripts/install-mac-app.sh` already does this
-for you.
-
-There is one macOS-specific trap worth knowing about, because the symptom is
-that the new build silently does nothing. macOS ties the Accessibility and Input
-Monitoring grants to the app's **code signature**, and a build signed by a
-different identity is, as far as the system is concerned, a different app that
-happens to be sitting at the same path. The old entry stays in the list, still
-ticked, and grants nothing:
-
-```
-System Settings -> Privacy & Security -> Accessibility
-                                      -> Input Monitoring
-```
-
-Remove **LaTeX Squiggly** from both lists with the minus button *before*
-installing the new build, then let the new one ask again. If you are building
-from source with `scripts/setup-mac-signing.sh`'s stable identity, the signature does
-not change between builds and none of this applies. If a build is not responding
-to what you type and you want to know which of these it is:
-
-```
-"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose
-```
-
-Settings live in `UserDefaults` under `com.keenanjusak.latex-squiggly`, so they
-survive a reinstall too. To wipe them:
-
-```
-defaults delete com.keenanjusak.latex-squiggly
-```
-
-## Running the tests
-
-```
-swift run latex-squiggly-check     # works with Command Line Tools alone
-swift test                        # requires Xcode
-```
-
-Both run the same suite. On macOS, XCTest *and* swift-testing ship inside
-`Xcode.app`, so `swift test` cannot work on a machine with only the Command
-Line Tools installed. The expectations therefore live in a plain-Swift target,
-`Sources/LaTeXUnicodeChecks`, with two thin front ends: the
-`latex-squiggly-check` executable and a `Tests/LaTeXUnicodeTests` wrapper. There
-is exactly one copy of every expectation.
-
-Xcode is on the critical path for Phase 1 anyway (AppKit app bundle, code
-signing), so this is a stopgap, not a permanent shape.
-
-Current status: **1674 checks passing.**
-
-## Trying conversions by hand
-
-```
-swift run latex-squiggly '\int_5^6'          # one-shot
-swift run latex-squiggly                      # interactive, one fragment per line
-echo '\alpha' | swift run latex-squiggly      # pipe
-swift run latex-squiggly -c '\R'              # also print U+ values
-swift run latex-squiggly -k '\int_0^\infty'   # keep a script Unicode cannot make
-```
-
-Replacement text goes to stdout and explanations to stderr, so the tool
-composes. Exit status is 0 for converted and fallback, 1 for unsupported.
-
-It reports what the *app* would do, not just what the engine would do, so
-`$x^2$` shows `x²` rather than `$x²$`. Input the app would not fire on falls
-through to the raw engine result, which keeps the engine directly testable.
-
-## API
-
-```swift
-public enum ConversionResult: Equatable {
-    case converted(String)                 // faithful Unicode
-    case fallback(String, reason: String)  // linear approximation; tell the user
-    case unsupported(reason: String)       // leave the input alone; tell the user why
-}
-
-public func convert(_ latex: String,
-                    options: ConversionOptions = .default) -> ConversionResult
-
-public struct ConversionOptions: Equatable, Sendable {
-    public var keepUnrenderableScripts: Bool   // default false
-}
-```
-
-`ConversionResult` also exposes `.text`, `.reason`, and `.requiresUserNotice`
-for the Phase 1 call site.
-
-`convert` takes a whole fragment, not just one command. Literal text passes
-through:
-
-```swift
-convert("\\alpha")             // .converted("α")
-convert("\\int_5^6")           // .converted("∫₅⁶")
-convert("\\alpha + \\beta \\leq x^2")
-                               // .converted("α + β ≤ x²")
-convert("\\frac{x+1}{y-2}")    // .fallback("(x+1)/(y-2)", reason: …)
-convert("x_b")                 // .unsupported("There is no Unicode subscript for “b”.")
-convert("\\begin{matrix}")     // .unsupported("The matrix environment needs …")
-```
-
-## Decisions
-
-**All or nothing.** If any part of the input has no faithful Unicode form, the
-whole call returns `.unsupported`. A half-converted string is never produced —
-this is the failure mode the app exists to avoid. `.unsupported` beats
-`.fallback`, which beats `.converted`. The single exception is opt-in and
-reports itself as a fallback: see below.
-
-**Longest match on command names.** A command name is a backslash followed by
-the longest run of ASCII letters, so the `\in` / `\inf` / `\infty` / `\int`
-family resolves without ambiguity. `\int` can never be read as `\in` + `t`, and
-a longer unknown command (`\ints`) never decays into a shorter known one.
-
-**Terminators are preserved.** The space or tab that ends a command name is
-*not* consumed; it is emitted as ordinary text, so `\alpha ` becomes `α `. This
-diverges from TeX, which swallows it. In running prose, eating the space is the
-wrong default: `\alpha + \beta ` should read `α + β`, not `α+ β`.
-
-**…except before an argument.** A command that takes an argument skips
-whitespace first, so `\mathbb R`, `\frac 1 2` and `\sqrt 2` work as in LaTeX.
-This doesn't conflict with the rule above: symbol commands take no argument and
-so never hit this path.
-
-**Fallbacks parenthesise only when needed.** `\frac{1}{2}` → `1/2`;
-`\frac{x+1}{y-2}` → `(x+1)/(y-2)`. Single characters are left bare.
-
-**Refused commands are recognised, not unknown.** `\vec` returns "An accent
-cannot be drawn over other characters in plain text", not "Unknown command
-\vec". The first tells the user the truth about the constraint; the second
-suggests a typo.
-
-## Scripts Unicode cannot make
-
-Unicode has raised forms for some characters and not others. There is a
-superscript `n` and a superscript `2`; there is no superscript `∞`, no
-superscript `α`, and no way to nest one raised character inside another. So
-`\Sigma_{i=1}^\infty{a_i}` is correct LaTeX that has no honest inline form, and
-by default the app refuses it whole and says why.
-
-The **Scripts** switch in Settings offers the other answer. On, every part that
-has a Unicode form gets one and only the script that has none keeps the way it
-was typed:
-
-```
-\Sigma_{i=1}^\infty{a_i}   off →  refused: "There is no Unicode superscript for ∞."
-                            on →  Σᵢ₌₁^∞aᵢ
-\int_0^\infty               on →  ∫₀^∞
-x^{a^b}                     on →  x^(aᵇ)
-```
-
-It reports itself as a `.fallback`, so the notice still fires and nothing is
-substituted silently. The rules it keeps:
-
-- **All or nothing within one script.** `x^{1q}` gives `x^(1q)`, not `x¹q`.
-  Half a script raised and half not reads as a typo.
-- **Parenthesised past one character**, for the reason `\frac` parenthesises:
-  `x^(n+1)` says something `x^n+1` does not.
-- **Scripts only.** `\vec{v}` and `\begin{matrix}` are still refused. A script
-  can be written back in the notation it was typed in; an accent over a letter
-  and a two-dimensional layout cannot.
-
-Off by default, and worth understanding before turning it on: the output puts
-converted characters and raw LaTeX on the same line. Text left alone is always
-honest about what happened. Mixed text is only sometimes what was wanted.
-
-On the command line it is `-k` / `--keep-scripts`; in the engine it is
-`ConversionOptions.keepUnrenderableScripts`.
-
-## Coverage
-
-202 symbols: Greek (both cases, plus `\var…` forms), operators, relations, set
-notation, logic, arrows, blackboard bold (`\R \Q \Z \N \C \H \E \F \P` and
-`\mathbb{…}`), delimiters, ellipses. 32 named operators (`\sin`, `\log`,
-`\lim`, …) convert to their upright roman text.
-
-Superscripts: all ten digits, `+ - = ( )`, and every lowercase letter **except
-`q`**. Subscripts: all ten digits, `+ - = ( )`, and only
-`a e h i j k l m n o p r s t u v x` — **missing `b c d f g q w y z`**. Requesting
-a missing letter returns `.unsupported`. Uppercase has no script forms in
-Unicode at all.
-
-Fractions convert properly rather than falling back. Unicode has no stacked
-fraction — there is no vinculum and no way to put one expression above another —
-so the choice is between compact and legible, and the rule picks whichever suits
-the content:
-
-```
-\frac{1}{2}       ->  ½             precomposed character
-\frac{5}{8}       ->  ⅝             precomposed character
-\frac{10}{17}     ->  ¹⁰⁄₁₇         composed: superscript ⁄ subscript
-\frac{n}{2}       ->  ⁿ⁄₂           composed
-\frac{x+1}{2}     ->  (x+1)∕2       linear
-\frac{x-2}{x-4}   ->  (x−2)∕(x−4)   linear
-\frac{a}{b}       ->  a∕b           linear — no subscript b exists
-```
-
-Composition is capped at what stays readable: both sides all digits (legible at
-any length), or both sides at most two characters. Superscript `x` against
-subscript `x` is near-indistinguishable at text size, so longer alphabetic
-fractions read better on one line.
-
-Linear maths uses real mathematical characters — U+2212 MINUS SIGN and U+2215
-DIVISION SLASH, not the ASCII hyphen and solidus. A hyphen is shorter, sits
-lower, and reads as a word break. `\text{}` keeps its hyphens, so "well-known"
-is not mangled. One trade-off: the output is not ASCII, so it will not paste
-into a calculator or source code as-is.
-
-Remaining fallbacks: `\sqrt` (including `\sqrt[n]`) and `\binom`.
-
-Unsupported: environments, stacked constructions, accents, alternate alphabets,
-spacing commands, line breaks, nested scripts.
-
-### Variant letters
-
-Following `unicode-math`, `\epsilon` → ϵ (U+03F5, lunate) and `\varepsilon` → ε
-(U+03B5); `\phi` → ϕ (U+03D5) and `\varphi` → φ (U+03C6). If you'd rather
-`\epsilon` gave the familiar ε, swap the two names in
-`scripts/generate-swift-tables.py` and regenerate — it's a one-line change.
-
-## The coverage table is generated, not typed
-
-`Sources/LaTeXUnicode/SymbolTable.swift` and `ScriptTables.swift` are produced
-by `scripts/generate-swift-tables.py`. Each entry is specified by its **Unicode
-character name**, and the character is resolved by `unicodedata.lookup` against
-the Unicode database shipped with Python:
-
-```python
-("alpha", "GREEK SMALL LETTER ALPHA"),
-```
-
-A wrong name is a hard error at generation time rather than a wrong glyph at
-runtime. This is deliberate: hand-written LaTeX→Unicode tables get codepoints
-wrong in ways that look right. The generator also rejects duplicate commands,
-which would silently shadow in a Swift dictionary literal.
-
-`Sources/LaTeXUnicodeChecks/GeneratedCodepointChecks.swift` is generated
-alongside and asserts the exact scalar value of all 277 table entries, so a later
-hand-edit to a table fails loudly.
-
-To change a table: edit the generator, run `python3 scripts/generate-swift-tables.py`,
-re-run the checks.
-
-## Deliberately left out — tell me which you want
-
-None of these were omitted from uncertainty; they're scope calls for you to
-overrule.
-
-- **Combining accents.** `\hat{x}` → `x` + U+0302 is real inline Unicode, but
-  renders inconsistently across the apps this types into. Currently
-  `.unsupported` with an honest reason.
-- **Bold / script / fraktur alphabets.** 𝐀 𝒜 𝔄 exist (U+1D400 onward).
-  Currently `.unsupported`.
-- **Greek super- and subscripts.** ᵅ ᵝ ᵞ and ᵦ ᵧ ᵨ exist for a handful of
-  letters. Partial coverage, so left out entirely.
-- **Vulgar fractions.** `\frac{1}{2}` → ½ would make that case `.converted`
-  rather than `.fallback`. Better output, but the spec treats fractions as a
-  fallback case throughout, so I didn't add it unasked.
-- **Spacing commands.** `\,` `\;` `\quad` currently `.unsupported`. U+2009 and
-  friends exist if you want them.
-- **`\pmod`, `\overset`, `\underset`.**
-
-## How replacement works
-
-`InputTracking` holds the typing logic with no system APIs in it, so the part
-most likely to be wrong is unit-tested rather than only observable by typing
-into Slack. The app target is a thin shell over it.
-
-**Two things fire.** A `$...$` span converts whatever is inside it, and a
-candidate starting with a backslash converts itself:
-
-```
-\alpha             ->  α
-\int_5^6           ->  ∫₅⁶
-\frac{\alpha}{2}   ->  α∕2
-$x^2$              ->  x²
-$\alpha + x^2$     ->  α + x²
-```
-
-**A candidate starts at the first backslash, not the last.** Everything typed
-since the last space is one fragment, so `\frac{\alpha}{2}` is replaced whole
-rather than having `\alpha` picked out of the middle of it. Reading from the
-last backslash left `\alpha}{2}`, which really is unbalanced, and said so about
-LaTeX that was written correctly.
-
-**Bare `x^2` deliberately does not fire.** Otherwise `2^3` in prose, or `a_b` in
-an identifier, would rewrite itself. Write `$x^2$` when you mean maths —
-nobody types that by accident. `\alpha_b` still reports its missing subscript,
-because it opens with a command.
-
-**A `$...$` span must contain a `\`, `^` or `_` to count as maths**, so `$5$`
-stays money. Failures inside a span are always reported, unlike the backslash
-path: wrapping something in delimiters is a clear statement of intent, so
-silence would be the wrong answer.
-
-**Unknown commands stay silent.** `C:\Users ` contains a backslash but `Users`
-is nobody's command, so nothing happens and nothing is reported. You are only
-told about failures you plausibly meant to cause. A refusal needs *every*
-command in the fragment to be one the converter knows, which is what keeps
-`C:\path\to\file ` quiet even though `\to` is real.
-
-**Space and tab terminate; Return does not.** In a chat app Return sends the
-message, and racing a replacement against a send is how you post half a symbol.
-
-**The terminator is suppressed and retyped.** The tap is `.defaultTap` rather
-than `.listenOnly` for exactly this reason, and the replacement is posted
-synchronously inside the callback — dispatching it leaves a window in which the
-next keystroke lands first and the delete count eats a character the user meant
-to keep.
-
-**Synthetic events are stamped** via `CGEventSource.userData` so the tap ignores
-its own output instead of feeding on it.
-
-## The menu
-
-The status item shows state at a glance — the LS mark when converting, a
-faded and struck-through one when not — and carries the enable toggle,
-permission shortcuts when something is missing, **Do not convert in ‹app›**,
-**Settings…** and **Symbols…**.
-
-**Do not convert in ‹app›** is the only exclusion the menu carries, because it
-is the only one that needs the app in front of you to mean anything: a default
-list cannot know about every TeX editor, and the moment you notice a miss is the
-moment you are looking at the wrong app. The list itself lives in Settings and
-nowhere else. Where the app stays quiet is a setting, and a second front door to
-the same editor only made "what is this configured to do" a question with two
-places to look.
-
-Two icon states, not three. The icon answers "is it converting right now",
-which has the same answer whether the app is switched off or merely staying
-quiet in Cursor; the menu answers "why not", naming the rule it is obeying. A
-third glyph meaning "off, but for another reason" would be read as neither.
-
-The mark is drawn as a **template image**: macOS keeps its alpha and supplies
-the colour itself, which is the only way one file reads correctly on a light
-menu bar, a dark one and a highlighted status item. Its orange survives in the
-app icon, where the background is ours to choose. Both are generated from the
-artwork in `assets/` by `scripts/make-mac-icons.sh` — the app icon into
-`assets/app-icon.icns`, and the menu bar mark into a base64 literal in
-`Sources/LaTeXSquigglyApp/MenuBarIconData.swift`.
-
-Embedded in source, not bundled as a resource, because `swift run
-LaTeXSquigglyApp` has no `Resources` directory to read from: a project that
-promises to build with only the Command Line Tools should look the same however
-it was started.
-
-## Settings
-
-`Settings…` (⌘,) from the menu, or:
-
-```
-open -a "LaTeX Squiggly" --args --settings
-```
-
-Two panes, in the shape macOS has used for preferences since long before
-System Settings — `NSTabViewController` in `.toolbar` mode, which supplies the
-toolbar, the selection and the resize between panes.
-
-**General** carries the four switches and, unusually for a settings window,
-the permission state:
-
-| | |
+<p align="center">
+  <img src="site/assets/og-card.png" alt="LaTeX Squiggly" width="600">
+</p>
+
+<p align="center">
+  <b>Type LaTeX anywhere. Get real characters.</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/actions/workflows/checks.yml"><img src="https://github.com/SuperWalrus01/LaTeX-Squiggly/actions/workflows/checks.yml/badge.svg" alt="Checks"></a>
+  <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest"><img src="https://img.shields.io/github/v/release/SuperWalrus01/LaTeX-Squiggly" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/SuperWalrus01/LaTeX-Squiggly" alt="MIT licence"></a>
+</p>
+
+You can't paste LaTeX into a chat, an email or a comment box. LaTeX Squiggly
+lets you type it anyway. Type `\alpha`, press space, and the letters you just
+typed become α, right where you typed them. The result is ordinary Unicode
+text, so it survives copying and pasting into anything.
+
+It runs as a menu bar app on macOS, a tray app on Windows and a Chrome
+extension. **[Try it in your browser](https://superwalrus01.github.io/LaTeX-Squiggly/#try)**
+before installing anything.
+
+| You type | You get |
 |---|---|
-| Convert LaTeX as you type | The same switch as the menu's, reading the same value. Off, the app keeps running and stops touching your typing. |
-| Open at login | `SMAppService.mainApp`. Disabled, with the reason shown, when the app is not running from a bundle — under `swift run` there is nothing to register, and registering would record a path that stops existing at the next build. |
-| Show a notice when a command is refused or falls back | Covers the notices a *conversion* produces. The app's own state messages are never silenced: "conversion stopped, permission was turned off" is the difference between quiet and broken. |
-| Keep superscripts and subscripts that have no Unicode form | Off by default. See [Scripts Unicode cannot make](#scripts-unicode-cannot-make). |
-| Accessibility / Input Monitoring | Granted or not, live, with a button to the only place either can be changed. |
+| `\alpha` `\Rightarrow` `\leq` `\in` | α ⇒ ≤ ∈ |
+| `$x^2$` `$a_1$` | x² a₁ |
+| `\int_0^1` `\sum_{i=1}^{n}` | ∫₀¹ ∑ᵢ₌₁ⁿ |
+| `\frac{1}{2}` `\frac{10}{17}` | ½ ¹⁰⁄₁₇ |
+| `\mathbb{R}` | ℝ |
+| `\frac{x+1}{2}` | (x+1)∕2, with a note that it had to be written on one line |
+| `\vec{v}` | left as typed, with a note saying why |
 
-The permissions are here rather than only in the menu because the menu can only
-offer them while they are *missing* — it has nowhere to say "granted". An app
-that reads your keystrokes should be able to show you exactly what it currently
-holds, at any time, rather than asking you to read its silence correctly.
+202 symbols, plus superscripts, subscripts, fractions, roots and binomials.
+When something has no exact Unicode form, it says so instead of guessing, and
+it never leaves a half-converted result.
 
-**Exclusions** is the Phase 2 list editor, which used to be a window of its own.
-Where the app stays quiet is a setting, and having it open separately meant the
-answer to "what is this app configured to do" lived in two places.
+## Install
 
-The window reads the app's state through a `SettingsHost` protocol instead of
-copying it, so the menu and the window cannot disagree about whether conversion
-is on: both ask the same object at the moment they draw. The permission poll
-that already runs every two seconds refreshes the pane when the answer actually
-changes, so a grant made in System Settings appears without reopening
-anything — and does nothing at all while the window is closed.
-
-The symbol browser searches all 202 symbols by command, Unicode name and
-category at once, so "greek capital" narrows to eleven rows and "double-struck"
-finds the blackboard bold letters without knowing they are called that. Double-
-click copies the glyph; there is a button for the command.
-
-```
-open -a "LaTeX Squiggly" --args --symbols   # opens the browser directly
-```
-
-## Signing and distribution
-
-```
-scripts/setup-mac-signing.sh    one-time: a stable self-signed identity
-scripts/build-mac-app.sh         assemble and sign the .app from SwiftPM output
-scripts/install-mac-app.sh          build from source and install to /Applications
-scripts/make-mac-icons.sh       regenerate the icons after changing assets/
-```
-
-**Signing is a development need before it is a distribution one.** macOS TCC
-identifies an app by its code signature, and ad-hoc signatures key on the code
-directory hash, which changes on every build — so without a stable identity you
-re-grant Accessibility and Input Monitoring on every single rebuild.
-`setup-mac-signing.sh` creates one. Verified: codesign accepts an untrusted
-self-signed certificate as long as its keychain is in the search list, so this
-does not touch the trust store.
-
-**Building from source is the distribution path.** Not a fallback — the only
-free one that is actually clean. Tested on macOS 15.6:
-
-| How the app arrives | Quarantined? |
+| Platform | How |
 |---|---|
-| Built locally (`scripts/install-mac-app.sh`) | No — opens normally |
-| Downloaded `.tar.gz`, extracted with `tar -xzf` | **Yes** |
-| Downloaded `.dmg`, dragged from Finder | Yes |
+| **macOS** 13+ | Download the `.dmg` from the [latest release](https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest) and drag the app to Applications, or [build it from source](docs/macos.md#installing). |
+| **Windows** 10+ *(beta)* | Download the `.exe` from the [releases](https://github.com/SuperWalrus01/LaTeX-Squiggly/releases) and double-click it. No installer, no admin rights. See [windows/](windows/README.md). |
+| **Chrome** | Coming to the Chrome Web Store. Until then, [load it unpacked](chrome/README.md#trying-it-locally). |
 
-Command-line `tar` is widely believed to sidestep quarantine. It does for plain
-files, but **not** for `.app` bundles: macOS writes a fresh quarantine attribute
-(flag `0281`, not the archive's own) onto the extracted bundle's contents. A
-downloaded build therefore still costs the user a trip through System Settings →
-Privacy & Security, which on macOS 15 no longer has the old Control-click → Open
-shortcut.
+Neither desktop app is signed with a paid certificate, so macOS and Windows
+each show a warning the first time. The platform guides above say exactly what
+you will see and what to click.
 
-Notarization is the only thing that removes that step, and it requires a
-Developer ID certificate, which requires the paid Apple Developer Program.
-Until then: ship source, and `DMG=1 scripts/build-mac-app.sh` for anyone who won't
-build it — with honest instructions about what they'll see.
+## Where it stays quiet
 
-The disk image carries an `Applications` symlink, so installing is a drag
-rather than a question, and is itself signed: an unsigned image makes the first
-thing macOS says about the download "damaged", which is both alarming and
-untrue. It buys no Gatekeeper relief — see the table above. `TARBALL=1` still
-produces a `.tar.gz` for anyone who prefers one.
+In a `.tex` file or on Overleaf, `\alpha` has to stay `\alpha`. So LaTeX
+Squiggly does nothing in TeX editors, code editors and terminals, or on
+Overleaf and other LaTeX websites, and you can add any app or site to that
+list. It also stays silent on ordinary typing that happens to contain a
+backslash, like `C:\Users\`.
 
-## The site
+## Privacy
 
-`site/` is a plain static site — no build step, no framework, no dependencies —
-ready for GitHub Pages (**Settings -> Pages -> Deploy from a branch**, `main`,
-`/docs`). It carries a live demo of the converter that runs in the browser.
+To recognise a command, LaTeX Squiggly keeps the last few characters you typed,
+in memory only, and forgets them whenever you click, press an arrow key or
+switch apps. Nothing you type is stored or sent anywhere, and no part of it
+makes a network request. The source is here so you can check. See the
+[privacy policy](https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html).
 
-The demo is not a recording and not a second implementation typed out by hand.
-`scripts/make-site.py` reads the tables straight out of `Sources/LaTeXUnicode`
-into `site/assets/data.js`, and runs every worked example on the page through
-the real `latex-squiggly` binary, capturing what it actually printed:
+## Documentation
 
-```
-python3 scripts/make-site.py
-```
+- [How the platforms fit together](docs/architecture.md): one Swift engine,
+  with the Windows and Chrome versions generated from it and checked against it
+  over 2,030 fragments.
+- [The engine](docs/engine.md): what converts, and why it decides what it does.
+- [The Mac app](docs/macos.md), [the Windows app](windows/README.md) and
+  [the Chrome extension](chrome/README.md).
+- [Changelog](CHANGELOG.md).
 
-So the page cannot claim a conversion the app does not make. Each example
-carries the outcome the page claims for it — converts, refuses, or is left
-alone — and the generator stops if the engine disagrees.
+## Contributing
 
-That last outcome is why `latex-squiggly` grew `--app-only`. By default the
-tool falls through to the raw engine for anything the trigger would not fire
-on, because trying `\frac12` without typing a space around it is the point of a
-tool for trying things by hand. But it means `x^2` prints x-squared there while
-doing nothing at all in the app, and a page built from that output would have
-been advertising a conversion that never happens. The examples sit
-between `<!-- BEGIN generated: ... -->` markers in `site/index.html`; the rest
-of that file, the stylesheet and the demo's own code are written by hand.
-
-## Non-goals
-
-No image rendering, cloud sync, accounts, text editor, note-taking, iOS,
-Windows, Linux, web version, telemetry, or auto-update. Not now, not later.
-
-## Layout
-
-```
-Sources/LaTeXUnicode/          engine
-  ConversionResult.swift       the result type
-  ConversionOptions.swift      the one setting the engine takes
-  Tokenizer.swift              string → tokens; longest match, terminator rules
-  Converter.swift              public convert(); assembly and strictness
-  SymbolTable.swift            generated
-  ScriptTables.swift           generated
-  TextOperators.swift          \sin, \log, … → upright roman text
-  UnsupportedCommands.swift    recognised-but-refused, with user-facing reasons
-Sources/AppSuppression/        Phase 2 rules, pure
-  AppContext.swift             what is frontmost, and which page if a browser
-  ExclusionList.swift          the rules, the decision, host matching
-  DefaultExclusions.swift      what ships excluded, and what is found on disk
-  KnownBrowsers.swift          which apps get asked about their page
-Sources/InputTracking/         Phase 1 typing logic, pure
-Sources/LaTeXSquigglyApp/       the menu bar app
-  EventTapController.swift     the tap; buffering, terminators, suppression
-  FrontmostAppMonitor.swift    which app is in front, and which page
-  BrowserPageReader.swift      the Accessibility reads; see the table above
-  SuppressionGate.swift        cached per keystroke, verified before typing
-  ExclusionStore.swift         persistence, defaults, on-disk discovery
-  SettingsWindow.swift         the settings window, and what it may ask the app
-  GeneralPane.swift            switches, and the permissions stated plainly
-  ExclusionsPane.swift         the list editor
-  Preferences.swift            every switch's defaults key, in one place
-  LoginItem.swift              open at login, and when it cannot be offered
-Sources/LaTeXUnicodeChecks/    the test suite (no XCTest)
-Sources/latex-squiggly-check/   CLI runner
-Tests/LaTeXUnicodeTests/       swift test wrapper
-scripts/generate-swift-tables.py       table generator
-scripts/make-app-icons.swift         icon generator, from assets/ artwork
-scripts/make-site.py             regenerates the site's tables and examples
-scripts/make-site-images.swift   regenerates the site's images
-assets/                        the artwork, and the generated .icns
-site/                          the site; see site/README.md
-Sources/latex-squiggly/         convert CLI for trying things by hand
-scripts/                       signing, bundling, install, icons
-```
+Bug reports and symbol requests are welcome as
+[issues](https://github.com/SuperWalrus01/LaTeX-Squiggly/issues/new/choose).
+[CONTRIBUTING.md](CONTRIBUTING.md) explains how the repository is organised and
+how to make a change; `scripts/check-all.sh` runs every check before you push.
 
 ## Licence
 
-[MIT](LICENSE). Use it for anything, including commercially; keep the copyright
-notice.
-
-There is no third-party code in it. The package declares no dependencies, and
-the symbol table was not copied from `unicode-math` or the W3C entity tables:
-`scripts/generate-swift-tables.py` holds its own list of commands paired with Unicode
-*character names*, and resolves each name against the Unicode database at
-generation time. The command names themselves are of course Knuth's, Lamport's
-and the AMS's, and the characters are Unicode's, but names and codepoint
-assignments are facts rather than anyone's property.
+[MIT](LICENSE). There is no third-party code in it. The symbol table was not
+copied from `unicode-math` or the W3C entity tables:
+`scripts/generate-swift-tables.py` pairs each command with a Unicode character
+*name* and resolves it against the Unicode database when it runs.
