@@ -62,6 +62,7 @@ The result is ordinary Unicode text, not an image, so it survives copying and pa
 • Honest when it has to approximate: if something cannot be written exactly in plain text, a short note says what it did, and if it cannot be written at all, your text is left as typed
 • Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
 • In ordinary text boxes, undo brings the command back
+• The toolbar icon turns grey wherever it is not converting, and Alt+Shift+L pauses it anywhere
 
 Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
 

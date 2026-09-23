@@ -59,11 +59,38 @@
   }
   const active = () => config !== null && config.enabled && excludedBy() === null;
 
-  settings.load().then((loaded) => { config = loaded; });
-  chrome.storage.onChanged.addListener((_, area) => {
+  settings.load().then((loaded) => { config = loaded; report(); });
+  chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "sync") return;
-    settings.load().then((loaded) => { config = loaded; reset(); });
+    settings.load().then((loaded) => {
+      config = loaded;
+      reset();
+      report();
+      if ("enabled" in changes) announcePause();
+    });
   });
+
+  // The top frame tells the background worker whether this tab is converting,
+  // so the toolbar icon can say so without being clicked.
+  function report() {
+    if (window !== window.top || config === null) return;
+    const site = excludedBy();
+    const on = config.enabled && site === null;
+    const title = !config.enabled ? "LaTeX Squiggly: paused"
+      : site !== null ? `LaTeX Squiggly: off on ${site}`
+      : "LaTeX Squiggly";
+    chrome.runtime.sendMessage({ type: "state", on, title }).catch(() => {});
+  }
+
+  // Pausing from the keyboard shortcut happens without anything on screen, so
+  // the page in front says so. Shown even with notices switched off: those
+  // cover what a conversion did, and a pause that goes unannounced looks
+  // exactly like the extension being broken.
+  function announcePause() {
+    if (window !== window.top || !document.hasFocus()) return;
+    if (config.enabled) notify("Converting again", "LaTeX Squiggly is converting as you type.", { always: true });
+    else notify("Paused", "LaTeX Squiggly is paused everywhere until you turn it back on.", { always: true });
+  }
 
   // The popup asks the top frame which site it is on. Frames stay quiet, or
   // an embedded page could answer first.
@@ -348,9 +375,9 @@
   // Drawn in a closed shadow root so the page's styles cannot reach it.
   let notice = null;
 
-  function notify(title, message) {
+  function notify(title, message, { always = false } = {}) {
     // A frame in the background has no business interrupting.
-    if (!config?.showNotices || (window !== window.top && !document.hasFocus())) return;
+    if ((!always && !config?.showNotices) || (window !== window.top && !document.hasFocus())) return;
     // Rebuilt if the page replaced its document since, taking the old one with it.
     if (!notice || !notice.host.isConnected) notice = buildNotice();
     notice.title.textContent = title;

@@ -17,7 +17,11 @@ Windows fixes ship once they have been tested on Windows.
   settings. Docs gives the extension no text to check, so it follows the keys
   pressed instead, forgets them after four seconds or on any click, and
   replaces a command with Backspace and key events. Documents only; Sheets and
-  Slides are untouched.
+  Slides are untouched. The popup offers the switch when a Google Doc is open.
+- The extension's toolbar icon turns grey with a strike wherever it is not
+  converting, paused or on an excluded site, and its tooltip says which.
+- Alt+Shift+L pauses and resumes the extension from any page, and the page
+  says so. The shortcut can be changed at `chrome://extensions/shortcuts`.
 
 - **Chrome extension**, in `chrome/`. Converts LaTeX in text boxes and rich
   editors on web pages, with the same engine and the same 2,030-fragment

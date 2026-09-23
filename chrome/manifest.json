@@ -26,6 +26,14 @@
   "background": {
     "service_worker": "background/worker.js"
   },
+  "commands": {
+    "toggle-conversion": {
+      "suggested_key": {
+        "default": "Alt+Shift+L"
+      },
+      "description": "Pause or resume converting"
+    }
+  },
   "permissions": [
     "storage"
   ],

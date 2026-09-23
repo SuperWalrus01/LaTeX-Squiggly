@@ -28,6 +28,14 @@
     <p class="note muted" id="site-note" hidden></p>
   </section>
 
+  <label class="switch row" id="docs-row" hidden>
+    <span>
+      <span>Convert in Google Docs</span>
+      <span class="host muted">Docs goes by the keys you press</span>
+    </span>
+    <input type="checkbox" id="google-docs">
+  </label>
+
   <p class="row example muted">
     Type <code>\alpha</code> then space to get α.
     <code>$x^2$</code> gives x².
@@ -35,6 +43,7 @@
 
   <footer>
     <a href="#" id="options">Settings and symbols</a>
+    <p class="shortcut muted" id="shortcut" hidden>Pause anywhere: <kbd id="shortcut-keys"></kbd></p>
   </footer>
 
   <script src="../engine/tables.js"></script>

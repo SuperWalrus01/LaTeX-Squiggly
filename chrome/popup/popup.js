@@ -4,6 +4,8 @@ const enabled = document.getElementById("enabled");
 const siteEnabled = document.getElementById("site-enabled");
 const hostLabel = document.getElementById("host");
 const note = document.getElementById("site-note");
+const docsRow = document.getElementById("docs-row");
+const googleDocs = document.getElementById("google-docs");
 
 let config = await settings.load();
 let status = null;
@@ -31,6 +33,20 @@ try {
   status = null;
 }
 
+// The Google Docs switch, offered where it matters: in a Google Doc, which is
+// where a problem with it would be noticed.
+googleDocs.addEventListener("change", async () => {
+  config.googleDocs = googleDocs.checked;
+  await settings.save({ googleDocs: googleDocs.checked });
+});
+
+// The pause shortcut as Chrome has it, which the user may have changed.
+const [command] = (await chrome.commands.getAll()).filter((c) => c.name === "toggle-conversion");
+if (command?.shortcut) {
+  document.getElementById("shortcut-keys").textContent = command.shortcut;
+  document.getElementById("shortcut").hidden = false;
+}
+
 siteEnabled.addEventListener("change", async () => {
   if (!status) return;
   let sites = config.excludedSites;
@@ -50,6 +66,11 @@ siteEnabled.addEventListener("change", async () => {
 });
 
 function render() {
+  const inDocs = !!status?.host && settings.hostMatches(status.host, "docs.google.com");
+  docsRow.hidden = !inDocs;
+  googleDocs.checked = config.googleDocs;
+  googleDocs.disabled = !config.enabled;
+
   if (!status || !status.host) {
     siteEnabled.checked = false;
     siteEnabled.disabled = true;

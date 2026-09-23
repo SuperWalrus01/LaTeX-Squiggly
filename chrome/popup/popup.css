@@ -22,5 +22,6 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 .example { margin: 0; font-size: 12px; }
 
 footer { padding: 10px 16px 12px; font-size: 13px; }
+.shortcut { margin: 6px 0 0; font-size: 12px; }
 
 .row.switch { display: flex; }

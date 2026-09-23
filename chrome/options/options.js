@@ -25,6 +25,18 @@ document.getElementById("welcome-done").addEventListener("click", () => {
   history.replaceState(null, "", location.pathname);
 });
 
+// MARK: The shortcut
+
+// As Chrome has it, which the user may have changed or cleared.
+const [command] = (await chrome.commands.getAll()).filter((c) => c.name === "toggle-conversion");
+if (command?.shortcut) {
+  document.getElementById("shortcut-hint").textContent =
+    ` ${command.shortcut} does the same from any page; change it at chrome://extensions/shortcuts.`;
+  document.getElementById("welcome-shortcut").textContent = command.shortcut;
+} else {
+  document.getElementById("welcome-shortcut").textContent = "A keyboard shortcut, set at chrome://extensions/shortcuts,";
+}
+
 // MARK: General
 
 enabled.checked = config.enabled;

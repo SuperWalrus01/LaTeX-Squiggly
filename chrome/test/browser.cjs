@@ -234,6 +234,44 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   await fresh('#ta'); await page.keyboard.type('\\alpha ');
   check('overleaf subdomain untouched', await value('#ta'), '\\alpha ');
 
+  // The toolbar icon's tooltip, read back from Chrome for the tab. The worker
+  // can stop and restart between checks, so it is looked up each time.
+  const worker = async () => context.serviceWorkers()[0] ?? context.waitForEvent('serviceworker');
+  // The tab is found as the active one, because without the tabs permission,
+  // which the extension does not ask for, Chrome will not match tabs by URL.
+  const toolbarTitle = async () => {
+    await page.bringToFront();
+    await page.waitForTimeout(300);
+    return (await worker()).evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      return chrome.action.getTitle({ tabId: tab.id });
+    });
+  };
+  check('toolbar icon says it is off on an excluded site',
+    await toolbarTitle(), 'LaTeX Squiggly: off on overleaf.com');
+
+  await page.goto('https://www.example.test/');
+  check('toolbar icon says it is converting elsewhere',
+    await toolbarTitle(), 'LaTeX Squiggly');
+
+  // The pause shortcut, through the same function the command calls. The
+  // notice shows even with notices off: it is about the extension, not a
+  // conversion.
+  await page.waitForTimeout(300);
+  await page.bringToFront(); await page.click('#ta');
+  await (await worker()).evaluate(() => chrome.storage.sync.set({ showNotices: false }));
+  await (await worker()).evaluate(() => toggleConversion());
+  check('the shortcut pauses: the toolbar icon says so',
+    await toolbarTitle(), 'LaTeX Squiggly: paused');
+  check('the shortcut pauses: the page in front says so, notices off or not', await notice(), true);
+  await fresh('#ta'); await page.keyboard.type('\\alpha ');
+  check('the shortcut pauses: nothing converts', await value('#ta'), '\\alpha ');
+  await (await worker()).evaluate(() => toggleConversion());
+  await page.waitForTimeout(300);
+  await fresh('#ta'); await page.keyboard.type('\\alpha ');
+  check('the shortcut resumes', await value('#ta'), 'α ');
+  await (await worker()).evaluate(() => chrome.storage.sync.set({ showNotices: true }));
+
   // Settings: turning it off
   const options = await context.newPage();
   await options.goto(`chrome-extension://${id}/options/options.html`);
@@ -299,6 +337,9 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   await popup.goto(`chrome-extension://${id}/popup/popup.html`);
   await popup.waitForTimeout(300);
   check('popup shows its switch', await popup.isVisible('#enabled'), true);
+  // Chrome writes it as Alt+Shift+L, or as ⌥⇧L on a Mac.
+  const keys = await popup.textContent('#shortcut-keys');
+  check('popup shows the pause shortcut', ['Alt+Shift+L', '⌥⇧L'].includes(keys), true);
 
   console.log(`\n${results.filter(Boolean).length}/${results.length} passed`);
   await context.close();

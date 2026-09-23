@@ -27,6 +27,11 @@
           where you typed it. Undo brings the command back.</li>
         <li>Nothing you type is saved or sent anywhere. The extension makes no network requests.</li>
         <li>It stays off on Overleaf and the other sites listed below, and in code editors.</li>
+        <li>It works in Google Docs too. Docs does not show the extension your text, so there it
+          goes by the keys you press. At the start of a sentence, Docs may capitalise a Greek
+          letter; turn off its Tools → Preferences → Automatically capitalize words to stop that.</li>
+        <li>The toolbar icon turns grey wherever it is not converting. <span
+          id="welcome-shortcut">Alt+Shift+L</span> pauses and resumes it anywhere.</li>
       </ul>
       <p class="muted">Try it: type <code>\alpha</code> and a space in any text box on a web page.
         Pages that were already open need reloading first.
@@ -40,7 +45,8 @@
         <label class="switch">
           <span>
             <span>Convert as I type</span>
-            <span class="hint muted">Turn this off to pause LaTeX Squiggly everywhere.</span>
+            <span class="hint muted">Turn this off to pause LaTeX Squiggly everywhere.<span
+              id="shortcut-hint"></span></span>
           </span>
           <input type="checkbox" id="enabled">
         </label>

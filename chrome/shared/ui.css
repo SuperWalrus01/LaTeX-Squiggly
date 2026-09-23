@@ -30,6 +30,9 @@
 
 * { box-sizing: border-box; }
 
+/* The hidden attribute wins over any display a class sets. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--bg);
