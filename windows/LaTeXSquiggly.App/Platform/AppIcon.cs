@@ -63,9 +63,16 @@ internal static class AppIcon
         {
             // Missing artwork is a packaging fault, not a reason to run with no
             // tray icon at all: an app with no mark cannot be switched off.
-            return SystemIcons.Application;
+            return Fallback();
         }
         try { return new Icon(stream); }
-        catch (Exception) { return SystemIcons.Application; }
+        catch (Exception) { return Fallback(); }
     }
+
+    /// <summary>
+    /// A copy of the system's application icon. A copy, because Sized disposes
+    /// the icon it is given, and SystemIcons.Application is shared by the whole
+    /// process: disposing it would break every later use of it.
+    /// </summary>
+    private static Icon Fallback() => (Icon)SystemIcons.Application.Clone();
 }

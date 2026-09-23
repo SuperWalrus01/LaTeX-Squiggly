@@ -16,37 +16,82 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
-        using var instance = new Mutex(initiallyOwned: true, InstanceName, out var isFirst);
-        if (!isFirst)
+        // The error handlers go in first, before anything that can throw. They
+        // used to be registered after the single-instance check and after
+        // start-up had begun, so a failure in either closed the app with no
+        // message and no line in the log: it simply vanished at launch.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Report(e.ExceptionObject as Exception);
+        AppDomain.CurrentDomain.FirstChanceException += (_, e) => Diagnostics.FirstChance(e.Exception);
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += (_, e) => Report(e.Exception);
+
+        Mutex instance;
+        bool isFirst;
+        try
         {
+            instance = new Mutex(initiallyOwned: true, InstanceName, out isFirst);
+        }
+        catch (Exception error)
+        {
+            // Opening the mutex is refused when another copy created it with
+            // different rights, which is what happens when that copy is running
+            // as administrator.
+            Diagnostics.Log("could not open the single-instance mutex: " + error.Message);
             MessageBox.Show(
-                "LaTeX Squiggly is already running. Look for its mark near the clock.",
-                "LaTeX Squiggly", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "LaTeX Squiggly could not start, because another copy of it seems to be running "
+                + "with different rights, for example as administrator.\n\n"
+                + "Quit that copy from its tray menu, or end LaTeX Squiggly in Task Manager, "
+                + "then start it again.",
+                "LaTeX Squiggly", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
-        ApplicationConfiguration.Initialize();
+        using (instance)
+        {
+            if (!isFirst)
+            {
+                // A copy that has hung is still running even though its tray
+                // icon is gone: Explorer removes the icon of a process that has
+                // stopped responding. So say where to look.
+                MessageBox.Show(
+                    "LaTeX Squiggly is already running. Look for its mark near the clock.\n\n"
+                    + "If you cannot find it, it may have stopped responding: end LaTeX Squiggly "
+                    + "in Task Manager, then start it again.",
+                    "LaTeX Squiggly", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
 
-        // The start line and the exit line are how the next run tells a quit
-        // from a kill; see Diagnostics.
-        Diagnostics.OpenSession(
-            $"--- started, version {Application.ProductVersion}, {RuntimeInformation.ProcessArchitecture} "
-            + $"on {RuntimeInformation.OSArchitecture}, {Environment.OSVersion.VersionString}");
-        Application.ApplicationExit += (_, _) => Diagnostics.Log("exiting");
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => Diagnostics.Log("exiting");
+            ApplicationConfiguration.Initialize();
 
-        // A hook callback that throws takes the hook down with it, and the user
-        // is left with an app that has silently stopped converting. Neither of
-        // these should ever fire, but "should" is not a plan.
-        Application.ThreadException += (_, e) => Report(e.Exception);
-        AppDomain.CurrentDomain.UnhandledException += (_, e) => Report(e.ExceptionObject as Exception);
-        AppDomain.CurrentDomain.FirstChanceException += (_, e) => Diagnostics.FirstChance(e.Exception);
+            // The start line and the exit line are how the next run tells a quit
+            // from a kill; see Diagnostics.
+            Diagnostics.OpenSession(
+                $"--- started, version {Application.ProductVersion}, {RuntimeInformation.ProcessArchitecture} "
+                + $"on {RuntimeInformation.OSArchitecture}, {Environment.OSVersion.VersionString}");
+            Application.ApplicationExit += (_, _) => Diagnostics.Log("exiting");
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => Diagnostics.Log("exiting");
 
-        Application.Run(new TrayApplication());
+            TrayApplication tray;
+            try
+            {
+                tray = new TrayApplication();
+            }
+            catch (Exception error)
+            {
+                // Start-up runs before the message loop, where ThreadException
+                // cannot catch it. Report it here, in words, rather than let the
+                // process end on an unhandled exception.
+                Diagnostics.Log("start-up failed: " + error);
+                Report(error);
+                return;
+            }
 
-        // The mutex must outlive the message loop, or a second copy could start
-        // while this one is still running.
-        GC.KeepAlive(instance);
+            Application.Run(tray);
+
+            // The mutex must outlive the message loop, or a second copy could
+            // start while this one is still running.
+            GC.KeepAlive(instance);
+        }
     }
 
     private static void Report(Exception? error)
