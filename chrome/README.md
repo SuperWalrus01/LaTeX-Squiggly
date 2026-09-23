@@ -40,7 +40,8 @@ NODE_PATH=/tmp/squiggly-test/node_modules node chrome/test/browser.cjs
 
 This loads the extension into Chromium and types into real fields: a textarea,
 inputs, contenteditable, a controlled field in the React style, a code editor,
-an excluded site, and the off switch. Branded Google Chrome ignores
+editors in iframes and in a shadow root, keys typed with AltGr, Option and dead
+keys, Google Docs' hidden input frame, an excluded site, and the off switch. Branded Google Chrome ignores
 `--load-extension`, so it has to be Playwright's Chromium.
 
 ## How it differs from the desktop apps
@@ -69,11 +70,23 @@ taken over safely. Return is excluded for the same reason as on the desktop.
 **Code editors are recognised by their markup** (CodeMirror, Monaco, Ace),
 because on the web they are components inside a page, not apps.
 
+**Every keyboard, not only US English.** A key typed with AltGr (Control and
+Alt, to the browser) or with Option on a Mac is typing, not a shortcut: on most
+European keyboards that is how `{` and `}` are typed. Only Control and Command
+shortcuts end a command. Dead keys and input methods are followed through
+their composition, so `^` on a German keyboard works.
+
+**Editors in frames and components.** The script also runs in frames with no
+address of their own (`about:blank`), where TinyMCE, CKEditor 4 and the
+classic WordPress editor keep their text, and reads the selection from a shadow
+root when the editor is inside a web component.
+
 ## What does not work
 
 - **Google Docs, Sheets and Slides.** They draw text on a canvas and take typing
-  through a hidden field, so there is nothing to confirm against and the
-  extension stays out of the way.
+  through a hidden frame. The extension does nothing in any frame inside Docs,
+  so it can never hand Docs a second copy of what was typed. Docs' own text
+  boxes, such as comments, are in the top frame and still convert.
 - **Chrome's own pages** (`chrome://`, the Web Store, the new tab page). Chrome
   keeps every extension out of these.
 - **Password fields**, deliberately.

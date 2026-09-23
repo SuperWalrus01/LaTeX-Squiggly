@@ -64,7 +64,14 @@
   }
 
   async function load() {
-    const stored = await chrome.storage.sync.get(defaults());
+    // Sync storage can be unavailable, turned off by policy or over quota. The
+    // defaults are the safe answer; without this the extension stayed off.
+    let stored;
+    try {
+      stored = await chrome.storage.sync.get(defaults());
+    } catch {
+      return defaults();
+    }
     return {
       enabled: stored.enabled !== false,
       showNotices: stored.showNotices !== false,

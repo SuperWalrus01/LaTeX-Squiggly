@@ -28,6 +28,10 @@
   let buffer = { element: null, text: "" };
   let replacing = false;
 
+  // True between compositionstart and compositionend: an input method, or a
+  // dead key such as ^ on a German keyboard, is building a character.
+  let composing = false;
+
   const reset = () => { buffer = { element: null, text: "" }; };
 
   // MARK: Settings and suppression
@@ -41,6 +45,18 @@
   }
 
   const excludedBy = () => settings.matchingSite(framedHosts(), config?.excludedSites ?? []);
+
+  // Google Docs, Sheets and Slides draw their own text and take typing through
+  // a hidden frame, which Docs reads and empties. Converting there could hand
+  // Docs a second copy of what was typed, so inside Docs every frame below the
+  // top one does nothing at all. The check cannot rest on the frame's address:
+  // a frame the page has written into with document.open takes the page's
+  // own address, so it looks like any other docs.google.com frame. Docs' own
+  // text boxes, such as comments, are in the top frame and still convert.
+  const HIDDEN_INPUT_HOSTS = ["docs.google.com"];
+  if (window !== window.top && settings.matchingSite(framedHosts(), HIDDEN_INPUT_HOSTS) !== null) {
+    return;
+  }
   const active = () => config !== null && config.enabled && excludedBy() === null;
 
   settings.load().then((loaded) => { config = loaded; });
@@ -87,15 +103,31 @@
     return characters.length <= CAPACITY ? text : characters.slice(-CAPACITY).join("");
   }
 
+  // Whether the element has a selection rather than a caret, in which case a
+  // deletion removes more than the one character the buffer would drop.
+  function hasSelection(element) {
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      return element.selectionStart !== element.selectionEnd;
+    }
+    const selection = selectionFor(element);
+    return !!selection && !selection.isCollapsed;
+  }
+
   addEventListener("beforeinput", (event) => {
     if (replacing) return;
     const target = editable(deepActiveElement());
-    if (!target || event.isComposing) { reset(); return; }
+    if (!target) { reset(); return; }
+
+    // Text being composed arrives in pieces and may still change. It is
+    // recorded once, when the composition ends, and does not reset the
+    // buffer: a dead key used to, which broke $x^2$ on a German Mac.
+    if (composing || event.isComposing || event.inputType.startsWith("insertComposition")) return;
+
     if (buffer.element !== target.element) buffer = { element: target.element, text: "" };
 
     if (event.inputType === "insertText" && event.data) {
       buffer.text = trimmed(buffer.text + event.data);
-    } else if (event.inputType === "deleteContentBackward") {
+    } else if (event.inputType === "deleteContentBackward" && !hasSelection(target.element)) {
       buffer.text = engine.characters(buffer.text).slice(0, -1).join("");
     } else {
       // Paste, drop, undo, a deleted word: the buffer no longer describes
@@ -111,19 +143,43 @@
   ]);
   addEventListener("mousedown", reset, true);
   addEventListener("focusin", () => { if (!replacing) reset(); }, true);
-  addEventListener("compositionstart", reset, true);
+  // Leaving the window, for another app or the address bar, is a caret move
+  // the page never sees.
+  addEventListener("blur", (event) => { if (event.target === window) reset(); });
+
+  addEventListener("compositionstart", () => { composing = true; }, true);
+  addEventListener("compositionend", (event) => {
+    composing = false;
+    const target = editable(deepActiveElement());
+    if (!target) { reset(); return; }
+    if (buffer.element !== target.element) buffer = { element: target.element, text: "" };
+    if (event.data) buffer.text = trimmed(buffer.text + event.data);
+  }, true);
+
+  // Pressed on their own, these change nothing.
+  const MODIFIERS = new Set(["Shift", "Control", "Alt", "AltGraph", "Meta", "CapsLock", "Fn", "OS"]);
+
+  // A shortcut, as opposed to a modifier used for typing. AltGr is Control
+  // and Alt together as far as the browser is concerned, and on most
+  // European keyboards it is how { } \ are typed; Option does the same on a
+  // Mac. Neither is a shortcut. Resetting on every modified key used to mean
+  // \frac{1}{2} could never convert on those keyboards.
+  function isShortcut(event) {
+    const altGr = event.getModifierState?.("AltGraph") || (event.ctrlKey && event.altKey);
+    return (event.ctrlKey || event.metaKey) && !altGr;
+  }
 
   // MARK: The terminator
 
   // Space only. Return sends messages in chat apps, and Tab moves focus in a
   // browser, so neither can safely be taken over.
   addEventListener("keydown", (event) => {
-    if (replacing) return;
-    if (NAVIGATION.has(event.key) || event.ctrlKey || event.metaKey || event.altKey) {
+    if (replacing || MODIFIERS.has(event.key)) return;
+    if (NAVIGATION.has(event.key) || isShortcut(event)) {
       reset();
       return;
     }
-    if (event.key !== " " || event.isComposing || !active()) return;
+    if (event.key !== " " || event.isComposing || composing || !active()) return;
 
     const target = editable(deepActiveElement());
     if (!target || buffer.element !== target.element) return;
@@ -139,16 +195,22 @@
                                           : richSource(target.element, outcome.source);
     if (typed === null) { reset(); return; }
 
-    event.preventDefault();
-    event.stopImmediatePropagation();
+    let replaced = false;
     replacing = true;
     try {
-      if (target.kind === "field") replaceInField(target.element, typed, outcome.insert);
-      else replaceInRich(typed, outcome.insert);
+      replaced = target.kind === "field"
+        ? replaceInField(target.element, typed, outcome.insert)
+        : replaceInRich(target.element, typed, outcome.insert);
     } finally {
       replacing = false;
       reset();
     }
+    // Only a replacement that happened swallows the space. If the editor
+    // refused it, the caret is back where it was and the space goes through,
+    // so nothing the user typed is lost.
+    if (!replaced) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
     if (outcome.notice) notify("Converted with an approximation", outcome.notice);
   }, true);
 
@@ -167,9 +229,10 @@
     field.setSelectionRange(range.start, range.end);
     // insertText goes through the browser's own editing, so undo restores the
     // source and frameworks such as React see an ordinary input event.
-    if (document.execCommand("insertText", false, insert)) return;
+    if (document.execCommand("insertText", false, insert)) return true;
     field.setRangeText(insert, range.start, range.end, "end");
     field.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: insert }));
+    return true;
   }
 
   // MARK: Rich text
@@ -177,8 +240,17 @@
   // Walks back from the caret through the text nodes of the editing host,
   // collecting exactly as many code units as the source has, and returns the
   // range covering them when they match.
+  // The selection that covers the host. A shadow root keeps its own, and the
+  // document's only reports the shadow host, so an editor inside a web
+  // component was never found.
+  function selectionFor(host) {
+    const root = host.getRootNode();
+    if (root instanceof ShadowRoot && typeof root.getSelection === "function") return root.getSelection();
+    return getSelection();
+  }
+
   function richSource(host, source) {
-    const selection = getSelection();
+    const selection = selectionFor(host);
     if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) return null;
     const caret = selection.getRangeAt(0);
     if (!host.contains(caret.endContainer)) return null;
@@ -230,11 +302,18 @@
     return last;
   }
 
-  function replaceInRich(range, insert) {
-    const selection = getSelection();
+  function replaceInRich(host, range, insert) {
+    const selection = selectionFor(host);
+    const caret = selection.getRangeAt(0).cloneRange();
     selection.removeAllRanges();
     selection.addRange(range);
-    document.execCommand("insertText", false, insert);
+    if (host.ownerDocument.execCommand("insertText", false, insert)) return true;
+
+    // The editor refused. Put the caret back rather than leave the command
+    // selected, where the next keystroke would type over it.
+    selection.removeAllRanges();
+    selection.addRange(caret);
+    return false;
   }
 
   // MARK: Notices

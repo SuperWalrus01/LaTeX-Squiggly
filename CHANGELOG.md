@@ -44,6 +44,15 @@ Every release, newest first. The format follows
   code as the published executable.
 - The extension's icons were missing from the repository, because the rule
   ignoring the macOS `Icon` file also matched `chrome/icons/`.
+- In the Chrome extension: commands with braces, such as `\frac{1}{2}`, never
+  converted on keyboards that type braces with AltGr or Option, which is most
+  European ones, because any modified key ended the command; dead keys such
+  as `^` on a German keyboard did the same. Editors inside an `about:blank`
+  frame (TinyMCE, CKEditor 4, classic WordPress) or a shadow root were never
+  reached. The extension now also stays out of every frame inside Google
+  Docs, rather than relying on how Docs builds its hidden input frame, and an
+  editor that refuses a replacement no longer leaves the command selected
+  with the space lost.
 
 ## [0.2.1] - 2026-09-08
 

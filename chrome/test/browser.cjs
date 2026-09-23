@@ -1,7 +1,8 @@
 // Loads the unpacked extension into Chromium and types into real fields: a
-// textarea, inputs, contenteditable, a controlled field, a code editor, and an
-// excluded site. Pages are served by route interception, so nothing touches
-// the network.
+// textarea, inputs, contenteditable, a controlled field, a code editor, an
+// editor in an about:blank iframe and one in a shadow root, keys typed with
+// AltGr, Option and dead keys, and an excluded site. Pages are served by route
+// interception, so nothing touches the network.
 //
 // Needs Playwright, which is not a dependency of the extension:
 //   npm install --prefix /tmp/squiggly-test playwright
@@ -22,11 +23,33 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
 <div id=ce contenteditable style="min-height:2em;border:1px solid"></div>
 <div class=cm-editor><textarea id=code></textarea></div>
 <input id=react><p id=log></p>
+<iframe id=frame style="width:300px;height:80px"></iframe>
+<iframe id=blank style="width:300px;height:80px"></iframe>
+<shadow-editor></shadow-editor>
 <script>
   // A controlled field in the React style: it keeps its own copy of the value
   // and only knows about changes that arrive as input events.
   let model = ''; const r = document.getElementById('react');
   r.addEventListener('input', () => { model = r.value; document.getElementById('log').textContent = model; });
+
+  // A TinyMCE-style editor: an editable body in an about:blank iframe.
+  const doc = document.getElementById('frame').contentDocument;
+  doc.open(); doc.write('<body contenteditable style="min-height:40px"></body>'); doc.close();
+
+  // The same, made editable without document.open, so the frame keeps the
+  // address about:blank and only match_origin_as_fallback reaches it.
+  const blank = document.getElementById('blank').contentDocument;
+  blank.body.contentEditable = 'true';
+  blank.body.style.minHeight = '40px';
+
+  // A web component with its editor inside a shadow root.
+  customElements.define('shadow-editor', class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' }).innerHTML =
+        '<div id=ed contenteditable style="min-height:2em;border:1px solid"></div>';
+    }
+  });
 </script>`;
 
 (async () => {
@@ -44,7 +67,8 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
 
   await context.route('https://**/*', (route) => {
     const u = new URL(route.request().url());
-    if (u.hostname.endsWith('example.test') || u.hostname.endsWith('overleaf.com')) {
+    if (u.hostname.endsWith('example.test') || u.hostname.endsWith('overleaf.com')
+        || u.hostname === 'docs.google.com') {
       return route.fulfill({ contentType: 'text/html', body: PAGE });
     }
     return route.continue();
@@ -126,6 +150,56 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
 
   await fresh('#ce'); await page.keyboard.type('\\sum_{i=1}^{n} ');
   check('contenteditable: \\sum_{i=1}^{n}', await text('#ce'), '∑ᵢ₌₁ⁿ ');
+
+  // Keyboards other than US English. A key typed with AltGr reaches the page
+  // as Control and Alt together, and one typed with Option on a Mac as Alt;
+  // on most European keyboards that is how { and } are typed.
+  const modifiedKey = (key, modifiers) => page.evaluate(([k, m]) =>
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, ...m })), [key, modifiers]);
+  const typeWith = async (modifiers, sequence) => {
+    for (const ch of sequence) {
+      if ('{}'.includes(ch)) { await modifiedKey(ch, modifiers); await page.keyboard.insertText(ch); }
+      else await page.keyboard.type(ch);
+    }
+  };
+  await fresh('#ta'); await typeWith({ ctrlKey: true, altKey: true }, '\\frac{1}{2} ');
+  check('braces typed with AltGr', await value('#ta'), '½ ');
+  await fresh('#ta'); await typeWith({ altKey: true }, '\\frac{1}{2} ');
+  check('braces typed with Option', await value('#ta'), '½ ');
+
+  await fresh('#ta'); await page.keyboard.type('\\alp');
+  await modifiedKey('b', { ctrlKey: true });
+  await page.keyboard.type('ha ');
+  check('a Control shortcut still ends the run', await value('#ta'), '\\alpha ');
+
+  // A dead key: ^ built by composition, as on a German Mac.
+  const cdp = await context.newCDPSession(page);
+  await fresh('#ta'); await page.keyboard.type('$x');
+  await cdp.send('Input.imeSetComposition', { text: '^', selectionStart: 1, selectionEnd: 1 });
+  await cdp.send('Input.insertText', { text: '^' });
+  await page.keyboard.type('2$ ');
+  check('a caret typed with a dead key', await value('#ta'), 'x² ');
+
+  const frameBody = (f) => f.$eval('body', (b) => b.textContent.replace(/\u00a0/g, ' '));
+  // Frames come in page order: #frame, written with document.open, then #blank.
+  const [, written, blankFrame] = page.frames();
+  await written.click('body'); await page.keyboard.type('\\alpha ');
+  check('an editor in an iframe written with document.open', await frameBody(written), 'α ');
+  await blankFrame.click('body'); await page.keyboard.type('\\gamma ');
+  check('an editor in an about:blank iframe', await frameBody(blankFrame), 'γ ');
+
+  await page.click('shadow-editor >> #ed'); await page.keyboard.type('\\beta ');
+  check('an editor inside a shadow root', (await page.$eval('shadow-editor >> #ed', (e) => e.textContent)).replace(/\u00a0/g, ' '), 'β ');
+
+  // Google Docs takes typing through a hidden about:blank frame, which the
+  // extension must leave alone even though it runs in such frames elsewhere.
+  await page.goto('https://docs.google.com/document/d/test/edit');
+  await page.waitForTimeout(500);
+  for (const [index, kind] of [[1, 'written with document.open'], [2, 'about:blank']]) {
+    const docsFrame = page.frames()[index];
+    await docsFrame.click('body'); await page.keyboard.type('\\alpha ');
+    check(`Google Docs' hidden frame (${kind}) untouched`, await frameBody(docsFrame), '\\alpha ');
+  }
 
   // Excluded site
   await page.goto('https://fr.overleaf.com/project');
