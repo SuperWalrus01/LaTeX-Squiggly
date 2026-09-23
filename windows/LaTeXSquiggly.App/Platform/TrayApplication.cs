@@ -181,7 +181,10 @@ internal sealed class TrayApplication : ApplicationContext
         _settings.ConversionEnabled = enabled;
         _settings.Save();
         if (enabled) StartConverting(); else StopConverting();
-        RebuildMenu();
+        // Posted rather than called: this runs inside a menu item's Click
+        // handler, and rebuilding disposes that same item while WinForms is
+        // still using it, which throws once the handler returns.
+        Post(RebuildMenu);
         _window?.Refresh();
     }
 
@@ -192,7 +195,9 @@ internal sealed class TrayApplication : ApplicationContext
         _settings.Save();
         _rules = _settings.Exclusions.Snapshot();
         _hook.ResetBuffer();
-        RebuildMenu();
+        // Posted for the same reason as in SetConversionEnabled: "Do not
+        // convert in ..." calls this from its own Click handler.
+        Post(RebuildMenu);
     }
 
     private void ShowNotice(string message)
