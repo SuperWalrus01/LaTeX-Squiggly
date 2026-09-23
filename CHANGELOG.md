@@ -8,7 +8,15 @@ Every release, newest first. The format follows
 
 ## Unreleased
 
+To be released as 0.3.0.
+
 ### Added
+
+- **Google Docs mode** in the Chrome extension, experimental and off until it
+  is switched on in the settings. Docs gives the extension no text to check,
+  so it follows the keys pressed instead, forgets them after four seconds or
+  on any click, and replaces a command with Backspace and key events.
+  Documents only; Sheets and Slides are untouched.
 
 - **Chrome extension**, in `chrome/`. Converts LaTeX in text boxes and rich
   editors on web pages, with the same engine and the same 2,030-fragment
