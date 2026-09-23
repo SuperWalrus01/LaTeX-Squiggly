@@ -106,8 +106,53 @@ public sealed class ExclusionList
 
     // MARK: Editing
 
-    public bool Contains(string processName) =>
-        Apps.Any(app => string.Equals(app.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+    public bool Contains(string processName) => Find(processName) is not null;
+
+    /// <summary>
+    /// A plain loop rather than LINQ. This is on the path every keystroke takes
+    /// and a lambda here allocates a closure per call, which over a day of
+    /// typing is a garbage collection that did not need to happen.
+    /// </summary>
+    private ExcludedApp? Find(string processName)
+    {
+        foreach (var app in Apps)
+        {
+            if (string.Equals(app.ProcessName, processName, StringComparison.OrdinalIgnoreCase))
+            {
+                return app;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// A copy nobody is going to edit.
+    ///
+    /// The hook runs on its own thread and reads these rules on every keystroke;
+    /// the settings window adds, removes and sorts them from the UI thread.
+    /// Rather than lock the two together, which would put the settings window in
+    /// front of the machine's keyboard, the app hands the hook a snapshot and
+    /// replaces it wholesale when the user changes something.
+    /// </summary>
+    public ExclusionList Snapshot()
+    {
+        var copy = new ExclusionList
+        {
+            SuppressUnidentifiedPages = SuppressUnidentifiedPages,
+            Apps = new List<ExcludedApp>(Apps),
+            DeclinedProcessNames = new List<string>(DeclinedProcessNames),
+            Sites = new List<ExcludedSite>(Sites.Count),
+        };
+        foreach (var site in Sites)
+        {
+            copy.Sites.Add(new ExcludedSite
+            {
+                Host = site.Host,
+                TitleFragments = new List<string>(site.TitleFragments),
+            });
+        }
+        return copy;
+    }
 
     public void Add(ExcludedApp app)
     {
@@ -133,7 +178,10 @@ public sealed class ExclusionList
     {
         var host = NormalisedHost(site.Host);
         if (host is null) return;
-        if (Sites.Any(existing => existing.Host == host)) return;
+        foreach (var existing in Sites)
+        {
+            if (existing.Host == host) return;
+        }
         Sites.Add(new ExcludedSite { Host = host, TitleFragments = site.TitleFragments });
         Sites.Sort((a, b) => string.CompareOrdinal(a.Host, b.Host));
     }
@@ -152,8 +200,7 @@ public sealed class ExclusionList
     {
         if (context.ProcessName is not null)
         {
-            var app = Apps.FirstOrDefault(candidate =>
-                string.Equals(candidate.ProcessName, context.ProcessName, StringComparison.OrdinalIgnoreCase));
+            var app = Find(context.ProcessName);
             if (app is not null)
             {
                 return SuppressionDecision.Suppress(
@@ -174,7 +221,11 @@ public sealed class ExclusionList
                     // exactly like a page we could not read at all.
                     return UnidentifiedPageDecision(context);
                 }
-                var site = Sites.FirstOrDefault(candidate => HostMatches(host, candidate.Host));
+                ExcludedSite? site = null;
+                foreach (var candidate in Sites)
+                {
+                    if (HostMatches(host, candidate.Host)) { site = candidate; break; }
+                }
                 return site is not null
                     ? SuppressionDecision.Suppress(
                         new SuppressionReason(SuppressionReasonKind.ExcludedSite, site.Host))
@@ -184,10 +235,11 @@ public sealed class ExclusionList
             case BrowserPageKind.Title:
             {
                 var title = context.Page.Value!;
-                var site = Sites.FirstOrDefault(candidate =>
-                    candidate.TitleFragments.Any(fragment =>
-                        fragment.Length > 0
-                        && title.Contains(fragment, StringComparison.CurrentCultureIgnoreCase)));
+                // Ordinal, not culture-aware. The fragments are ASCII product
+                // names, a culture-aware Contains is an ICU call per fragment per
+                // check, and a culture-aware answer here would mean the app could
+                // behave differently on a Turkish machine than on an English one.
+                var site = SiteMatchingTitle(title);
                 if (site is not null)
                 {
                     return SuppressionDecision.Suppress(
@@ -202,6 +254,22 @@ public sealed class ExclusionList
             default:
                 return UnidentifiedPageDecision(context);
         }
+    }
+
+    private ExcludedSite? SiteMatchingTitle(string title)
+    {
+        foreach (var candidate in Sites)
+        {
+            foreach (var fragment in candidate.TitleFragments)
+            {
+                if (fragment.Length > 0
+                    && title.Contains(fragment, StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate;
+                }
+            }
+        }
+        return null;
     }
 
     private SuppressionDecision UnidentifiedPageDecision(TypingContext context) =>

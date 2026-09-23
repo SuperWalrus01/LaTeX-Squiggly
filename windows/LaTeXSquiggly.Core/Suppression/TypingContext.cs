@@ -30,6 +30,13 @@ public sealed record BrowserPage(BrowserPageKind Kind, string? Value)
 /// </summary>
 public sealed record TypingContext(string? ProcessName, string? Name = null, BrowserPage? Page = null)
 {
+    /// <summary>
+    /// No foreground app, or one we could not name. Shared rather than built
+    /// each time: the suppression check runs often enough that its "nothing to
+    /// report" answer should not be an allocation.
+    /// </summary>
+    public static readonly TypingContext Unknown = new((string?)null);
+
     /// <summary>Whatever we have to call this app in a sentence.</summary>
     public string DisplayName => Name ?? ProcessName ?? "this app";
 }
