@@ -3,10 +3,11 @@
 Everything the Developer Dashboard asks for, in the order it asks. The text in
 the boxes is ready to paste.
 
-The text here is for the next upload, 0.3.0, which adds the experimental
-Google Docs setting. Version 0.2.1's listing said the extension does not work
-in Google Docs; when uploading 0.3.0, paste the description and the host
-permission justification again, because both changed to describe that setting.
+The text here is for the next upload, 0.2.2, which adds Google Docs. Version
+0.2.1's listing said the extension does not work in Google Docs, so when
+uploading 0.2.2, paste the description and the host permission justification
+again: both changed. The steps are under
+[Uploading the next version](#uploading-the-next-version).
 
 ## Why this should pass review
 
@@ -62,7 +63,7 @@ The result is ordinary Unicode text, not an image, so it survives copying and pa
 • Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
 • In ordinary text boxes, undo brings the command back
 
-Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too, with an experimental setting that is off until you turn it on. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
+Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
 
 Privacy: to recognise a command, the extension keeps the last few characters you typed in a text box, in memory only, and forgets them when you click or change fields. Nothing you type is saved or sent anywhere, and the extension makes no network requests. Your settings are stored with Chrome.
 
@@ -106,7 +107,7 @@ Saves the user's settings: whether conversion is on, whether notices are shown, 
 **Host permission justification** (the content script's `http://*/*` and `https://*/*`)
 
 ```
-The extension converts LaTeX wherever the user types, which can be any site, so its content script has to run on every page. It only reacts to typing in text fields: it keeps the last 64 typed characters in memory to recognise a command, reads the characters just before the cursor to confirm them, and replaces them. In Google Docs, only when the user turns on an experimental setting, it cannot read the text, so it replaces a command by sending Backspace and key events instead. It compares the page's host with the user's list of excluded sites and discards it. It does not read the rest of the page, store anything typed, or make any network request.
+The extension converts LaTeX wherever the user types, which can be any site, so its content script has to run on every page. It only reacts to typing in text fields: it keeps the last 64 typed characters in memory to recognise a command, reads the characters just before the cursor to confirm them, and replaces them. In Google Docs, whose text it cannot read, it replaces a command by sending Backspace and key events instead, and the user can switch this off. It compares the page's host with the user's list of excluded sites and discards it. It does not read the rest of the page, store anything typed, or make any network request.
 ```
 
 **Are you using remote code?** No.

@@ -1,4 +1,4 @@
-// Google Docs mode: experimental, and off unless switched on in the settings.
+// Google Docs mode: on by default, and switched off in the settings.
 //
 // Everywhere else the extension reads the text in front of the caret and only
 // replaces it when it is exactly what was typed. Google Docs gives nothing to
@@ -16,9 +16,9 @@
 //
 // content.js stays out of every frame inside Docs; see its HIDDEN_INPUT_HOSTS.
 //
-// Not yet verified against Google Docs itself, which needs a signed-in test by
-// hand: see "Google Docs (experimental)" in chrome/README.md. The browser test
-// runs it against a stand-in that behaves the way Docs is expected to.
+// The browser test runs it against a stand-in built the way Docs works, which
+// proves this side. Docs' side can only be tested by hand, signed in: see
+// "Google Docs" in chrome/README.md, and re-run that test after any change here.
 
 (() => {
   const { engine, settings } = globalThis.LaTeXSquiggly;
@@ -165,7 +165,8 @@
   }
 
   // Backspace as keydown and keyup, and each character as keypress, which is
-  // how Docs is understood to read keys: by keyCode and charCode, not key.
+  // how Docs reads keys: by keyCode and charCode, not key. Checked by hand in
+  // Docs; see chrome/README.md.
   function typeIntoDocs(deletes, text) {
     const target = document.activeElement ?? document.body;
     const send = (type, init) =>

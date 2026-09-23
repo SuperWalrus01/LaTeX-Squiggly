@@ -217,14 +217,15 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   await page.click('shadow-editor >> #ed'); await page.keyboard.type('\\beta ');
   check('an editor inside a shadow root', (await page.$eval('shadow-editor >> #ed', (e) => e.textContent)).replace(/\u00a0/g, ' '), 'β ');
 
-  // Google Docs takes typing through a hidden about:blank frame, which the
-  // extension must leave alone even though it runs in such frames elsewhere.
-  await page.goto('https://docs.google.com/document/d/test/edit');
+  // Google Docs, Sheets and Slides take typing through a hidden frame, which
+  // content.js must leave alone even though it runs in such frames elsewhere.
+  // Slides here, because in Docs documents docs.js takes over; see below.
+  await page.goto('https://docs.google.com/presentation/d/test/edit');
   await page.waitForTimeout(500);
   for (const [index, kind] of [[1, 'written with document.open'], [2, 'about:blank']]) {
     const docsFrame = page.frames()[index];
     await docsFrame.click('body'); await page.keyboard.type('\\alpha ');
-    check(`Google Docs' hidden frame (${kind}) untouched`, await frameBody(docsFrame), '\\alpha ');
+    check(`Google Slides' hidden frame (${kind}) untouched`, await frameBody(docsFrame), '\\alpha ');
   }
 
   // Excluded site
@@ -254,14 +255,8 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   };
   const drawn = () => page.$eval('#doc', (e) => e.textContent);
 
-  await docs(); await page.keyboard.type('\\alpha ');
-  check('Google Docs mode is off by default', await drawn(), '\\alpha ');
-
-  await options.click('label:has(#google-docs)');
-  await options.waitForTimeout(300);
-
   await docs(); await page.keyboard.type('x \\alpha y');
-  check('Google Docs mode: \\alpha', await drawn(), 'x α y');
+  check('Google Docs mode is on by default: \\alpha', await drawn(), 'x α y');
 
   await docs(); await page.keyboard.type('$x^2$ and \\frac{1}{2} ');
   check('Google Docs mode: scripts and fractions', await drawn(), 'x² and ½ ');
@@ -290,6 +285,12 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   await docs('/spreadsheets/d/stand-in/edit'); await page.keyboard.type('\\alpha ');
   check('Google Docs mode stays out of Sheets', await drawn(), '\\alpha ');
 
+  // Switched off, it stops at once, without reloading the document.
+  await docs();
+  await options.click('label:has(#google-docs)');
+  await options.waitForTimeout(300);
+  await page.frames()[1].click('body'); await page.keyboard.type('\\alpha ');
+  check('Google Docs mode switched off stops without a reload', await drawn(), '\\alpha ');
   await options.click('label:has(#google-docs)');
 
   // Popup, as a page
