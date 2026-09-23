@@ -75,8 +75,10 @@ Also available as a menu bar app for macOS and a tray app for Windows, which wor
 | Store icon (128×128) | `chrome/icons/icon-128.png` |
 | Screenshots (1280×800) | `chrome/store/screenshot-1-typing.png`, `screenshot-2-notice.png`, `screenshot-3-welcome.png` |
 | Small promo tile (440×280) | `chrome/store/promo-440x280.png` |
+| Marquee promo tile (1400×560), optional | `chrome/store/marquee-1400x560.png` |
 
 The screenshots are real: the extension typing into a page, not a mock-up.
+Every image is a 24-bit PNG with no alpha channel, which the store requires.
 
 **Homepage URL:** `https://superwalrus01.github.io/LaTeX-Squiggly/`
 
