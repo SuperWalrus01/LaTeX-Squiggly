@@ -351,7 +351,8 @@ Either way the executable lands in `windows/dist/<runtime>/`.
 
 Anyone can work on the Windows app from a Windows machine with only the .NET 8
 SDK: everything generated from the Swift engine is committed.
-[TESTING.md](TESTING.md) is the setup and the testing loop.
+[DEVELOPING.md](DEVELOPING.md) is the guide to setting up, changing and
+testing it.
 
 Where a change goes:
 
@@ -408,7 +409,7 @@ windows/
       AppIcon.cs              the mark, drawn from the Mac artwork
   LaTeXSquiggly.Conformance/  the proof, runnable anywhere
   build.ps1                   build, check and run it on Windows
-  TESTING.md                  setting up a Windows machine to work on it
+  DEVELOPING.md               how to change and test it on Windows
 ```
 
 The full pipeline, which needs a Mac, is `scripts/build-windows.sh`.
