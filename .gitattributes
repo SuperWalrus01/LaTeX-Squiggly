@@ -1,0 +1,23 @@
+# Text files are stored with LF endings, whatever the platform.
+* text=auto eol=lf
+
+# Except .gitignore, whose rule for the macOS Icon file ends in two literal
+# carriage returns that line-ending conversion would strip.
+/.gitignore -text
+
+# Binary artwork: never diffed or converted.
+*.png binary
+*.icns binary
+*.ico binary
+*.tiff binary
+
+# Generated files. GitHub collapses them in diffs and leaves them out of the
+# language statistics. Never edit them by hand; see CONTRIBUTING.md.
+Sources/LaTeXUnicode/SymbolTableData.swift linguist-generated=true
+Sources/LaTeXUnicode/ScriptTables.swift linguist-generated=true
+Sources/LaTeXUnicodeChecks/GeneratedCodepointChecks.swift linguist-generated=true
+Sources/LaTeXSquigglyApp/MenuBarIconData.swift linguist-generated=true
+windows/LaTeXSquiggly.Core/Engine/*.g.cs linguist-generated=true
+chrome/engine/tables.js linguist-generated=true
+conformance/*.json linguist-generated=true
+site/assets/data.js linguist-generated=true

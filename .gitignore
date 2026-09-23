@@ -17,9 +17,11 @@ assets/*.iconset/
 # ending.
 Icon
 
-# Note-to-self, not part of the app.
-latex-unicode-app-build-prompt.md
-ARCHITECTURE.md
+# Notes to self at the top level, not part of the app. Anchored with a slash,
+# because git on a Mac ignores case and ARCHITECTURE.md alone also matched
+# docs/architecture.md.
+/latex-unicode-app-build-prompt.md
+/ARCHITECTURE.md
 
 # Windows port build output
 windows/**/bin/
