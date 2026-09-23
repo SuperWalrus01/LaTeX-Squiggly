@@ -143,15 +143,46 @@ first. Unlisted items go through the same review.
 
 **Regions:** All regions.
 
-## Releasing an update
+## Uploading the next version
 
-1. Bump `VERSION`, and the version in `chrome/manifest.json` to match.
-   `scripts/check-version.py` fails until they agree. The store refuses a version
-   that is not higher than the last one it accepted.
-2. Run `scripts/package-chrome.sh`.
-3. In the dashboard: **Package → Upload new package**, then **Submit for
-   review**.
+The next version is **0.2.2**, and it is ready on `main`: the version is set
+everywhere, and the file to upload is `build/LaTeX-Squiggly-0.2.2-chrome.zip`.
 
-Adding a permission later shows existing users a warning and disables the
+**Before uploading**
+
+1. 0.2.1 has been approved. Uploading while a review is pending can restart it.
+2. Rebuild the zip, so it has every change made since it was last built:
+
+   ```
+   scripts/package-chrome.sh
+   ```
+
+   It checks the version and runs the tests before it packages anything.
+3. The privacy policy has its Google Docs paragraph live at
+   <https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html>. It deploys
+   when `main` is pushed.
+
+**In the dashboard** (<https://chrome.google.com/webstore/devconsole>, then
+LaTeX Squiggly)
+
+1. **Package → Upload new package**, and choose the 0.2.2 zip.
+2. **Store listing**: paste the description above; it now mentions Google Docs.
+3. **Privacy**: paste the host permission justification above; it now describes
+   Google Docs. Every other answer stays as it is.
+4. **Submit for review**. 0.2.1 stays live until 0.2.2 is approved.
+
+**After uploading**
+
+1. In `CHANGELOG.md`, rename **Unreleased** to `[0.2.2]` with the date.
+2. Tag it: `git tag v0.2.2 && git push origin v0.2.2`.
+3. From then on, 0.2.2 is fixed. The next change goes into 0.2.3: set it in
+   `VERSION`, `chrome/manifest.json` and `windows/LaTeXSquiggly.App/app.manifest`
+   (as `0.2.3.0`), and `scripts/check-version.py` checks that all three agree.
+
+**Changing something before 0.2.2 is uploaded** needs none of that: make the
+change, run `scripts/check-all.sh`, commit, and rebuild the zip. The version
+stays 0.2.2 until it is uploaded.
+
+Adding a permission shows every existing user a warning and disables the
 extension until they accept it, so keep the permission list as it is unless a
-feature cannot work without the change.
+feature cannot work without the change. 0.2.2 adds none.
