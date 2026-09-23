@@ -30,9 +30,13 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
 </script>`;
 
 (async () => {
+  // Playwright's default headless browser is a stripped-down shell that cannot
+  // load extensions, so ask for its full Chromium unless a build is named.
   const context = await chromium.launchPersistentContext('', {
-    executablePath: process.env.CHROMIUM_PATH || undefined, headless: true,
-    args: ['--headless=new', `--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
+    executablePath: process.env.CHROMIUM_PATH || undefined,
+    channel: process.env.CHROMIUM_PATH ? undefined : 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
   });
   let [sw] = context.serviceWorkers();
   if (!sw) sw = await context.waitForEvent('serviceworker');
