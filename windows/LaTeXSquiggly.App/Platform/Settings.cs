@@ -56,6 +56,7 @@ internal sealed class Settings
                     // A file that predates the exclusion list, or one written by
                     // hand, still has to come back usable.
                     loaded.Exclusions ??= DefaultExclusions.Fresh();
+                    loaded.Exclusions.Repair();
                     if (loaded.Exclusions.Apps.Count == 0 && loaded.Exclusions.Sites.Count == 0
                         && loaded.Exclusions.DeclinedProcessNames.Count == 0)
                     {

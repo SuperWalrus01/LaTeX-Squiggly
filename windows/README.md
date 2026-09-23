@@ -310,13 +310,13 @@ that must stay silent. `LaTeXSquiggly.Conformance` replays all of them through
 the C# engine and checks that every answer is identical: same text, same reason,
 same delete count, same decision to stay quiet. The suppression rules, which
 have no Swift counterpart to compare against because they were genuinely
-rewritten, get 30 checks of their own.
+rewritten, get 38 checks of their own, including repairing a damaged settings file.
 
 ```
 PASS  engine       4060 checks over 2030 fragments,
                    every answer identical to the Swift engine
-PASS  suppression  30 checks on the Windows rules
-      4090 checks passed.
+PASS  suppression  38 checks on the Windows rules
+      4098 checks passed.
 ```
 
 `scripts/build-windows.sh` runs the whole pipeline and refuses to publish if any of it

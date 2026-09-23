@@ -40,7 +40,7 @@ the identical answer, down to how many characters to delete:
 
 | Port | Runner | Checks |
 |---|---|---|
-| Windows | `windows/LaTeXSquiggly.Conformance` | 4,090 |
+| Windows | `windows/LaTeXSquiggly.Conformance` | 4,098 |
 | Chrome | `chrome/test/conformance.mjs` | 4,076 |
 
 Only the parts that touch the operating system are genuinely different per

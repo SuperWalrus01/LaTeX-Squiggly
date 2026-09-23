@@ -113,6 +113,50 @@ internal static class SuppressionChecks
         Expect(DefaultExclusions.Sites().All(site => site.TitleFragments.Count > 0),
                "every default site has a title fragment, which is all Windows gets");
 
+        // MARK: A settings file with nulls in it
+
+        // Hand-edited or damaged settings used to load and then throw during
+        // start-up, which closed the app before it showed anything.
+        const string damaged = """
+            {
+              "Apps": [ null, { "ProcessName": "texstudio", "Name": null }, { "ProcessName": null } ],
+              "Sites": [ { "Host": null }, { "Host": "overleaf.com", "TitleFragments": null },
+                         { "Host": "cocalc.com", "TitleFragments": [ "CoCalc", null ] } ],
+              "DeclinedProcessNames": null
+            }
+            """;
+        var repaired = System.Text.Json.JsonSerializer.Deserialize<ExclusionList>(damaged)!;
+        repaired.Repair();
+        Expect(repaired.Apps.Count == 1 && repaired.Apps[0].Name == "texstudio",
+               "repair keeps the one real app and names it after its executable");
+        Expect(repaired.Sites.Count == 2, "repair drops the site with no host and keeps the others");
+        Expect(repaired.Sites.All(site => site.TitleFragments is not null && !site.TitleFragments.Contains(null!)),
+               "repair leaves no null title fragments");
+        Expect(repaired.DeclinedProcessNames is not null, "repair replaces a null list with an empty one");
+
+        var threw = false;
+        try
+        {
+            var snapshot = repaired.Snapshot();
+            snapshot.Decision(new TypingContext("texstudio", "TeXstudio"));
+            snapshot.Decision(new TypingContext(chrome, "Chrome", BrowserPage.Title("Draft - CoCalc - Google Chrome")));
+            snapshot.Decision(new TypingContext(chrome, "Chrome", BrowserPage.Title("Slack")));
+        }
+        catch (Exception)
+        {
+            threw = true;
+        }
+        Expect(!threw, "a repaired list can be snapshotted and asked for decisions without throwing");
+        Suppressed(repaired.Snapshot(), new TypingContext("texstudio", "TeXstudio"),
+                   "a repaired list still excludes what it listed");
+        Suppressed(repaired.Snapshot(),
+                   new TypingContext(chrome, "Chrome", BrowserPage.Title("Draft - CoCalc - Google Chrome")),
+                   "a repaired site still matches its surviving title fragment");
+
+        var empty = new ExclusionList { Apps = null!, Sites = null!, DeclinedProcessNames = null! };
+        empty.Repair();
+        Expect(empty.Apps.Count == 0 && empty.Sites.Count == 0, "repair turns null lists into empty ones");
+
         return (passed, failures);
     }
 }

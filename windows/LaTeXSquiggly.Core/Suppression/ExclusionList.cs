@@ -126,6 +126,35 @@ public sealed class ExclusionList
     }
 
     /// <summary>
+    /// Makes a list read from disk safe to use, keeping every rule that is
+    /// still meaningful.
+    ///
+    /// The settings file is JSON a person can edit, and JSON can say null where
+    /// the code expects a list. A null list, a null entry or a rule with no name
+    /// used to load without complaint and then throw later, in the middle of
+    /// starting up, which made the app vanish at launch. Repairing it here means
+    /// one bad line costs that line, not the app.
+    /// </summary>
+    public void Repair()
+    {
+        Apps ??= new List<ExcludedApp>();
+        Sites ??= new List<ExcludedSite>();
+        DeclinedProcessNames ??= new List<string>();
+
+        Apps.RemoveAll(app => app is null || string.IsNullOrWhiteSpace(app.ProcessName));
+        foreach (var app in Apps) app.Name ??= app.ProcessName;
+
+        Sites.RemoveAll(site => site is null || string.IsNullOrWhiteSpace(site.Host));
+        foreach (var site in Sites)
+        {
+            site.TitleFragments ??= new List<string>();
+            site.TitleFragments.RemoveAll(fragment => fragment is null);
+        }
+
+        DeclinedProcessNames.RemoveAll(name => name is null);
+    }
+
+    /// <summary>
     /// A copy nobody is going to edit.
     ///
     /// The hook runs on its own thread and reads these rules on every keystroke;
