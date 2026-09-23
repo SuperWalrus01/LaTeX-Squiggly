@@ -49,7 +49,9 @@ Every release, newest first. The format follows
   European ones, because any modified key ended the command; dead keys such
   as `^` on a German keyboard did the same. Editors inside an `about:blank`
   frame (TinyMCE, CKEditor 4, classic WordPress) or a shadow root were never
-  reached. The extension now also stays out of every frame inside Google
+  reached, and an editor filled with `document.open` after the page loaded,
+  as TinyMCE does, erased the extension's listeners, so it worked on some
+  loads and not others. The extension now also stays out of every frame inside Google
   Docs, rather than relying on how Docs builds its hidden input frame, and an
   editor that refuses a replacement no longer leaves the command selected
   with the space lost.

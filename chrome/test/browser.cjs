@@ -32,9 +32,14 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
   let model = ''; const r = document.getElementById('react');
   r.addEventListener('input', () => { model = r.value; document.getElementById('log').textContent = model; });
 
-  // A TinyMCE-style editor: an editable body in an about:blank iframe.
-  const doc = document.getElementById('frame').contentDocument;
-  doc.open(); doc.write('<body contenteditable style="min-height:40px"></body>'); doc.close();
+  // A TinyMCE-style editor: an editable body written into an iframe with
+  // document.open. Written after a pause, as editors do once the page has
+  // loaded, so the extension is already in the frame when document.open
+  // erases every listener on it.
+  setTimeout(() => {
+    const doc = document.getElementById('frame').contentDocument;
+    doc.open(); doc.write('<body contenteditable style="min-height:40px"></body>'); doc.close();
+  }, 300);
 
   // The same, made editable without document.open, so the frame keeps the
   // address about:blank and only match_origin_as_fallback reaches it.

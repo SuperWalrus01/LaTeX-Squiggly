@@ -95,6 +95,27 @@
     return null;
   }
 
+  // MARK: Listening
+
+  // Every listener this script puts on the window, so they can be put back.
+  // document.open, which editors such as TinyMCE use to fill their frame once
+  // the page has loaded, erases every listener on the window. A script already
+  // in the frame by then went deaf, and whether it had arrived first was a
+  // race, so those editors worked on some loads and not others.
+  const listeners = [];
+
+  function on(type, handler, capture = false) {
+    listeners.push([type, handler, capture]);
+    addEventListener(type, handler, capture);
+  }
+
+  // A new document element is what document.open leaves behind. Adding a
+  // listener that is already there does nothing, so putting them all back is
+  // safe whenever it happens, and it is rare.
+  new MutationObserver(() => {
+    for (const [type, handler, capture] of listeners) addEventListener(type, handler, capture);
+  }).observe(document, { childList: true });
+
   // MARK: Following what is typed
 
   function trimmed(text) {
@@ -113,7 +134,7 @@
     return !!selection && !selection.isCollapsed;
   }
 
-  addEventListener("beforeinput", (event) => {
+  on("beforeinput", (event) => {
     if (replacing) return;
     const target = editable(deepActiveElement());
     if (!target) { reset(); return; }
@@ -141,14 +162,14 @@
     "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End",
     "PageUp", "PageDown", "Enter", "Escape", "Tab",
   ]);
-  addEventListener("mousedown", reset, true);
-  addEventListener("focusin", () => { if (!replacing) reset(); }, true);
+  on("mousedown", reset, true);
+  on("focusin", () => { if (!replacing) reset(); }, true);
   // Leaving the window, for another app or the address bar, is a caret move
   // the page never sees.
-  addEventListener("blur", (event) => { if (event.target === window) reset(); });
+  on("blur", (event) => { if (event.target === window) reset(); });
 
-  addEventListener("compositionstart", () => { composing = true; }, true);
-  addEventListener("compositionend", (event) => {
+  on("compositionstart", () => { composing = true; }, true);
+  on("compositionend", (event) => {
     composing = false;
     const target = editable(deepActiveElement());
     if (!target) { reset(); return; }
@@ -173,7 +194,7 @@
 
   // Space only. Return sends messages in chat apps, and Tab moves focus in a
   // browser, so neither can safely be taken over.
-  addEventListener("keydown", (event) => {
+  on("keydown", (event) => {
     if (replacing || MODIFIERS.has(event.key)) return;
     if (NAVIGATION.has(event.key) || isShortcut(event)) {
       reset();
@@ -325,7 +346,8 @@
   function notify(title, message) {
     // A frame in the background has no business interrupting.
     if (!config?.showNotices || (window !== window.top && !document.hasFocus())) return;
-    if (!notice) notice = buildNotice();
+    // Rebuilt if the page replaced its document since, taking the old one with it.
+    if (!notice || !notice.host.isConnected) notice = buildNotice();
     notice.title.textContent = title;
     notice.message.textContent = message;
     notice.card.classList.add("shown");
@@ -370,6 +392,6 @@
       event.preventDefault();
       card.classList.remove("shown");
     });
-    return { card, title: root.querySelector(".title"), message: root.querySelector(".message"), timer: 0 };
+    return { host, card, title: root.querySelector(".title"), message: root.querySelector(".message"), timer: 0 };
   }
 })();
