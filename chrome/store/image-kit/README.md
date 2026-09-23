@@ -120,7 +120,7 @@ A 1.91:1 social sharing card. Centre: a large empty area for a logo. Below it, a
 
 ## Finishing
 
-Put the backgrounds you like in `generated/`, then ask Claude to compose the
-final images: wordmark, headlines and real screenshots placed on top, exported
-at the exact store sizes as 24-bit PNGs with no transparency, and copied into
-`chrome/store/`.
+Keep the backgrounds you use in `generated/`, as the source of the finished
+images. Compose each final image by placing the wordmark, the headline and the
+real screenshot on its background, export it at the exact store size as a
+24-bit PNG with no transparency, and save it in `chrome/store/`.
