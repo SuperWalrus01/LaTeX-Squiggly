@@ -29,7 +29,7 @@ cd LaTeX-Squiggly
 ```
 
 `-Check` builds the engine and runs the conformance suite. It should end with
-`4090 checks passed.` If it does, the machine is ready.
+`4098 checks passed.` If it does, the machine is ready.
 
 Nothing else is needed. Everything the Windows app is generated from (the
 tables, the icons and the conformance reference) comes from the Swift engine
@@ -153,7 +153,7 @@ Win32 spelling (`WM_KEYDOWN`, `KBDLLHOOKSTRUCT`) so they can be looked up.
 ```
 
 It replays 2,030 fragments through the engine and requires the same answer the
-Swift engine gave for each, and runs 30 checks on the exclusion rules. It proves
+Swift engine gave for each, and runs 38 checks on the exclusion rules. It proves
 the engine. It cannot prove the keyboard hook, the typing or the tray, which is
 what the next part is for.
 
@@ -248,6 +248,12 @@ A crash also writes the full exception to `crash.log` in the same folder.
 
 ## 6. When something goes wrong
 
+- **It closes as soon as it starts.** Look in `%APPDATA%\LaTeXSquiggly\` for
+  `crash.log`, and at the end of `log.txt` for a `start-up failed` or
+  `could not open the single-instance mutex` line. Then check the list in
+  section 7, which covers every cause found so far. If there is no log folder
+  at all, the app died before it could write one, which points at .NET itself:
+  try the self-contained build rather than the small one.
 - **It stops converting and the log is quiet.** Windows may have removed the
   hook without saying so. Switch conversion off and on from the tray menu, which
   installs it again. Detecting this automatically is an open task in README.md.
@@ -260,7 +266,42 @@ A crash also writes the full exception to `crash.log` in the same folder.
 - **SmartScreen blocks a published build.** The executable is not code-signed:
   **More info**, then **Run anyway**. `-Run` builds are not affected.
 
-## 7. Sending the change
+## 7. Known and suspected bugs
+
+Reported: the latest Windows build closed immediately after it was opened.
+It could not be reproduced where these fixes were written, because that was a
+Mac, so this list is every cause found by reading the start-up path, ranked by
+how well it fits that report. Each fix is in the code, and each needs
+confirming on a real Windows machine, using the step in its last column. When
+you confirm or rule one out, update its status here.
+
+**Fixed, waiting for confirmation on Windows**
+
+| # | Symptom | Cause | Fix | How to confirm |
+|---|---|---|---|---|
+| 1 | Vanishes at launch with no message and no log line | `Main` created its single-instance mutex before it registered any error handler. Opening the mutex throws when another copy created it with different rights, such as a copy running as administrator, and the exception ended the process silently. | Error handlers are registered first; a mutex failure shows a message saying what to do. | Run a copy as administrator, then start a normal copy: it must explain, not vanish. |
+| 2 | Closes at launch, sometimes with a generic error | Anything that threw while the tray app was being built happened before the message loop, where only the last-resort handler could see it. | Start-up is wrapped: the failure is written to `log.txt` as `start-up failed` and to `crash.log`, and explained in a message. | The log names the failure instead of ending mid-start. |
+| 3 | Closes at launch after `settings.json` was edited or damaged | JSON can say `null` where the code expects a list. The file loaded without complaint, and the tray app then threw copying the rules at start-up. | `ExclusionList.Repair()` runs on every load: null lists become empty, and null or nameless entries are dropped. Reproduced and covered by 8 checks in the conformance suite. | Put `"TitleFragments": null` in a site in `settings.json`: it must start. |
+| 4 | "LaTeX Squiggly hit an error" after clicking **Convert LaTeX as I type** or **Do not convert in …** | Both rebuilt the menu from inside their own Click handler, and the rebuild disposes the item being clicked while WinForms is still using it. | The rebuild is posted to run after the click has finished. | Click both items several times: no error. |
+| 5 | Stops converting soon after starting, with nothing on screen | Log lines were written on the input thread, including every first-chance exception and the lines around each replacement. A slow disk, or antivirus scanning the new log file, can hold that thread past the 300 ms after which Windows removes the keyboard hook. | Everything the input thread logs is written from the thread pool; the exception logger never waits on the disk and cannot call itself. | Heartbeat lines keep coming, and `slowest callback` stays under 10 ms on first launch. |
+| 6 | Stops converting, with the tray icon still there | If the input thread failed, its hook stayed installed on a thread that no longer answered, and nothing told the user. | The hook is removed first, the failure is logged, and a notice says to switch conversion off and on. | Hard to trigger by hand; the log would show `the input thread died`. |
+| 7 | Later errors about a disposed icon, only if the artwork is missing | The fallback returned Windows' shared application icon, which was then disposed. | The fallback is a copy. | Only reachable with a broken build. |
+
+**Not fixed: behaviour to know about**
+
+| # | Symptom | Cause | Status |
+|---|---|---|---|
+| 8 | Starting it says "already running", but there is no tray icon | An earlier copy hung. Explorer removes the tray icon of a process that has stopped responding, but the process still holds the single-instance mutex. | The message now says to end it in Task Manager. The hang that caused it is the one this build fixes. |
+| 9 | Stops converting and the log is quiet | Windows removed the hook without saying so. | Open task, in README.md: detect it and reinstall. Switching conversion off and on is the workaround. |
+| 10 | A command typed in the first seconds after launch, or after switching keyboard layout, does not convert | The keyboard layout table is built in the background, within four seconds. Until it is ready, keys are not recorded, which is the safe way to be wrong. | By design. |
+| 11 | Possibly, a character typed very fast after the space lands before the replacement | The replacement is typed just after the hook answers, and a keystroke arriving in that instant could be handled first. | Suspected, not seen. It would look like the command converting but the character typed right after the space being lost or appearing before the symbol. |
+| 12 | Typing lags on an ARM laptop | The x64 build runs under emulation, which is several times slower inside the hook. | Use the ARM64 build; not yet tested on ARM. |
+| 13 | Nothing converts in a window running as administrator | Windows does not let a normal program send input to an elevated one. | By design; the app says so. |
+
+When you report a start-up failure, include `crash.log`, the end of
+`log.txt`, and the Windows version and architecture.
+
+## 8. Sending the change
 
 1. Run `.\windows\build.ps1 -Check`; it must pass.
 2. Work through the manual test list for what you changed.
