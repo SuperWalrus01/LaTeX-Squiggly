@@ -57,6 +57,8 @@ The result is ordinary Unicode text, not an image, so it survives copying and pa
 • Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
 • In ordinary text boxes, undo brings the command back
 
+Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Not in Google Docs, Sheets or Slides, which draw their own text instead of using a text box, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
+
 Privacy: to recognise a command, the extension keeps the last few characters you typed in a text box, in memory only, and forgets them when you click or change fields. Nothing you type is saved or sent anywhere, and the extension makes no network requests. Your settings are stored with Chrome.
 
 Also available as a menu bar app for macOS and a tray app for Windows, which work in every app, not only the browser.
