@@ -31,7 +31,21 @@ internal static class Diagnostics
     /// </summary>
     private static readonly HashSet<string> SeenFaults = new();
 
+    /// <summary>
+    /// Guards SeenFaults only, and is never held during a file write, so a
+    /// thread that throws never waits on the disk.
+    /// </summary>
+    private static readonly object FaultsGate = new();
+
     private static int _writes;
+
+    /// <summary>
+    /// Set while this thread is inside FirstChance. Logging can itself throw
+    /// and catch, and every exception raises FirstChanceException again, so
+    /// without this a failing log write could call itself until the stack ran
+    /// out, which ends a process with no message at all.
+    /// </summary>
+    [ThreadStatic] private static bool _inFirstChance;
 
     public static string Path_ => Path.Combine(Settings.Directory, "log.txt");
 
@@ -60,18 +74,45 @@ internal static class Diagnostics
     /// Every exception, caught or not, the first time it is seen. Most are
     /// harmless and handled, but a caught exception on the input thread is
     /// exactly the kind of thing that explains a hang afterwards.
+    ///
+    /// The line is written from the thread pool, not here. This runs on
+    /// whichever thread threw, which can be the input thread in the middle of
+    /// a keystroke, and a file write there can outlast the 300 ms after which
+    /// Windows removes the keyboard hook.
     /// </summary>
     public static void FirstChance(Exception error)
     {
+        if (_inFirstChance) return;
+        _inFirstChance = true;
         try
         {
             var key = error.GetType().FullName + "|" + error.Message;
-            lock (Gate)
+            lock (FaultsGate)
             {
                 if (SeenFaults.Count > 40 || !SeenFaults.Add(key)) return;
             }
             var where = error.StackTrace?.Split('\n').FirstOrDefault()?.Trim() ?? "no stack";
-            Log($"### {error.GetType().Name}: {error.Message}  at {where}");
+            LogLater($"### {error.GetType().Name}: {error.Message}  at {where}");
+        }
+        catch (Exception)
+        {
+            // Nothing useful left to do.
+        }
+        finally
+        {
+            _inFirstChance = false;
+        }
+    }
+
+    /// <summary>
+    /// Log, from the thread pool. For any thread that must not wait on a file,
+    /// which above all means the input thread.
+    /// </summary>
+    public static void LogLater(string message)
+    {
+        try
+        {
+            ThreadPool.QueueUserWorkItem(_ => Log(message));
         }
         catch (Exception)
         {

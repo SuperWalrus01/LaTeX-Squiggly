@@ -185,8 +185,20 @@ internal sealed class InputThread : IDisposable
         }
         catch (Exception error)
         {
-            _installed = false;
+            // Take the hook out before anything else, so no keystroke waits on a
+            // thread that is no longer pumping, then say so: an app that has
+            // quietly stopped converting looks exactly like one that has died.
+            try { Uninstall(); } catch (Exception) { _installed = false; }
             Diagnostics.Log("the input thread died: " + error);
+            try
+            {
+                OnNotice?.Invoke("LaTeX Squiggly stopped converting because of an internal error. "
+                    + "Switch it off and on again from the tray menu. The details are in the log.");
+            }
+            catch (Exception)
+            {
+                // Nothing useful left to do.
+            }
         }
         finally
         {
@@ -209,7 +221,7 @@ internal sealed class InputThread : IDisposable
         if (!_installed) return;
 
         var timer = Native.SetTimer(IntPtr.Zero, UIntPtr.Zero, TickIntervalMs, IntPtr.Zero);
-        if (timer == UIntPtr.Zero) Diagnostics.Log("SetTimer failed; there will be no timeline");
+        if (timer == UIntPtr.Zero) Report("SetTimer failed; there will be no timeline");
 
         int result;
         while ((result = Native.GetMessageW(out var message, IntPtr.Zero, 0, 0)) > 0)
@@ -233,9 +245,11 @@ internal sealed class InputThread : IDisposable
             }
         }
 
-        Diagnostics.Log($"the input pump ended (GetMessage returned {result}); " + Summary());
+        // The hook comes out before the file is written, so no keystroke waits on the disk.
+        var summary = Summary();
         if (timer != UIntPtr.Zero) Native.KillTimer(IntPtr.Zero, timer);
         Uninstall();
+        Diagnostics.Log($"the input pump ended (GetMessage returned {result}); " + summary);
     }
 
     /// <summary>An exception in housekeeping is logged, never allowed to end the pump.</summary>
@@ -247,7 +261,7 @@ internal sealed class InputThread : IDisposable
         }
         catch (Exception error)
         {
-            Diagnostics.Log($"!!! {what} threw: {error}");
+            Report($"!!! {what} threw: {error}");
         }
     }
 
@@ -272,13 +286,13 @@ internal sealed class InputThread : IDisposable
         _foregroundEvent = Native.SetWinEventHook(
             Native.EVENT_SYSTEM_FOREGROUND, Native.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero,
             _foregroundProc, 0, 0, Native.WINEVENT_OUTOFCONTEXT);
-        if (_foregroundEvent == IntPtr.Zero) Diagnostics.Log("SetWinEventHook failed");
+        if (_foregroundEvent == IntPtr.Zero) Report("SetWinEventHook failed");
 
         _watcher.ReadsPages = true;
         Forget();
         _lastKeystroke = Environment.TickCount;
         _installed = true;
-        Diagnostics.Log("keyboard hook installed");
+        Report("keyboard hook installed");
     }
 
     private void Uninstall()
@@ -327,9 +341,12 @@ internal sealed class InputThread : IDisposable
             + $"{_conversions} conversions, slowest callback {slowestText}, " + Handles();
     }
 
-    /// <summary>Writes to the log off this thread: a file write is never on the keystroke path.</summary>
-    private static void Report(string message) =>
-        ThreadPool.QueueUserWorkItem(_ => Diagnostics.Log(message));
+    /// <summary>
+    /// Writes to the log off this thread. Once the hook is in, every write from
+    /// here goes through this: a file write on this thread holds up every
+    /// keystroke on the machine, and one slow enough gets the hook removed.
+    /// </summary>
+    private static void Report(string message) => Diagnostics.LogLater(message);
 
     // MARK: The callbacks
 
@@ -371,7 +388,7 @@ internal sealed class InputThread : IDisposable
             try
             {
                 _buffer.Reset();
-                Diagnostics.Log("!!! a keystroke threw: " + error);
+                Report("!!! a keystroke threw: " + error);
             }
             catch (Exception)
             {
@@ -574,12 +591,12 @@ internal sealed class InputThread : IDisposable
         if (pending is null) return;
 
         // Counts only. What was typed is never written anywhere.
-        Diagnostics.Log($"typing: {pending.DeleteCount} deletes, {pending.Insert.Length} chars");
+        Report($"typing: {pending.DeleteCount} deletes, {pending.Insert.Length} chars");
         _replacing = true;
         bool typed;
         try { typed = TextReplacer.Perform(pending); }
         finally { _replacing = false; }
-        Diagnostics.Log(typed ? "typed" : "SendInput refused");
+        Report(typed ? "typed" : "SendInput refused");
 
         if (!typed)
         {
