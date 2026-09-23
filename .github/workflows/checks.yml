@@ -24,35 +24,37 @@ jobs:
     # macOS, because the Swift package includes the AppKit menu bar app.
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Pinned: scripts/generate-swift-tables.py resolves characters against
       # Python's Unicode database, and the drift check compares its output
       # byte for byte with what is committed.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "8.0.x"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Run every check
         run: scripts/check-all.sh
 
   extension-in-browser:
     name: Extension in a browser
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest, so a new Ubuntu cannot break
+    # Playwright's browser install without a change here to point at.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
       # Playwright is a test tool, not a dependency of the extension, so it is
       # installed outside the repository rather than added to a package.json.
