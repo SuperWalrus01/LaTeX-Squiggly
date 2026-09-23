@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using LaTeXSquiggly.App.Platform;
 
@@ -26,13 +27,26 @@ internal static class Program
 
         ApplicationConfiguration.Initialize();
 
+        // The start line and the exit line are how the next run tells a quit
+        // from a kill; see Diagnostics.
+        Diagnostics.OpenSession(
+            $"--- started, version {Application.ProductVersion}, {RuntimeInformation.ProcessArchitecture} "
+            + $"on {RuntimeInformation.OSArchitecture}, {Environment.OSVersion.VersionString}");
+        Application.ApplicationExit += (_, _) => Diagnostics.Log("exiting");
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => Diagnostics.Log("exiting");
+
         // A hook callback that throws takes the hook down with it, and the user
         // is left with an app that has silently stopped converting. Neither of
         // these should ever fire, but "should" is not a plan.
         Application.ThreadException += (_, e) => Report(e.Exception);
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Report(e.ExceptionObject as Exception);
+        AppDomain.CurrentDomain.FirstChanceException += (_, e) => Diagnostics.FirstChance(e.Exception);
 
         Application.Run(new TrayApplication());
+
+        // The mutex must outlive the message loop, or a second copy could start
+        // while this one is still running.
+        GC.KeepAlive(instance);
     }
 
     private static void Report(Exception? error)
@@ -43,6 +57,7 @@ internal static class Program
             var log = Path.Combine(Settings.Directory, "crash.log");
             Directory.CreateDirectory(Settings.Directory);
             File.AppendAllText(log, $"{DateTime.Now:u}  {error}\n\n");
+            Diagnostics.Log("unhandled: " + error.Message);
             MessageBox.Show(
                 $"LaTeX Squiggly hit an error and may have stopped converting.\n\n{error.Message}\n\n"
                 + $"Details were written to {log}",

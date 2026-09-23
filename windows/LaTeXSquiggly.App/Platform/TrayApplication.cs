@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using LaTeXSquiggly.Core.Suppression;
 
@@ -14,23 +15,53 @@ namespace LaTeXSquiggly.App.Platform;
 /// </summary>
 internal sealed class TrayApplication : ApplicationContext
 {
+    /// <summary>
+    /// How often the icon is brought up to date, and the keyboard layout
+    /// checked. A browser tab can change without the foreground window
+    /// changing, and there is no notification for that, so this is the one
+    /// thing still polled.
+    /// </summary>
+    private const int TabPollIntervalMs = 4000;
+
     private readonly Settings _settings = Settings.Load();
-    private readonly KeyboardHook _hook = new();
+    private readonly InputThread _hook = new();
     private readonly ForegroundWatcher _watcher = new();
     private readonly NoticeWindow _notices = new();
     private readonly NotifyIcon _tray = new();
-    private readonly System.Windows.Forms.Timer _menuRefresh;
+    private readonly System.Windows.Forms.Timer _tabPoll;
+
+    /// <summary>
+    /// A control that is never shown, kept for its handle: BeginInvoke on it is
+    /// how work from the input thread reaches the UI thread without waiting.
+    /// </summary>
+    private readonly Control _ui = new();
+
+    /// <summary>
+    /// The exclusion rules the input thread reads: a snapshot, replaced
+    /// wholesale when the user changes them, so the hook never locks against
+    /// the settings window.
+    /// </summary>
+    private volatile ExclusionList _rules;
 
     private Icon? _activeIcon;
     private Icon? _inactiveIcon;
     private SettingsWindow? _window;
 
+    /// <summary>Set once quitting starts, so nothing posted late touches a disposed control.</summary>
+    private bool _quitting;
+
     public TrayApplication()
     {
         if (_settings.DiscoverDefaults()) _settings.Save();
 
-        _hook.OnNotice = ShowNotice;
-        _hook.Suppression = CurrentDecision;
+        _rules = _settings.Exclusions.Snapshot();
+        _ = _ui.Handle;   // created now, on the UI thread, so BeginInvoke works from the start
+
+        // The input thread calls these on its own thread, and must never wait
+        // for the UI, so both only post.
+        _hook.Rules = () => _rules;
+        _hook.OnNotice = message => Post(() => ShowNotice(message));
+        _hook.OnForegroundChanged = () => Post(RefreshIcon);
 
         _tray.Text = "LaTeX Squiggly";
         _tray.Visible = true;
@@ -38,6 +69,16 @@ internal sealed class TrayApplication : ApplicationContext
 
         BuildIcons();
         RebuildMenu();
+
+        // Keeps the icon honest about whether it is converting right now, and
+        // notices a change of keyboard layout. The table is built off the UI
+        // thread: it is 2,048 calls to ToUnicodeEx.
+        _tabPoll = new System.Windows.Forms.Timer { Interval = TabPollIntervalMs };
+        _tabPoll.Tick += (_, _) =>
+        {
+            RefreshIcon();
+            ThreadPool.QueueUserWorkItem(_ => BuildLayoutTable());
+        };
 
         if (_settings.ConversionEnabled ?? true) StartConverting();
 
@@ -47,31 +88,71 @@ internal sealed class TrayApplication : ApplicationContext
         // it is closed.
         _tray.ContextMenuStrip!.Opening += (_, _) => RebuildMenu();
 
-        // Keeps the icon honest about whether it is converting right now, which
-        // changes when the user switches into an excluded app.
-        _menuRefresh = new System.Windows.Forms.Timer { Interval = 1500 };
-        _menuRefresh.Tick += (_, _) => RefreshIcon();
-        _menuRefresh.Start();
+        // Posted, so the tray icon is up before the welcome message blocks.
+        if (_settings.IsFirstRun) Post(ShowWelcome);
+    }
 
-        if (_settings.IsFirstRun) ShowWelcome();
+    /// <summary>
+    /// Runs work on the UI thread without waiting for it. Safe to call from any
+    /// thread, and a no-op once quitting has started.
+    /// </summary>
+    private void Post(Action work)
+    {
+        if (_quitting) return;
+        try
+        {
+            if (!_ui.IsDisposed && _ui.IsHandleCreated) _ui.BeginInvoke(work);
+        }
+        catch (Exception)
+        {
+            // The control went away between the check and the call.
+        }
     }
 
     // MARK: The decision
 
     /// <summary>
-    /// Asked on every keystroke, and again immediately before anything is
-    /// typed. Cheap enough on Windows to answer freshly both times: see
-    /// ForegroundWatcher for why the Mac cannot.
+    /// For the icon and the menu, on the UI thread. The input thread makes its
+    /// own decisions, with its own watcher; see InputThread.
     /// </summary>
     private SuppressionDecision CurrentDecision() =>
-        _settings.Exclusions.Decision(_watcher.Current());
+        _rules.Decision(_watcher.Current());
+
+    /// <summary>
+    /// Builds the keyboard layout table for the layout in front, if it has
+    /// changed, and hands it to the input thread. Never runs on the input
+    /// thread; see KeyboardLayoutTable for why.
+    /// </summary>
+    private void BuildLayoutTable()
+    {
+        try
+        {
+            var window = Native.GetForegroundWindow();
+            var thread = window != IntPtr.Zero ? Native.GetWindowThreadProcessId(window, out _) : 0;
+            var layout = Native.GetKeyboardLayout(thread);
+            if (layout != IntPtr.Zero && layout != _hook.LayoutHandle)
+            {
+                _hook.UseLayout(KeyboardLayoutTable.Build(layout));
+            }
+        }
+        catch (Exception error)
+        {
+            Diagnostics.Log("reading the keyboard layout failed: " + error);
+        }
+    }
 
     private bool IsEnabled => _settings.ConversionEnabled ?? true;
 
     private void StartConverting()
     {
+        // Started first and in the background, so the table is usually ready
+        // before the first keystroke. Until it is, keys type nothing the buffer
+        // records, which is the safe way to be wrong.
+        ThreadPool.QueueUserWorkItem(_ => BuildLayoutTable());
+
         if (!_hook.Start())
         {
+            Diagnostics.Log("SetWindowsHookEx refused the keyboard hook");
             MessageBox.Show(
                 "Windows would not let LaTeX Squiggly watch the keyboard.\n\n"
                 + "This usually means another tool already holds a low-level keyboard "
@@ -81,13 +162,16 @@ internal sealed class TrayApplication : ApplicationContext
         }
         // Window titles are only read while conversion is actually running.
         _watcher.ReadsPages = true;
+        _tabPoll?.Start();
         RefreshIcon();
     }
 
     private void StopConverting()
     {
+        Diagnostics.Log("conversion switched off; " + _hook.Summary());
         _hook.Stop();
         _watcher.ReadsPages = false;
+        _tabPoll?.Stop();
         RefreshIcon();
     }
 
@@ -106,6 +190,7 @@ internal sealed class TrayApplication : ApplicationContext
     public void ExclusionsChanged()
     {
         _settings.Save();
+        _rules = _settings.Exclusions.Snapshot();
         _hook.ResetBuffer();
         RebuildMenu();
     }
@@ -113,7 +198,18 @@ internal sealed class TrayApplication : ApplicationContext
     private void ShowNotice(string message)
     {
         if (!_settings.ShowNotices) return;
-        _notices.ShowNotice(message);
+        // Logged without the message: a notice can quote what was typed.
+        Diagnostics.Log("notice: showing");
+        try
+        {
+            _notices.ShowNotice(message);
+        }
+        catch (Exception error)
+        {
+            Diagnostics.Log("notice: failed, " + error);
+            return;
+        }
+        Diagnostics.Log("notice: shown");
     }
 
     // MARK: The icon
@@ -132,6 +228,7 @@ internal sealed class TrayApplication : ApplicationContext
 
     private void RefreshIcon()
     {
+        if (_quitting) return;
         var converting = _hook.IsRunning && !CurrentDecision().IsSuppressed;
         var wanted = converting ? _activeIcon : _inactiveIcon;
         if (!ReferenceEquals(_tray.Icon, wanted)) _tray.Icon = wanted;
@@ -155,7 +252,13 @@ internal sealed class TrayApplication : ApplicationContext
     private void RebuildMenu()
     {
         var menu = _tray.ContextMenuStrip ?? new ContextMenuStrip();
+
+        // Clearing a menu does not dispose its items, and the menu is rebuilt
+        // every time it opens, so without this each opening leaked a handful.
+        var old = new ToolStripItem[menu.Items.Count];
+        menu.Items.CopyTo(old, 0);
         menu.Items.Clear();
+        foreach (var item in old) item.Dispose();
 
         var decision = CurrentDecision();
         var status = new ToolStripMenuItem(StatusTitle()) { Enabled = false };
@@ -228,6 +331,10 @@ internal sealed class TrayApplication : ApplicationContext
             menu.Items.Add(item);
         }
 
+        var diagnostics = new ToolStripMenuItem("Copy diagnostics");
+        diagnostics.Click += (_, _) => CopyDiagnostics();
+        menu.Items.Add(diagnostics);
+
         var settings = new ToolStripMenuItem("Settings and Symbols...");
         settings.Click += (_, _) => ShowSettings();
         menu.Items.Add(settings);
@@ -240,6 +347,35 @@ internal sealed class TrayApplication : ApplicationContext
 
         _tray.ContextMenuStrip = menu;
         RefreshIcon();
+    }
+
+    /// <summary>
+    /// A summary to paste into a bug report: version, architecture, whether the
+    /// hook is in and how fast it has been, and which executable is in front.
+    /// No window titles, no page titles, nothing typed.
+    /// </summary>
+    private void CopyDiagnostics()
+    {
+        var context = _watcher.Current();
+        var decision = CurrentDecision();
+        var text = string.Join(Environment.NewLine,
+            "LaTeX Squiggly " + Application.ProductVersion,
+            $"{Environment.OSVersion.VersionString}, {RuntimeInformation.ProcessArchitecture} process "
+                + $"on {RuntimeInformation.OSArchitecture}",
+            "conversion " + (IsEnabled ? "on" : "off") + ", " + _hook.Summary(),
+            $"notices {(_settings.ShowNotices ? "on" : "off")}, {_settings.Exclusions.Apps.Count} apps and "
+                + $"{_settings.Exclusions.Sites.Count} sites excluded",
+            "in front: " + (context.ProcessName ?? "unknown") + ", " + (decision.Reason?.Summary ?? "converting"),
+            "log: " + Diagnostics.Path_);
+        try
+        {
+            Clipboard.SetText(text);
+        }
+        catch (Exception)
+        {
+            // Another program is holding the clipboard.
+        }
+        _notices.ShowNotice("Diagnostics copied to the clipboard.");
     }
 
     private void ShowSettings()
@@ -273,11 +409,15 @@ internal sealed class TrayApplication : ApplicationContext
 
     private void Quit()
     {
-        _menuRefresh.Stop();
+        Diagnostics.Log("quit from the tray menu; " + _hook.Summary());
+        _quitting = true;
+        _tabPoll.Stop();
+        _tabPoll.Dispose();
         _hook.Dispose();
         _tray.Visible = false;
         _tray.Dispose();
         _notices.Dispose();
+        _ui.Dispose();
         ExitThread();
     }
 
@@ -285,9 +425,12 @@ internal sealed class TrayApplication : ApplicationContext
     {
         if (disposing)
         {
+            _quitting = true;
+            _tabPoll?.Dispose();
             _hook.Dispose();
             _tray.Dispose();
             _notices.Dispose();
+            _ui.Dispose();
         }
         base.Dispose(disposing);
     }
