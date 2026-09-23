@@ -8,21 +8,24 @@ warm cream paper. Everything here builds on that.
 
 ## What is in this folder
 
-| Folder | Contents |
+| File | Contents |
 |---|---|
-| `references/` | Images to attach to the generator as a style guide |
-| `current/` | The store images in use now, to compare against |
-| `generated/` | Put what the generator makes here |
+| `generated/` | What the generator made, kept as the source of the finished images |
+| `wordmark-transparent.png` | The wordmark on a transparent background, 867 pixels wide, to place on finished images. Not for the generator. |
 
-**References**
+The store images in use now are in `chrome/store/`, one folder up.
+
+**References to attach to the generator**
+
+These are the originals elsewhere in the repository, not copies, so they cannot
+drift from what the app actually uses. Paths are from the repository root.
 
 | File | Attach it for |
 |---|---|
-| `1-wordmark-card.png` | The squiggly letter style and the paper colour. Attach to every prompt. |
-| `2-app-icon.png` | The same style, square |
-| `3-ls-mark.png` | The orange "LS" mark |
-| `4-product-screenshot.png` | What the product looks like, for the screenshot backgrounds |
-| `5-wordmark-transparent.png` | Not for the generator. The wordmark on a transparent background, 867 pixels wide, to place on finished images. |
+| `docs/assets/og-card.png` | The squiggly letter style and the paper colour. Attach to every prompt. |
+| `Assets/app-icon.png` | The same style, square |
+| `chrome/icons/icon-128.png` | The orange "LS" mark |
+| `chrome/store/screenshot-1-typing.png` | What the product looks like, for the screenshot backgrounds |
 
 ## Rules
 
@@ -49,7 +52,7 @@ Style: warm, friendly, hand-made. Background is flat cream paper, hex #FAF7EE, w
 
 ## 1. Marquee promo tile (1400×560)
 
-Attach: `1-wordmark-card.png`, `3-ls-mark.png`
+Attach: `docs/assets/og-card.png`, `chrome/icons/icon-128.png`
 
 ```
 A wide banner, 5:2 aspect ratio. The left 55% is completely empty cream paper, reserved for a title to be added later. On the right side, a playful illustration of transformation: a thick orange squiggly line enters from the left edge, loops once like a ribbon, and flows into a scatter of soft rounded orange blobs of varying sizes, as if ink is wriggling into new shapes. A few tiny orange sparkle marks and dots float around it. Generous margins on all sides, composition balanced toward the right, calm and uncluttered.
@@ -60,7 +63,7 @@ the web" under it.
 
 ## 2. Small promo tile (440×280)
 
-Attach: `1-wordmark-card.png`, `3-ls-mark.png`
+Attach: `docs/assets/og-card.png`, `chrome/icons/icon-128.png`
 
 ```
 A small, simple tile, 11:7 aspect ratio, that must stay readable when shown tiny. Centre-left: a large empty rounded area for a logo to be added later. Around the edges: three or four chunky orange squiggles and blobs, bold and simple, nothing thin or detailed. Lots of empty cream space. Minimal and bold.
@@ -71,7 +74,7 @@ only; anything more is unreadable at this size.
 
 ## 3. Screenshot backgrounds (1280×800, make three)
 
-Attach: `1-wordmark-card.png`, `4-product-screenshot.png`
+Attach: `docs/assets/og-card.png`, `chrome/store/screenshot-1-typing.png`
 
 ```
 A 16:10 background for a product screenshot. The centre 70% of the image is a clean, empty, slightly lighter cream rectangle with softly rounded corners and a very soft shadow, where a screenshot will be placed later; leave it completely blank. Around it, in the margins only, loose orange squiggly doodles: wavy lines, small loops, rounded blobs and dots, as if drawn in the margin of a notebook. Keep the doodles light and sparse so they frame the centre without competing with it. Leave a clear empty band across the top 15% for a headline.
@@ -93,7 +96,7 @@ Afterwards: a headline in the top band, and the real screenshot in the centre.
 
 ## 4. Squiggly symbols (optional)
 
-Attach: `1-wordmark-card.png`
+Attach: `docs/assets/og-card.png`
 
 Use the style block, but replace its last sentence with "Only the single shape
 described below, nothing else."
@@ -109,7 +112,7 @@ in screenshot margins.
 
 ## 5. Social sharing card (1200×630, optional)
 
-Attach: `1-wordmark-card.png`
+Attach: `docs/assets/og-card.png`
 
 ```
 A 1.91:1 social sharing card. Centre: a large empty area for a logo. Below it, a thin empty band for one line of text. Framing it, a few bold orange squiggles curling in from the corners. Calm, lots of cream space.
