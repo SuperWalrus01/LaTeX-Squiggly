@@ -27,11 +27,11 @@ access. Updates that do not add permissions are usually faster.
 
 ## Before you start
 
-1. **Push `docs/privacy.html`** so the privacy policy is live at
+1. **Push `site/privacy.html`** so the privacy policy is live at
    <https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html>. The dashboard
    will not accept a policy URL that does not load, and the welcome page links
    to it.
-2. **Build the package:** `Tools/package_chrome.sh` writes
+2. **Build the package:** `scripts/package-chrome.sh` writes
    `build/LaTeX-Squiggly-<version>-chrome.zip`.
 3. **Register as a developer** at
    <https://chrome.google.com/webstore/devconsole> (a one-time US$5 fee) and
@@ -140,9 +140,9 @@ first. Unlisted items go through the same review.
 ## Releasing an update
 
 1. Bump `VERSION`, and the version in `chrome/manifest.json` to match.
-   `Tools/check_version.py` fails until they agree. The store refuses a version
+   `scripts/check-version.py` fails until they agree. The store refuses a version
    that is not higher than the last one it accepted.
-2. Run `Tools/package_chrome.sh`.
+2. Run `scripts/package-chrome.sh`.
 3. In the dashboard: **Package → Upload new package**, then **Submit for
    review**.
 

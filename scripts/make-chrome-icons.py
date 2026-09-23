@@ -10,7 +10,7 @@ Chrome's guidance for the 128 pixel icon is 96 pixels of artwork centred in the
 canvas, which leaves room for the shadow the Web Store adds. The toolbar sizes
 get less margin, because at 16 pixels every pixel of the mark counts.
 
-Needs Pillow.  Run:  python3 Tools/make_chrome_icons.py
+Needs Pillow.  Run:  python3 scripts/make-chrome-icons.py
 """
 
 import os, sys
@@ -23,7 +23,7 @@ except ImportError:
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "chrome", "icons")
 
-# The same orange as Tools/make_windows_icons.py.
+# The same orange as scripts/make-windows-icons.py.
 ORANGE = (0xF2, 0x7A, 0x1A)
 
 # Canvas size to the size of the artwork inside it.
@@ -31,7 +31,7 @@ SIZES = {128: 96, 48: 42, 32: 30, 16: 16}
 
 
 def main():
-    source = Image.open(os.path.join(ROOT, "Assets", "menu-icon.png")).convert("RGBA")
+    source = Image.open(os.path.join(ROOT, "assets", "menu-icon.png")).convert("RGBA")
     mark = source.crop(source.getbbox())
 
     # The mark's shape is its alpha; the colour is replaced outright.

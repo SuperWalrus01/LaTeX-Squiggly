@@ -109,8 +109,8 @@ it too.
 xcode-select --install                  # Apple's Command Line Tools, not Xcode
 git clone https://github.com/SuperWalrus01/LaTeX-Squiggly.git
 cd LaTeX-Squiggly
-Scripts/setup-signing.sh                # once, BEFORE the first install
-Scripts/install.sh                      # build from source, install to /Applications
+scripts/setup-mac-signing.sh                # once, BEFORE the first install
+scripts/install-mac-app.sh                      # build from source, install to /Applications
 open "/Applications/LaTeX Squiggly.app"
 ```
 
@@ -149,7 +149,7 @@ un-ticking and re-ticking if you moved it. See
 [`windows/README.md`](windows/README.md) for the long version.
 
 **macOS.** Quit from the menu bar item, drag `/Applications/LaTeX Squiggly.app`
-to the Trash, then install the new one. `Scripts/install.sh` already does this
+to the Trash, then install the new one. `scripts/install-mac-app.sh` already does this
 for you.
 
 There is one macOS-specific trap worth knowing about, because the symptom is
@@ -166,7 +166,7 @@ System Settings -> Privacy & Security -> Accessibility
 
 Remove **LaTeX Squiggly** from both lists with the minus button *before*
 installing the new build, then let the new one ask again. If you are building
-from source with `Scripts/setup-signing.sh`'s stable identity, the signature does
+from source with `scripts/setup-mac-signing.sh`'s stable identity, the signature does
 not change between builds and none of this applies. If a build is not responding
 to what you type and you want to know which of these it is:
 
@@ -367,12 +367,12 @@ spacing commands, line breaks, nested scripts.
 Following `unicode-math`, `\epsilon` → ϵ (U+03F5, lunate) and `\varepsilon` → ε
 (U+03B5); `\phi` → ϕ (U+03D5) and `\varphi` → φ (U+03C6). If you'd rather
 `\epsilon` gave the familiar ε, swap the two names in
-`Tools/generate_tables.py` and regenerate — it's a one-line change.
+`scripts/generate-swift-tables.py` and regenerate — it's a one-line change.
 
 ## The coverage table is generated, not typed
 
 `Sources/LaTeXUnicode/SymbolTable.swift` and `ScriptTables.swift` are produced
-by `Tools/generate_tables.py`. Each entry is specified by its **Unicode
+by `scripts/generate-swift-tables.py`. Each entry is specified by its **Unicode
 character name**, and the character is resolved by `unicodedata.lookup` against
 the Unicode database shipped with Python:
 
@@ -389,7 +389,7 @@ which would silently shadow in a Swift dictionary literal.
 alongside and asserts the exact scalar value of all 277 table entries, so a later
 hand-edit to a table fails loudly.
 
-To change a table: edit the generator, run `python3 Tools/generate_tables.py`,
+To change a table: edit the generator, run `python3 scripts/generate-swift-tables.py`,
 re-run the checks.
 
 ## Deliberately left out — tell me which you want
@@ -486,8 +486,8 @@ The mark is drawn as a **template image**: macOS keeps its alpha and supplies
 the colour itself, which is the only way one file reads correctly on a light
 menu bar, a dark one and a highlighted status item. Its orange survives in the
 app icon, where the background is ours to choose. Both are generated from the
-artwork in `Assets/` by `Scripts/make-icons.sh` — the app icon into
-`Assets/AppIcon.icns`, and the menu bar mark into a base64 literal in
+artwork in `assets/` by `scripts/make-mac-icons.sh` — the app icon into
+`assets/app-icon.icns`, and the menu bar mark into a base64 literal in
 `Sources/LaTeXSquigglyApp/MenuBarIconData.swift`.
 
 Embedded in source, not bundled as a resource, because `swift run
@@ -546,17 +546,17 @@ open -a "LaTeX Squiggly" --args --symbols   # opens the browser directly
 ## Signing and distribution
 
 ```
-Scripts/setup-signing.sh    one-time: a stable self-signed identity
-Scripts/make-app.sh         assemble and sign the .app from SwiftPM output
-Scripts/install.sh          build from source and install to /Applications
-Scripts/make-icons.sh       regenerate the icons after changing Assets/
+scripts/setup-mac-signing.sh    one-time: a stable self-signed identity
+scripts/build-mac-app.sh         assemble and sign the .app from SwiftPM output
+scripts/install-mac-app.sh          build from source and install to /Applications
+scripts/make-mac-icons.sh       regenerate the icons after changing assets/
 ```
 
 **Signing is a development need before it is a distribution one.** macOS TCC
 identifies an app by its code signature, and ad-hoc signatures key on the code
 directory hash, which changes on every build — so without a stable identity you
 re-grant Accessibility and Input Monitoring on every single rebuild.
-`setup-signing.sh` creates one. Verified: codesign accepts an untrusted
+`setup-mac-signing.sh` creates one. Verified: codesign accepts an untrusted
 self-signed certificate as long as its keychain is in the search list, so this
 does not touch the trust store.
 
@@ -565,7 +565,7 @@ free one that is actually clean. Tested on macOS 15.6:
 
 | How the app arrives | Quarantined? |
 |---|---|
-| Built locally (`Scripts/install.sh`) | No — opens normally |
+| Built locally (`scripts/install-mac-app.sh`) | No — opens normally |
 | Downloaded `.tar.gz`, extracted with `tar -xzf` | **Yes** |
 | Downloaded `.dmg`, dragged from Finder | Yes |
 
@@ -578,7 +578,7 @@ shortcut.
 
 Notarization is the only thing that removes that step, and it requires a
 Developer ID certificate, which requires the paid Apple Developer Program.
-Until then: ship source, and `DMG=1 Scripts/make-app.sh` for anyone who won't
+Until then: ship source, and `DMG=1 scripts/build-mac-app.sh` for anyone who won't
 build it — with honest instructions about what they'll see.
 
 The disk image carries an `Applications` symlink, so installing is a drag
@@ -589,17 +589,17 @@ produces a `.tar.gz` for anyone who prefers one.
 
 ## The site
 
-`docs/` is a plain static site — no build step, no framework, no dependencies —
+`site/` is a plain static site — no build step, no framework, no dependencies —
 ready for GitHub Pages (**Settings -> Pages -> Deploy from a branch**, `main`,
 `/docs`). It carries a live demo of the converter that runs in the browser.
 
 The demo is not a recording and not a second implementation typed out by hand.
-`Tools/make_site.py` reads the tables straight out of `Sources/LaTeXUnicode`
-into `docs/assets/data.js`, and runs every worked example on the page through
+`scripts/make-site.py` reads the tables straight out of `Sources/LaTeXUnicode`
+into `site/assets/data.js`, and runs every worked example on the page through
 the real `latex-squiggly` binary, capturing what it actually printed:
 
 ```
-python3 Tools/make_site.py
+python3 scripts/make-site.py
 ```
 
 So the page cannot claim a conversion the app does not make. Each example
@@ -612,7 +612,7 @@ on, because trying `\frac12` without typing a space around it is the point of a
 tool for trying things by hand. But it means `x^2` prints x-squared there while
 doing nothing at all in the app, and a page built from that output would have
 been advertising a conversion that never happens. The examples sit
-between `<!-- BEGIN generated: ... -->` markers in `docs/index.html`; the rest
+between `<!-- BEGIN generated: ... -->` markers in `site/index.html`; the rest
 of that file, the stylesheet and the demo's own code are written by hand.
 
 ## Non-goals
@@ -652,14 +652,14 @@ Sources/LaTeXSquigglyApp/       the menu bar app
 Sources/LaTeXUnicodeChecks/    the test suite (no XCTest)
 Sources/latex-squiggly-check/   CLI runner
 Tests/LaTeXUnicodeTests/       swift test wrapper
-Tools/generate_tables.py       table generator
-Tools/make_icons.swift         icon generator, from Assets/ artwork
-Tools/make_site.py             regenerates the site's tables and examples
-Tools/make_site_images.swift   regenerates the site's images
-Assets/                        the artwork, and the generated .icns
-docs/                          the site; see docs/README.md
+scripts/generate-swift-tables.py       table generator
+scripts/make-app-icons.swift         icon generator, from assets/ artwork
+scripts/make-site.py             regenerates the site's tables and examples
+scripts/make-site-images.swift   regenerates the site's images
+assets/                        the artwork, and the generated .icns
+site/                          the site; see site/README.md
 Sources/latex-squiggly/         convert CLI for trying things by hand
-Scripts/                       signing, bundling, install, icons
+scripts/                       signing, bundling, install, icons
 ```
 
 ## Licence
@@ -669,7 +669,7 @@ notice.
 
 There is no third-party code in it. The package declares no dependencies, and
 the symbol table was not copied from `unicode-math` or the W3C entity tables:
-`Tools/generate_tables.py` holds its own list of commands paired with Unicode
+`scripts/generate-swift-tables.py` holds its own list of commands paired with Unicode
 *character names*, and resolves each name against the Unicode database at
 generation time. The command names themselves are of course Knuth's, Lamport's
 and the AMS's, and the characters are Unicode's, but names and codepoint

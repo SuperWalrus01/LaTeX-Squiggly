@@ -12,7 +12,7 @@ before it does anything else; so does this.
 Everything is composed at 256 pixels and reduced from there, so the strike on
 the inactive mark is antialiased by the reduction rather than by hand.
 
-Run:  python3 Tools/make_windows_icons.py
+Run:  python3 scripts/make-windows-icons.py
 """
 
 import math, os, struct, zlib
@@ -263,7 +263,7 @@ def png(width, height, pixels):
 def main():
     os.makedirs(OUT, exist_ok=True)
 
-    width, height, pixels = decode_png(os.path.join(ROOT, "Assets", "menu-icon.png"))
+    width, height, pixels = decode_png(os.path.join(ROOT, "assets", "menu-icon.png"))
     min_x, min_y, max_x, max_y = alpha_bounds(width, height, pixels)
     mark_width = max_x - min_x + 1
     mark_height = max_y - min_y + 1
@@ -293,7 +293,7 @@ def main():
             handle.write(png(256, 256, master))
 
     # The exe's own icon, which already has its background in the artwork.
-    width, height, pixels = decode_png(os.path.join(ROOT, "Assets", "app-icon.png"))
+    width, height, pixels = decode_png(os.path.join(ROOT, "assets", "app-icon.png"))
     images = [(size, resample(pixels, width, height, size, size)) for size in SIZES]
     path = os.path.join(OUT, "app.ico")
     with open(path, "wb") as handle:

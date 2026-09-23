@@ -7,11 +7,12 @@
 # ~15 GB Xcode download. That constraint is why the bundle is assembled by hand
 # here instead of being produced by an .xcodeproj.
 #
-#   Scripts/make-app.sh                          ad-hoc signed, into build/
-#   SIGN_IDENTITY="LaTeX-Squiggly Dev" Scripts/make-app.sh   (the identity name
-#                                                            keeps its hyphen)
-#   DMG=1 Scripts/make-app.sh                    also produce a .dmg
-#   TARBALL=1 Scripts/make-app.sh                also produce a .tar.gz
+#   scripts/build-mac-app.sh               ad-hoc signed, into build/
+#   DMG=1 scripts/build-mac-app.sh         also produce a .dmg
+#   TARBALL=1 scripts/build-mac-app.sh     also produce a .tar.gz
+#   SIGN_IDENTITY="LaTeX-Squiggly Dev" scripts/build-mac-app.sh
+#                                          signed with a stable identity (the
+#                                          name keeps its hyphen on purpose)
 #
 # On the tarball: it is a convenience, NOT a Gatekeeper workaround. Tested on
 # macOS 15.6 — a quarantined archive containing a .app propagates quarantine to
@@ -21,7 +22,7 @@
 #
 # Building from source is the only free path that is genuinely clean, because a
 # locally built app is never downloaded and so never quarantined. See
-# Scripts/install.sh.
+# scripts/install-mac-app.sh.
 #
 set -euo pipefail
 
@@ -49,7 +50,7 @@ OUT="${OUT:-build}"
 APP="$OUT/$APP_NAME.app"
 CONTENTS="$APP/Contents"
 
-python3 Tools/check_version.py
+python3 scripts/check-version.py
 
 echo "Building $EXECUTABLE $VERSION (release)"
 swift build -c release --product "$EXECUTABLE"
@@ -60,13 +61,15 @@ mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 cp "$BIN_PATH/$EXECUTABLE" "$CONTENTS/MacOS/$APP_NAME"
 
 # The icon is generated ahead of time and committed, so building the app needs
-# neither the artwork nor iconutil. Scripts/make-icons.sh rebuilds it from
-# Assets/ after the artwork changes.
+# neither the artwork nor iconutil. scripts/make-mac-icons.sh rebuilds it from
+# assets/ after the artwork changes.
+#
+# Inside the bundle it keeps the name AppIcon, which Info.plist refers to.
 ICON_NAME="AppIcon"
-if [ -f "Assets/$ICON_NAME.icns" ]; then
-    cp "Assets/$ICON_NAME.icns" "$CONTENTS/Resources/$ICON_NAME.icns"
+if [ -f "assets/app-icon.icns" ]; then
+    cp "assets/app-icon.icns" "$CONTENTS/Resources/$ICON_NAME.icns"
 else
-    echo "warning: Assets/$ICON_NAME.icns is missing; run Scripts/make-icons.sh"
+    echo "warning: assets/app-icon.icns is missing; run scripts/make-mac-icons.sh"
     ICON_NAME=""
 fi
 
@@ -99,7 +102,7 @@ plutil -lint "$CONTENTS/Info.plist" >/dev/null
 # invalidates the signature.
 if [ "$SIGN_IDENTITY" = "-" ]; then
     echo "Signing ad-hoc (permissions will reset on every rebuild)"
-    echo "  Run Scripts/setup-signing.sh and set SIGN_IDENTITY to avoid that."
+    echo "  Run scripts/setup-mac-signing.sh and set SIGN_IDENTITY to avoid that."
 else
     echo "Signing as: $SIGN_IDENTITY"
 fi
@@ -132,19 +135,19 @@ if [ "${DMG:-0}" != "0" ]; then
     # The window dressing, both committed so this script needs no artwork.
     # Missing either one is not fatal: an unstyled image still installs.
     STYLED=1
-    if [ -f "Assets/dmg-background.tiff" ]; then
+    if [ -f "assets/dmg-background.tiff" ]; then
         mkdir -p "$STAGE/.background"
-        cp "Assets/dmg-background.tiff" "$STAGE/.background/background.tiff"
+        cp "assets/dmg-background.tiff" "$STAGE/.background/background.tiff"
     else
-        echo "warning: Assets/dmg-background.tiff is missing; run Scripts/make-icons.sh"
+        echo "warning: assets/dmg-background.tiff is missing; run scripts/make-mac-icons.sh"
         STYLED=0
     fi
     # The volume icon is deliberately NOT staged here. Finder deletes a
     # .VolumeIcon.icns it finds on a volume it is opening, so anything put in
     # the staging folder is gone by the time the window has been arranged.
     # It goes on after Finder has finished, below.
-    if [ ! -f "Assets/VolumeIcon.icns" ]; then
-        echo "warning: Assets/VolumeIcon.icns is missing; run Scripts/make-icons.sh"
+    if [ ! -f "assets/volume-icon.icns" ]; then
+        echo "warning: assets/volume-icon.icns is missing; run scripts/make-mac-icons.sh"
     fi
 
     rm -f "$IMAGE"
@@ -166,7 +169,7 @@ if [ "${DMG:-0}" != "0" ]; then
                  | grep -o '/Volumes/.*' | head -1)"
         [ -n "$MOUNT" ] || { echo "could not mount the staging image"; exit 1; }
 
-        # Positions and window size come from Tools/make_dmg_images.swift,
+        # Positions and window size come from scripts/make-dmg-images.swift,
         # which drew the background to match them. Change them there.
         osascript >/dev/null <<APPLESCRIPT
 tell application "Finder"
@@ -194,8 +197,8 @@ APPLESCRIPT
         # volume it opens, so staging one before this point loses it. The flag
         # matters as much as the file, since .VolumeIcon.icns on its own does
         # nothing until the volume is marked as having a custom icon.
-        if [ -f "Assets/VolumeIcon.icns" ]; then
-            cp "Assets/VolumeIcon.icns" "$MOUNT/.VolumeIcon.icns"
+        if [ -f "assets/volume-icon.icns" ]; then
+            cp "assets/volume-icon.icns" "$MOUNT/.VolumeIcon.icns"
             SetFile -a C "$MOUNT" 2>/dev/null || \
                 echo "warning: could not set the custom-icon flag on the volume"
         fi

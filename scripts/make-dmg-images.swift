@@ -1,17 +1,17 @@
 //
-// Builds the disk image's two pictures from the artwork in Assets/.
+// Builds the disk image's two pictures from the artwork in assets/.
 //
-//   swift Tools/make_dmg_images.swift
+//   swift scripts/make-dmg-images.swift
 //
-// Writes into Assets/:
+// Writes into assets/:
 //
-//   VolumeIcon.iconset/    the mounted volume's icon, from Assets/dmg_image.png
-//                          (Scripts/make-icons.sh turns this into an .icns)
+//   volume-icon.iconset/   the mounted volume's icon, from assets/dmg-image.png
+//                          (scripts/make-mac-icons.sh turns this into an .icns)
 //   dmg-background.tiff    the window behind the two icons
 //
 // The background is drawn here rather than exported from a design tool for the
 // same reason the coverage table is generated: the icon positions in
-// Scripts/make-app.sh and the arrow between them have to agree, and two files
+// scripts/build-mac-app.sh and the arrow between them have to agree, and two files
 // that must agree should have one author. Change `layout` below and both the
 // picture and the window follow.
 //
@@ -23,16 +23,16 @@ import AppKit
 import Foundation
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let assets = root.appendingPathComponent("Assets")
+let assets = root.appendingPathComponent("assets")
 
 func die(_ message: String) -> Never {
-    FileHandle.standardError.write(Data(("make_dmg_images: " + message + "\n").utf8))
+    FileHandle.standardError.write(Data(("make-dmg-images: " + message + "\n").utf8))
     exit(1)
 }
 
 // MARK: - The layout both the picture and the window are built from
 
-/// Everything Scripts/make-app.sh also needs to know. Point units, origin at
+/// Everything scripts/build-mac-app.sh also needs to know. Point units, origin at
 /// the top left of the window's content area, which is how Finder counts.
 enum Layout {
     static let width: CGFloat = 660
@@ -139,7 +139,7 @@ func background(scale: Int) -> NSBitmapImageRep {
 
     context.scaleBy(x: CGFloat(scale), y: CGFloat(scale))
     // Finder counts from the top left; flipping here means every coordinate
-    // above reads the same way as the ones make-app.sh hands to Finder.
+    // above reads the same way as the ones build-mac-app.sh hands to Finder.
     context.translateBy(x: 0, y: Layout.height)
     context.scaleBy(x: 1, y: -1)
 
@@ -190,13 +190,13 @@ func scaled(_ image: CGImage, to side: Int) -> Data {
 
 // MARK: - Run
 
-let source = assets.appendingPathComponent("dmg_image.png")
+let source = assets.appendingPathComponent("dmg-image.png")
 guard let artwork = NSImage(contentsOf: source),
       let cg = artwork.cgImage(forProposedRect: nil, context: nil, hints: nil)
-else { die("cannot read Assets/dmg_image.png — run this from the repository root") }
+else { die("cannot read assets/dmg-image.png — run this from the repository root") }
 
 let square = squared(cg)
-let iconset = assets.appendingPathComponent("VolumeIcon.iconset")
+let iconset = assets.appendingPathComponent("volume-icon.iconset")
 try? FileManager.default.removeItem(at: iconset)
 do { try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true) }
 catch { die("cannot create \(iconset.path): \(error)") }
@@ -209,7 +209,7 @@ for points in [16, 32, 128, 256, 512] {
         catch { die("cannot write \(name): \(error)") }
     }
 }
-print("Assets/VolumeIcon.iconset: 10 sizes from \(cg.width)x\(cg.height) artwork")
+print("assets/volume-icon.iconset: 10 sizes from \(cg.width)x\(cg.height) artwork")
 
 let picture = NSImage(size: NSSize(width: Layout.width, height: Layout.height))
 picture.addRepresentation(background(scale: 1))
@@ -222,4 +222,4 @@ guard let tiff = picture.tiffRepresentation(using: .lzw, factor: 0) else {
 let backgroundURL = assets.appendingPathComponent("dmg-background.tiff")
 do { try tiff.write(to: backgroundURL) }
 catch { die("cannot write \(backgroundURL.path): \(error)") }
-print("Assets/dmg-background.tiff: \(Int(Layout.width))x\(Int(Layout.height)) pt at 1x and 2x, \(tiff.count) bytes")
+print("assets/dmg-background.tiff: \(Int(Layout.width))x\(Int(Layout.height)) pt at 1x and 2x, \(tiff.count) bytes")

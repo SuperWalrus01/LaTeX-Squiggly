@@ -22,13 +22,13 @@ var candidates = given is not null
     {
         "reference.json",
         Path.Combine(AppContext.BaseDirectory, "reference.json"),
-        Path.Combine("windows", "LaTeXSquiggly.Conformance", "reference.json"),
+        Path.Combine("conformance", "reference.json"),
     };
 var path = candidates.FirstOrDefault(File.Exists);
 if (path is null)
 {
     Console.Error.WriteLine(
-        "no reference.json found; run Tools/generate_conformance_corpus.py");
+        "no reference.json found; run scripts/generate-conformance-reference.py");
     return 2;
 }
 
@@ -101,10 +101,10 @@ failures.AddRange(suppressionFailures);
 
 if (failures.Count == 0)
 {
-    // Written next to the reference so Tools/make_site.py can quote these
+    // Written next to the reference so scripts/make-site.py can quote these
     // numbers without a .NET SDK to run this with. A count typed into a web
     // page by hand is a count that is wrong by the next release.
-    var summary = Path.Combine(Path.GetDirectoryName(path) ?? ".", "result.json");
+    var summary = Path.Combine(Path.GetDirectoryName(path) ?? ".", "windows-result.json");
     File.WriteAllText(summary, JsonSerializer.Serialize(new
     {
         fragments = records.Count,

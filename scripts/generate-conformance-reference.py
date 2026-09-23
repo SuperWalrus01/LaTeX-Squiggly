@@ -9,13 +9,13 @@ Every symbol, every script character, every refusal message and every trigger
 rule is covered, because a port that is right about \\alpha and wrong about
 \\varsigma is not obviously wrong until somebody types \\varsigma.
 
-Run:  swift build && python3 Tools/generate_conformance_corpus.py
+Run:  swift build && python3 scripts/generate-conformance-reference.py
 """
 
 import json, os, subprocess, string, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "windows", "LaTeXSquiggly.Conformance")
+OUT = os.path.join(ROOT, "conformance")
 
 
 def corpus(tables):

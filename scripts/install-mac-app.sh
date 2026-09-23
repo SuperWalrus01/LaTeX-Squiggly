@@ -9,11 +9,11 @@
 # reads their keystrokes.
 #
 # Requires the Command Line Tools (`xcode-select --install`). Xcode is not
-# needed: the .app bundle is assembled by Scripts/make-app.sh rather than by
+# needed: the .app bundle is assembled by scripts/build-mac-app.sh rather than by
 # Xcode's build system.
 #
-#   ./Scripts/install.sh
-#   INSTALL_DIR=~/Applications ./Scripts/install.sh
+#   scripts/install-mac-app.sh
+#   INSTALL_DIR=~/Applications scripts/install-mac-app.sh
 #
 set -euo pipefail
 
@@ -48,11 +48,11 @@ else
     echo "  Accessibility and Input Monitoring grants every time you rebuild."
     echo
     echo "  Fix it before granting permissions, not after:"
-    echo "      Scripts/setup-signing.sh && Scripts/install.sh"
+    echo "      scripts/setup-mac-signing.sh && scripts/install-mac-app.sh"
     echo
 fi
 
-Scripts/make-app.sh
+scripts/build-mac-app.sh
 
 # Copying over a running app leaves the old executable live in memory, still
 # holding its status item and its event tap. Quitting first is the difference

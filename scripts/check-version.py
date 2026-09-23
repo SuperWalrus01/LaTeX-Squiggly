@@ -2,7 +2,7 @@
 """
 Asserts that every place carrying a version number agrees with VERSION.
 
-The version used to be a default inside Scripts/make-app.sh, which meant a
+The version used to be a default inside scripts/build-mac-app.sh, which meant a
 release built without setting an environment variable was stamped with whatever
 the last person had typed there. That is the kind of mistake nothing catches:
 the app runs, the disk image mounts, and only the About box is wrong.
@@ -10,7 +10,7 @@ the app runs, the disk image mounts, and only the About box is wrong.
 Most places now read VERSION directly. The three that cannot are checked here
 instead, because a manifest is a source file worth being able to read.
 
-Run:  python3 Tools/check_version.py
+Run:  python3 scripts/check-version.py
 """
 
 import json, os, re, sys
@@ -48,7 +48,7 @@ def main():
 
     # Nothing should carry a hardcoded version any more. This catches one being
     # reintroduced, which is exactly how the last one survived.
-    for relative in ["Scripts/make-app.sh", "Scripts/install.sh"]:
+    for relative in ["scripts/build-mac-app.sh", "scripts/install-mac-app.sh"]:
         path = os.path.join(ROOT, relative)
         if not os.path.exists(path):
             continue

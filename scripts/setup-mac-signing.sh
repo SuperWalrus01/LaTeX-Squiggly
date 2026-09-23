@@ -79,6 +79,6 @@ echo "Done. Sign with:"
 echo "    codesign --force --sign \"$NAME\" YourApp.app"
 echo
 echo "Or point the bundle script at it:"
-echo "    SIGN_IDENTITY=\"$NAME\" Scripts/make-app.sh"
+echo "    SIGN_IDENTITY=\"$NAME\" scripts/build-mac-app.sh"
 echo
 security find-identity -p codesigning "$KEYCHAIN" | grep "$NAME" || true

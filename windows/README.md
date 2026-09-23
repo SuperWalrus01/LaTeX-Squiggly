@@ -21,7 +21,7 @@ is the same program without that copy, so Windows will tell you what is missing
 and where to get it if the runtime is not already there.
 
 Either build runs on an ARM laptop too, through the x64 emulation Windows does
-for itself. `./windows/build.sh win-arm64` produces a native one if you want it.
+for itself. `scripts/build-windows.sh win-arm64` produces a native one if you want it.
 
 Two things will happen the first time, and neither means anything is wrong.
 
@@ -109,11 +109,11 @@ to test on.
 
 **The tables are generated, not transcribed.** `latex-squiggly --dump-tables`
 prints the tables the Swift engine actually uses at runtime, and
-`Tools/generate_csharp_tables.py` turns that into C#. All 202 symbols, 40
+`scripts/generate-csharp-tables.py` turns that into C#. All 202 symbols, 40
 superscripts, 32 subscripts, 19 fractions, 33 operators and 49 refusal messages
 come from one source. A symbol added to the Mac cannot go missing here.
 
-**The port is diffed against the original.** `Tools/generate_conformance_corpus.py`
+**The port is diffed against the original.** `scripts/generate-conformance-reference.py`
 asks the Swift engine about 2,030 fragments, covering every symbol, every script
 character, every refusal, every fraction shape, the dollar rule, and everything
 that must stay silent. `LaTeXSquiggly.Conformance` replays all of them through
@@ -129,7 +129,7 @@ PASS  suppression  30 checks on the Windows rules
       4090 checks passed.
 ```
 
-`windows/build.sh` runs the whole pipeline and refuses to publish if any of it
+`scripts/build-windows.sh` runs the whole pipeline and refuses to publish if any of it
 disagrees.
 
 What this does **not** cover is the part only a Windows machine can answer:
@@ -142,8 +142,8 @@ windows look right. That is what your laptop is for.
 From a Mac or Linux box with the .NET 8 SDK:
 
 ```
-./windows/build.sh              # x64, which also runs on ARM laptops
-./windows/build.sh win-arm64    # native ARM64, if you want it
+scripts/build-windows.sh              # x64, which also runs on ARM laptops
+scripts/build-windows.sh win-arm64    # native ARM64, if you want it
 ```
 
 From Windows, the same `dotnet publish` line in `build.sh` works unchanged.

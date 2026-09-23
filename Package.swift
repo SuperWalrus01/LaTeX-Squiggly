@@ -25,7 +25,7 @@ let package = Package(
         // stay quiet is separable from asking macOS what is frontmost.
         .target(name: "AppSuppression"),
 
-        // Phase 1: the menu bar app. Bundle it with Scripts/make-app.sh.
+        // Phase 1: the menu bar app. Bundle it with scripts/build-mac-app.sh.
         .executableTarget(name: "LaTeXSquigglyApp",
                           dependencies: ["LaTeXUnicode", "InputTracking", "AppSuppression"]),
 

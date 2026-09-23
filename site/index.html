@@ -77,7 +77,7 @@ Try it here — type \theta then press space.</textarea>
       <h2>Characters, not markup</h2>
       <p class="lede">Every result below is what the app's own engine produced, not a mock-up. It is ordinary Unicode text: it survives a copy, a paste, a chat message and an email subject line, because there is nothing left to render.</p>
       <div class="pairs">
-        <!-- BEGIN generated: symbols (Tools/make_site.py) -->
+        <!-- BEGIN generated: symbols (scripts/make-site.py) -->
         <div class='pair'><div class='src'>\alpha</div><div class='arrow'>&#8594;</div><div class='out'>α</div></div>
         <div class='pair'><div class='src'>\Rightarrow</div><div class='arrow'>&#8594;</div><div class='out'>⇒</div></div>
         <div class='pair'><div class='src'>\int</div><div class='arrow'>&#8594;</div><div class='out'>∫</div></div>
@@ -97,7 +97,7 @@ Try it here — type \theta then press space.</textarea>
       <h2>It tells you, in words about your maths</h2>
       <p class="lede">Some LaTeX has no honest one-line form. The app leaves your text exactly as you typed it and says why — naming the constraint rather than reporting a syntax error, because <code>\vec</code> is not a typo.</p>
       <div class="pairs">
-        <!-- BEGIN generated: refusals (Tools/make_site.py) -->
+        <!-- BEGIN generated: refusals (scripts/make-site.py) -->
         <div class='pair'><div class='src'>\vec{v}</div><div class='arrow'>&#8594;</div><div class='out refused'>An accent cannot be drawn over other characters in plain text.</div></div>
         <div class='pair'><div class='src'>\overbrace</div><div class='arrow'>&#8594;</div><div class='out refused'>An overbrace cannot be drawn over other characters in plain text.</div></div>
         <div class='pair'><div class='src'>\matrix</div><div class='arrow'>&#8594;</div><div class='out refused'>A matrix needs two-dimensional layout, which has no inline Unicode form.</div></div>
@@ -107,7 +107,7 @@ Try it here — type \theta then press space.</textarea>
       </div>
       <p class="lede" style="margin-top:1.6rem">Where an approximation is defensible, it takes it and tells you it did. A fraction with an exact character becomes that character; one that composes legibly out of scripts is composed; everything else goes on one line with a slash.</p>
       <div class="pairs">
-        <!-- BEGIN generated: fallbacks (Tools/make_site.py) -->
+        <!-- BEGIN generated: fallbacks (scripts/make-site.py) -->
         <div class='pair'><div class='src'>\frac{1}{2}</div><div class='arrow'>&#8594;</div><div class='out'>½</div></div>
         <div class='pair'><div class='src'>\frac{3}{7}</div><div class='arrow'>&#8594;</div><div class='out'>³⁄₇</div></div>
         <div class='pair'><div class='src'>\frac{a}{b}</div><div class='arrow'>&#8594;</div><div class='out'>a∕b<small>A fraction cannot be stacked in plain text, so it was written on one line with a slash.</small></div></div>
@@ -177,7 +177,7 @@ Try it here — type \theta then press space.</textarea>
       <p class="lede">Superscripts are the dangerous feature. <code>x^2</code> cannot convert on its own, because <code>2^3</code> in a sentence and <code>a_b</code> in a variable name would rewrite themselves the moment you hit space. So bare scripts are unreachable, and <code>$x^2$</code> — which nobody types by accident — is what turns them on.</p>
       <p class="lede">That is not enough by itself. <b>I have $5$ left</b> is a pair of dollar signs around a number, and rewriting it would be worse than useless. So a span only converts when it contains a backslash, a caret or an underscore: an actual mathematical signal. Currency has none, and is left alone.</p>
       <div class="pairs">
-        <!-- BEGIN generated: dollars (Tools/make_site.py) -->
+        <!-- BEGIN generated: dollars (scripts/make-site.py) -->
         <div class='pair'><div class='src'>I have $5$ left</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
         <div class='pair'><div class='src'>that costs $20 and $30 more</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
         <div class='pair'><div class='src'>$a$</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
@@ -261,10 +261,10 @@ git clone https://github.com/SuperWalrus01/LaTeX-Squiggly.git
 cd LaTeX-Squiggly
 
 <span class="c"># 3. a stable signing identity — once, BEFORE the first install</span>
-Scripts/setup-signing.sh
+scripts/setup-mac-signing.sh
 
 <span class="c"># 4. build and install</span>
-Scripts/install.sh
+scripts/install-mac-app.sh
 open "/Applications/LaTeX Squiggly.app"</pre>
       <p class="lede">Order matters: macOS ties the Accessibility grant to the code signature, so signing <em>after</em> you have granted permission invalidates the grant. Ad-hoc signatures key on a hash that changes with every build, which is how you end up re-granting Accessibility forever and blaming the app.</p>
       <pre><span class="c"># ask the app what it currently sees</span>
@@ -274,7 +274,7 @@ open "/Applications/LaTeX Squiggly.app"</pre>
       <h3>Building the Windows app</h3>
       <p class="lede">From a Mac or a Linux box, which is how it is actually built: the .NET SDK cross-compiles, so no Windows machine is needed to produce the binary. The pipeline generates the C# tables from the Swift engine, records what the Swift engine answers, checks the port against it, and only then publishes. If any of that disagrees, nothing is published.</p>
       <pre><span class="c"># needs the .NET 8 SDK; nothing else</span>
-./windows/build.sh
+scripts/build-windows.sh
 <span class="c">#   1/6  building the Swift engine</span>
 <span class="c">#   2/6  generating the C# tables from it</span>
 <span class="c">#   3/6  generating the icons</span>

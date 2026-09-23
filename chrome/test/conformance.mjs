@@ -19,7 +19,7 @@ const { convert, outcome } = globalThis.LaTeXSquiggly.engine;
 const settings = globalThis.LaTeXSquiggly.settings;
 
 const records = JSON.parse(readFileSync(
-  join(root, "windows", "LaTeXSquiggly.Conformance", "reference.json"), "utf8"));
+  join(root, "conformance", "reference.json"), "utf8"));
 
 const failures = [];
 let checks = 0;

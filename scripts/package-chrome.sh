@@ -5,14 +5,14 @@
 # The zip is the chrome/ folder minus its tests, with manifest.json at the top
 # level, which is where the store looks for it.
 #
-# Run:  Tools/package_chrome.sh
+# Run:  scripts/package-chrome.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 OUT="$ROOT/build/LaTeX-Squiggly-$VERSION-chrome.zip"
 
-python3 "$ROOT/Tools/check_version.py"
+python3 "$ROOT/scripts/check-version.py"
 node "$ROOT/chrome/test/conformance.mjs"
 
 mkdir -p "$ROOT/build"

@@ -1,9 +1,9 @@
 //
-// Builds the site's images from the artwork in Assets/.
+// Builds the site's images from the artwork in assets/.
 //
-//   swift Tools/make_site_images.swift
+//   swift scripts/make-site-images.swift
 //
-// Writes into docs/assets/:
+// Writes into site/assets/:
 //
 //   wordmark.png   alpha mask of the wordmark, coloured in CSS
 //   mark.png       alpha mask of the LS mark, likewise
@@ -19,10 +19,10 @@ import AppKit
 import Foundation
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let out = root.appendingPathComponent("docs/assets")
+let out = root.appendingPathComponent("site/assets")
 
 func die(_ message: String) -> Never {
-    FileHandle.standardError.write(Data(("make_site_images: " + message + "\n").utf8))
+    FileHandle.standardError.write(Data(("make-site-images: " + message + "\n").utf8))
     exit(1)
 }
 
@@ -52,7 +52,7 @@ func writePNG(_ rep: NSBitmapImageRep, _ name: String) {
     let url = out.appendingPathComponent(name)
     try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
     do { try data.write(to: url) } catch { die("cannot write \(url.path): \(error)") }
-    print("docs/assets/\(name): \(rep.pixelsWide)x\(rep.pixelsHigh), \(data.count) bytes")
+    print("site/assets/\(name): \(rep.pixelsWide)x\(rep.pixelsHigh), \(data.count) bytes")
 }
 
 // MARK: Coverage
@@ -148,8 +148,8 @@ func writeMask(from path: String, keyingPaper: Bool, width: Int, as name: String
 
 // MARK: Run
 
-writeMask(from: "Assets/app-icon.png", keyingPaper: true, width: 520, as: "wordmark.png")
-writeMask(from: "Assets/menu-icon.png", keyingPaper: false, width: 120, as: "mark.png")
+writeMask(from: "assets/app-icon.png", keyingPaper: true, width: 520, as: "wordmark.png")
+writeMask(from: "assets/menu-icon.png", keyingPaper: false, width: 120, as: "mark.png")
 
 // The favicon is the LS mark, not the app icon.
 //
@@ -189,7 +189,7 @@ func writeFavicon(side: Int, tiled: Bool, as name: String) {
 
     // The mark, inked and centred. A tab icon is seen at 16 px and has nothing
     // to leave margin for; on a tile it keeps the margin the tile needs.
-    let (values, w, h, box) = coverage(of: load("Assets/menu-icon.png"), keyingPaper: false)
+    let (values, w, h, box) = coverage(of: load("assets/menu-icon.png"), keyingPaper: false)
     let markH = body * (tiled ? 0.62 : 0.94), markW = markH * box.width / box.height
     let target = CGRect(x: tile.midX - markW / 2, y: tile.midY - markH / 2,
                         width: markW, height: markH)
@@ -233,7 +233,7 @@ func drawCard(width cardW: Int, height cardH: Int, as name: String) {
     // Painted through the coverage rather than through the mask file: Core
     // Graphics reads a clipping mask the other way up from CSS, and one artwork
     // that means two opposite things is a trap worth not setting.
-    let art = load("Assets/app-icon.png")
+    let art = load("assets/app-icon.png")
     let (values, w, h, box) = coverage(of: art, keyingPaper: true)
     let inkW = 560.0, inkH = inkW * box.height / box.width
     let inkRect = CGRect(x: (Double(cardW) - inkW) / 2, y: Double(cardH) / 2 - inkH / 2 + 14,

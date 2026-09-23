@@ -27,26 +27,26 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 
 RID="${1:-win-x64}"
 
-python3 Tools/check_version.py
+python3 scripts/check-version.py
 
 echo "==> 1/6  building the Swift engine"
 swift build
 
 echo "==> 2/6  generating the C# tables from it"
-python3 Tools/generate_csharp_tables.py
+python3 scripts/generate-csharp-tables.py
 
 echo "==> 3/6  generating the icons"
-python3 Tools/make_windows_icons.py
+python3 scripts/make-windows-icons.py
 
 echo "==> 4/6  recording Swift's answers"
-python3 Tools/generate_conformance_corpus.py
+python3 scripts/generate-conformance-reference.py
 
 echo "==> 5/6  checking the port against them"
 # The reference is named explicitly so the run resolves the copy in the
-# source tree, and writes its result.json back there where make_site.py
+# source tree, and writes windows-result.json back there where make-site.py
 # and the commit can both see it.
 dotnet run --project windows/LaTeXSquiggly.Conformance -v quiet \
-    -- windows/LaTeXSquiggly.Conformance/reference.json
+    -- conformance/reference.json
 
 echo "==> 6/6  publishing for $RID"
 dotnet publish windows/LaTeXSquiggly.App/LaTeXSquiggly.App.csproj \

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="reference.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../conformance/reference.json" Link="reference.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

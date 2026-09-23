@@ -4,7 +4,7 @@ A plain static site: no build step, no framework, no dependencies. Open
 `index.html` in a browser and it works, from the file system or from a server.
 
 ```
-docs/
+site/
   index.html          the page
   assets/styles.css   one stylesheet, tokens for light and dark
   assets/app.js       the live demo and the symbol browser
@@ -30,14 +30,14 @@ insist on reading as an absolute URL.
 `assets/data.js` and the worked examples inside `index.html` are not:
 
 ```
-python3 Tools/make_site.py
+python3 scripts/make-site.py
 ```
 
-Nor are the four images, which come out of the artwork in `Assets/`:
+Nor are the four images, which come out of the artwork in `assets/`:
 
 ```
-Scripts/make-icons.sh                  # for the iconset the favicon is cut from
-swift Tools/make_site_images.swift
+scripts/make-mac-icons.sh                  # for the iconset the favicon is cut from
+swift scripts/make-site-images.swift
 ```
 
 `github-card.png` is not used by the site. It is the 1280x640 image GitHub
