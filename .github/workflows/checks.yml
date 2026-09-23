@@ -1,0 +1,67 @@
+# Runs every check in the repository on every push to main and every pull
+# request. The first job is scripts/check-all.sh, which is also what to run
+# locally before pushing; the second types into real pages with the extension
+# loaded.
+
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  all:
+    name: All checks
+    # macOS, because the Swift package includes the AppKit menu bar app.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned: scripts/generate-swift-tables.py resolves characters against
+      # Python's Unicode database, and the drift check compares its output
+      # byte for byte with what is committed.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run every check
+        run: scripts/check-all.sh
+
+  extension-in-browser:
+    name: Extension in a browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Playwright is a test tool, not a dependency of the extension, so it is
+      # installed outside the repository rather than added to a package.json.
+      - name: Install Playwright's Chromium
+        run: |
+          npm install --no-save --prefix "$RUNNER_TEMP/playwright" playwright
+          npx --prefix "$RUNNER_TEMP/playwright" playwright install --with-deps chromium
+
+      - name: Type into real pages
+        run: node chrome/test/browser.cjs
+        env:
+          NODE_PATH: ${{ runner.temp }}/playwright/node_modules
