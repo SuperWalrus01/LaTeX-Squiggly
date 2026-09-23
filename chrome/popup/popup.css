@@ -1,0 +1,26 @@
+body { width: 300px; }
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--edge);
+}
+header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+
+.row { display: block; padding: 12px 16px; border-bottom: 1px solid var(--edge); }
+
+.host {
+  display: block;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.note { margin: 8px 0 0; font-size: 12px; }
+
+.example { margin: 0; font-size: 12px; }
+
+footer { padding: 10px 16px 12px; font-size: 13px; }
+
+.row.switch { display: flex; }

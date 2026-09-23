@@ -33,6 +33,15 @@ give the identical answer down to the delete count. Only the parts that touch
 the operating system are genuinely different, and `windows/README.md` says
 exactly which and why.
 
+## Chrome
+
+There is a Chrome extension, in [`chrome/`](chrome/), with its own
+[README](chrome/README.md). It reaches only the browser, so it is for
+Chromebooks and for computers where software cannot be installed. The engine is
+the same one again, held to the same 2,030-fragment reference. What differs is
+that a web page lets it read the text it is about to replace, so it confirms
+the characters in front of the caret before it deletes anything.
+
 ## Per-app suppression
 
 In a `.tex` file or on Overleaf, `\alpha` has to stay `\alpha`. An app that

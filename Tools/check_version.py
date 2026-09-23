@@ -7,13 +7,13 @@ release built without setting an environment variable was stamped with whatever
 the last person had typed there. That is the kind of mistake nothing catches:
 the app runs, the disk image mounts, and only the About box is wrong.
 
-Most places now read VERSION directly. The two that cannot are checked here
+Most places now read VERSION directly. The three that cannot are checked here
 instead, because a manifest is a source file worth being able to read.
 
 Run:  python3 Tools/check_version.py
 """
 
-import os, re, sys
+import json, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -39,6 +39,12 @@ def main():
     elif found.group(1) != version + ".0":
         problems.append(
             f"app.manifest says {found.group(1)}, expected {version}.0")
+
+    # Chrome reads the extension's version from its manifest and nowhere else.
+    extension = json.loads(read("chrome", "manifest.json"))
+    if extension.get("version") != version:
+        problems.append(
+            f"chrome/manifest.json says {extension.get('version')}, expected {version}")
 
     # Nothing should carry a hardcoded version any more. This catches one being
     # reintroduced, which is exactly how the last one survived.

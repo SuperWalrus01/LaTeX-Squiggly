@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LaTeX Squiggly</title>
+  <link rel="stylesheet" href="../shared/ui.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="../icons/icon-48.png" alt="" width="24" height="24">
+    <h1>LaTeX Squiggly</h1>
+  </header>
+
+  <label class="switch row">
+    <span>Convert as I type</span>
+    <input type="checkbox" id="enabled">
+  </label>
+
+  <section class="row site" id="site">
+    <label class="switch">
+      <span>
+        <span>Convert on this site</span>
+        <span class="host muted" id="host"></span>
+      </span>
+      <input type="checkbox" id="site-enabled">
+    </label>
+    <p class="note muted" id="site-note" hidden></p>
+  </section>
+
+  <p class="row example muted">
+    Type <code>\alpha</code> then space to get α.
+    <code>$x^2$</code> gives x².
+  </p>
+
+  <footer>
+    <a href="#" id="options">Settings and symbols</a>
+  </footer>
+
+  <script src="../engine/tables.js"></script>
+  <script src="../shared/settings.js"></script>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

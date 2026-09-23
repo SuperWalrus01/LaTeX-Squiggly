@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LaTeX Squiggly Settings</title>
+  <link rel="stylesheet" href="../shared/ui.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="../icons/icon-128.png" alt="" width="48" height="48">
+      <div>
+        <h1>LaTeX Squiggly</h1>
+        <p class="muted">Type LaTeX in any text box and it becomes Unicode when you press space.</p>
+      </div>
+    </header>
+
+    <section class="welcome" id="welcome" hidden>
+      <h2>Welcome. Here is what LaTeX Squiggly does with your typing.</h2>
+      <ul>
+        <li>To recognise a command like <code>\alpha</code>, it keeps the last few characters you
+          typed in a text box, in memory only. They are forgotten when you click, press an arrow key
+          or change fields.</li>
+        <li>When you press space after a command, it replaces the command with the character, right
+          where you typed it. Undo brings the command back.</li>
+        <li>Nothing you type is saved or sent anywhere. The extension makes no network requests.</li>
+        <li>It stays off on Overleaf and the other sites listed below, and in code editors.</li>
+      </ul>
+      <p class="muted">Try it: type <code>\alpha</code> and a space in any text box on a web page.
+        Pages that were already open need reloading first.
+        <a href="https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html">Privacy policy</a></p>
+      <button class="button primary" type="button" id="welcome-done">Got it</button>
+    </section>
+
+    <section>
+      <h2>General</h2>
+      <div class="card">
+        <label class="switch">
+          <span>
+            <span>Convert as I type</span>
+            <span class="hint muted">Turn this off to pause LaTeX Squiggly everywhere.</span>
+          </span>
+          <input type="checkbox" id="enabled">
+        </label>
+        <label class="switch">
+          <span>
+            <span>Show notices</span>
+            <span class="hint muted">When a conversion is only an approximation, or LaTeX is left as
+              typed, a short note says why.</span>
+          </span>
+          <input type="checkbox" id="notices">
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>Sites where it stays off</h2>
+      <p class="muted">
+        In LaTeX source, <code>\alpha</code> has to stay <code>\alpha</code>. A site here covers its
+        subdomains too, so <code>overleaf.com</code> includes <code>www.overleaf.com</code>. Code
+        editors on any site are always left alone.
+      </p>
+      <div class="card">
+        <ul class="sites" id="sites" aria-label="Excluded sites"></ul>
+        <form class="add" id="add-form">
+          <label for="add-site" class="visually-hidden">Site to add</label>
+          <input id="add-site" type="text" placeholder="example.com or a pasted address"
+                 autocomplete="off" spellcheck="false">
+          <button class="button primary" type="submit">Add</button>
+        </form>
+        <p class="error" id="add-error" role="alert" hidden></p>
+      </div>
+      <button class="button" type="button" id="restore">Restore the default sites</button>
+    </section>
+
+    <section>
+      <h2>Symbols</h2>
+      <p class="muted">
+        Commands convert when you press space after them. Scripts go inside dollars:
+        <code>$x^2$</code> gives x², <code>$a_1$</code> gives a₁. Fractions, roots and
+        <code>\mathbb{R}</code> work too.
+      </p>
+      <label for="search" class="visually-hidden">Search symbols</label>
+      <input id="search" class="search" type="search" placeholder="Search, for example arrow or \in"
+             autocomplete="off" spellcheck="false">
+      <p class="muted count" id="count" aria-live="polite"></p>
+      <div class="symbols" id="symbols"></div>
+    </section>
+
+    <footer class="muted">
+      <p>
+        Everything happens on this computer. LaTeX Squiggly keeps only the last few characters you
+        typed, in memory, to recognise a command. It never stores or sends what you type, and these
+        settings sync only through your own Chrome account.
+        <a href="https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html">Privacy policy</a>
+      </p>
+      <p id="version"></p>
+    </footer>
+  </main>
+
+  <script src="../engine/tables.js"></script>
+  <script src="../shared/settings.js"></script>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

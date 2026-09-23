@@ -1,0 +1,106 @@
+/* Shared by the popup and the options page. The palette is the icon's: warm
+   paper and the mark's orange. */
+
+:root {
+  color-scheme: light dark;
+  --bg: #fbf8f2;
+  --surface: #ffffff;
+  --fg: #2b2118;
+  --muted: #6b5d50;
+  --edge: #e6dccf;
+  --accent: #d9661a;
+  --accent-fg: #ffffff;
+  --danger: #b3261e;
+  --focus: #d9661a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1612;
+    --surface: #251e18;
+    --fg: #f3ece3;
+    --muted: #bfb2a4;
+    --edge: #3a3129;
+    --accent: #f28a3a;
+    --accent-fg: #1b1612;
+    --danger: #ff8a80;
+    --focus: #f28a3a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a { color: var(--accent); }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+button, input { font: inherit; color: inherit; }
+
+.muted { color: var(--muted); }
+
+/* A switch that is a real checkbox underneath, so it is keyboard- and
+   screen-reader-accessible for free. */
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+}
+.switch input {
+  appearance: none;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--edge);
+  position: relative;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 120ms ease;
+}
+.switch input:checked { background: var(--accent); }
+.switch input:checked::after { transform: translateX(16px); }
+.switch input:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.button {
+  border: 1px solid var(--edge);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.button:hover { border-color: var(--accent); }
+.button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+
+kbd, code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch input, .switch input::after { transition: none; }
+}

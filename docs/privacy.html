@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaTeX Squiggly Privacy</title>
+<meta name="description" content="What LaTeX Squiggly does with what you type: it reads it on your own computer to recognise LaTeX, and never stores or sends it.">
+<meta name="theme-color" content="#FAF7EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17130F" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="canonical" href="https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="brandline"><div class="brandmark"></div><b>LaTeX Squiggly</b></div>
+    <nav>
+      <a href="./">Home</a>
+    </nav>
+  </header>
+
+  <main>
+    <section style="border-top:0">
+      <p class="eyebrow">Privacy</p>
+      <h2>What happens to what you type</h2>
+      <p class="lede">LaTeX Squiggly has to see your typing to turn <code>\alpha</code> into α. It does that entirely on your own computer. Nothing you type is stored, logged or sent anywhere, and the apps and the extension make no network requests at all.</p>
+    </section>
+
+    <section>
+      <h2>The Chrome extension</h2>
+      <p class="lede"><b>What it reads.</b> While you type in a text box on a web page, the extension keeps the last 64 characters you typed in memory so it can recognise a LaTeX command when you press space. It is cleared whenever you click, press an arrow key, press Return or move to another field. When it converts something, it reads the few characters just before the cursor to confirm they are what you typed, then replaces them.</p>
+      <p class="lede"><b>What it keeps.</b> Only your settings: whether conversion is on, whether notices are shown, and the list of sites where it stays off. These are saved with Chrome's own storage and, if you have Chrome sync turned on, synced through your Google account like any other extension setting. The developer never receives them.</p>
+      <p class="lede"><b>Which sites.</b> It runs on every web page so that it works wherever you type, and it checks each page's address against your list of excluded sites. The address is compared and then dropped. It is never stored or sent.</p>
+      <p class="lede"><b>What it never does.</b> It does not collect, transmit, sell or share any data. It does not use analytics, advertising or tracking, it does not load code from anywhere, and it does not read pages beyond the text field you are typing in.</p>
+    </section>
+
+    <section>
+      <h2>The macOS and Windows apps</h2>
+      <p class="lede">The desktop apps work the same way: the last few keystrokes are held in memory to recognise a command, and cleared on every click, arrow key and app switch. To keep out of Overleaf, the macOS app reads the address of the browser tab in front, compares it with your excluded sites, and drops it. Nothing is written to disk except your settings, and nothing is sent anywhere.</p>
+    </section>
+
+    <section>
+      <h2>Questions</h2>
+      <p class="lede">The source code is public, so every claim here can be checked. Questions and reports are welcome as <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">GitHub issues</a>.</p>
+      <p class="lede">Last updated 23 September 2026.</p>
+    </section>
+  </main>
+</div>
+</body>
+</html>

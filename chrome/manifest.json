@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "LaTeX Squiggly",
+  "short_name": "Squiggly",
+  "version": "0.2.1",
+  "description": "Type \\alpha or $x^2$ in any text box and it becomes α or x² as real text. Stays out of Overleaf and code editors.",
+  "minimum_chrome_version": "102",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "LaTeX Squiggly",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background/worker.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "engine/tables.js",
+        "engine/engine.js",
+        "shared/settings.js",
+        "content/content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

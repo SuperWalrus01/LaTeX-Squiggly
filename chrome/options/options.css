@@ -1,0 +1,118 @@
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+header h1 { font-size: 22px; margin: 0; }
+header p { margin: 2px 0 0; }
+
+section { margin-top: 32px; }
+h2 { font-size: 16px; margin: 0 0 8px; }
+section > p { margin: 0 0 12px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  padding: 4px 16px;
+  margin-bottom: 12px;
+}
+.card > .switch { padding: 12px 0; }
+.card > .switch + .switch { border-top: 1px solid var(--edge); }
+
+.hint { display: block; font-size: 13px; }
+
+.sites { list-style: none; margin: 0; padding: 0; }
+.sites li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--edge);
+  overflow-wrap: anywhere;
+}
+.sites li.empty { color: var(--muted); }
+.remove {
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  flex: none;
+}
+.remove:hover { color: var(--danger); }
+
+.add { display: flex; gap: 8px; padding: 12px 0; }
+.add input, .search {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.error { color: var(--danger); margin: 0 0 12px; font-size: 13px; }
+
+.search { width: 100%; }
+.count { font-size: 13px; margin: 8px 0; }
+
+.symbols h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 20px 0 8px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+.symbol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  min-width: 0;
+}
+.glyph { font-size: 20px; width: 1.4em; text-align: center; flex: none; }
+.command {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+footer { margin-top: 40px; font-size: 13px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.welcome {
+  margin-top: 0;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 16px 20px 20px;
+}
+.welcome ul { margin: 0 0 12px; padding-left: 20px; }
+.welcome li { margin-bottom: 6px; }
