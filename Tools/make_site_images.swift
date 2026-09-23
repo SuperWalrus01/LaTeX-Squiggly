@@ -7,12 +7,13 @@
 //
 //   wordmark.png   alpha mask of the wordmark, coloured in CSS
 //   mark.png       alpha mask of the LS mark, likewise
-//   favicon.png    the app icon, from the same iconset the bundle uses
+//   favicon.png    the LS mark on a transparent ground, for browser tabs
+//   touch-icon.png the LS mark on a paper tile, for home screens
 //   og-card.png    the picture that appears when the link is pasted somewhere
 //
 // The two marks are masks rather than pictures so the page can ink them for
 // whichever theme the reader is in — one file, both grounds. Everything else
-// on the site is CSS, so these four are the whole image budget.
+// on the site is CSS, so these are the whole image budget.
 //
 import AppKit
 import Foundation
@@ -155,39 +156,41 @@ writeMask(from: "Assets/menu-icon.png", keyingPaper: false, width: 120, as: "mar
 // They are the same brand but they answer to different constraints: the app
 // icon is a wordmark, and a wordmark at the 16 px a browser tab actually draws
 // is an orange smudge. The mark was drawn for the menu bar, which is the same
-// problem, so it is the one that survives the shrink. It sits on the artwork's
-// own paper, on the same grid as the app icon, so the two still read as a set.
-func writeFavicon(side: Int, as name: String) {
+// problem, so it is the one that survives the shrink.
+//
+// In a browser tab it stands on its own, with no tile behind it, the same as
+// the Chrome extension's icon: a cream tile read as a pale square on a dark tab
+// strip, and the orange alone reads on light and dark tabs both. A home screen
+// is different. iOS puts a transparent touch icon on black, so that one keeps
+// its tile of the artwork's own paper, on the app icon's superellipse.
+func writeFavicon(side: Int, tiled: Bool, as name: String) {
     let ctx = CGContext(data: nil, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 0,
                         space: CGColorSpaceCreateDeviceRGB(),
                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
     ctx.interpolationQuality = .high
+    let tile = CGRect(x: 0, y: 0, width: Double(side), height: Double(side))
+    let body = Double(side)
 
-    // The same superellipse corner as the app icon, but full-bleed. The icon
-    // grid's margin is there to hold a Dock shadow; a favicon has no shadow
-    // and only 16 px to work with, so spending a fifth of it on air is waste.
-    let canvas = Double(side), body = canvas
-    let tile = CGRect(x: ((canvas - body) / 2).rounded(), y: ((canvas - body) / 2).rounded(),
-                      width: body, height: body)
-    let path = CGMutablePath()
-    let a = tile.width / 2, b = tile.height / 2, n = 5.0
-    for step in 0...720 {
-        let t = 2 * Double.pi * Double(step) / 720
-        let c = cos(t), sn = sin(t)
-        let x = tile.midX + a * pow(abs(c), 2 / n) * (c < 0 ? -1 : 1)
-        let y = tile.midY + b * pow(abs(sn), 2 / n) * (sn < 0 ? -1 : 1)
-        step == 0 ? path.move(to: CGPoint(x: x, y: y)) : path.addLine(to: CGPoint(x: x, y: y))
+    if tiled {
+        let path = CGMutablePath()
+        let a = tile.width / 2, b = tile.height / 2, n = 5.0
+        for step in 0...720 {
+            let t = 2 * Double.pi * Double(step) / 720
+            let c = cos(t), sn = sin(t)
+            let x = tile.midX + a * pow(abs(c), 2 / n) * (c < 0 ? -1 : 1)
+            let y = tile.midY + b * pow(abs(sn), 2 / n) * (sn < 0 ? -1 : 1)
+            step == 0 ? path.move(to: CGPoint(x: x, y: y)) : path.addLine(to: CGPoint(x: x, y: y))
+        }
+        path.closeSubpath()
+        ctx.addPath(path)
+        ctx.setFillColor(CGColor(red: 250/255, green: 247/255, blue: 238/255, alpha: 1))
+        ctx.fillPath()
     }
-    path.closeSubpath()
 
-    ctx.addPath(path)
-    ctx.setFillColor(CGColor(red: 250/255, green: 247/255, blue: 238/255, alpha: 1))
-    ctx.fillPath()
-
-    // The mark, inked and centred, filling most of the tile — a favicon is
-    // seen at 16 px, so it can carry far less margin than a Dock icon.
+    // The mark, inked and centred. A tab icon is seen at 16 px and has nothing
+    // to leave margin for; on a tile it keeps the margin the tile needs.
     let (values, w, h, box) = coverage(of: load("Assets/menu-icon.png"), keyingPaper: false)
-    let markH = body * 0.62, markW = markH * box.width / box.height
+    let markH = body * (tiled ? 0.62 : 0.94), markW = markH * box.width / box.height
     let target = CGRect(x: tile.midX - markW / 2, y: tile.midY - markH / 2,
                         width: markW, height: markH)
 
@@ -213,7 +216,8 @@ func writeFavicon(side: Int, as name: String) {
     writePNG(NSBitmapImageRep(cgImage: ctx.makeImage()!), name)
 }
 
-writeFavicon(side: 256, as: "favicon.png")
+writeFavicon(side: 256, tiled: false, as: "favicon.png")
+writeFavicon(side: 180, tiled: true, as: "touch-icon.png")
 
 // The link card. Two sizes, because the two places that show one disagree:
 // Open Graph scrapers crop to roughly 1.91:1, and GitHub's social preview
