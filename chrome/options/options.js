@@ -2,6 +2,7 @@ const { settings, tables } = globalThis.LaTeXSquiggly;
 
 const enabled = document.getElementById("enabled");
 const notices = document.getElementById("notices");
+const googleDocs = document.getElementById("google-docs");
 const siteList = document.getElementById("sites");
 const addForm = document.getElementById("add-form");
 const addInput = document.getElementById("add-site");
@@ -28,8 +29,10 @@ document.getElementById("welcome-done").addEventListener("click", () => {
 
 enabled.checked = config.enabled;
 notices.checked = config.showNotices;
+googleDocs.checked = config.googleDocs;
 enabled.addEventListener("change", () => settings.save({ enabled: enabled.checked }));
 notices.addEventListener("change", () => settings.save({ showNotices: notices.checked }));
+googleDocs.addEventListener("change", () => settings.save({ googleDocs: googleDocs.checked }));
 
 // MARK: Sites
 
@@ -85,6 +88,7 @@ chrome.storage.onChanged.addListener(async (_, area) => {
   config = await settings.load();
   enabled.checked = config.enabled;
   notices.checked = config.showNotices;
+  googleDocs.checked = config.googleDocs;
   renderSites();
 });
 

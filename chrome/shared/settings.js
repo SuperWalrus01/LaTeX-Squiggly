@@ -15,9 +15,12 @@
     "sharelatex.com",
   ];
 
+  // googleDocs is off by default: in Docs the extension cannot check the text
+  // before replacing it. See content/docs.js.
   const defaults = () => ({
     enabled: true,
     showNotices: true,
+    googleDocs: false,
     excludedSites: [...DEFAULT_SITES],
   });
 
@@ -75,6 +78,7 @@
     return {
       enabled: stored.enabled !== false,
       showNotices: stored.showNotices !== false,
+      googleDocs: stored.googleDocs === true,
       excludedSites: Array.isArray(stored.excludedSites) ? stored.excludedSites : [...DEFAULT_SITES],
     };
   }

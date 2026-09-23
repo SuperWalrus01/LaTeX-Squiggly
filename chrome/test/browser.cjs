@@ -57,6 +57,24 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
   });
 </script>`;
 
+// A stand-in for Google Docs, built the way Docs is understood to work: the
+// document is drawn from a model, and typing reaches it only as key events in a
+// hidden frame, read by keyCode and charCode. It proves the extension's side of
+// Google Docs mode; only a test by hand in Docs itself proves Docs' side.
+const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
+<div id=doc style="min-height:2em;border:1px solid"></div>
+<iframe id=input style="width:200px;height:40px"></iframe>
+<script>
+  let model = '';
+  const draw = () => { document.getElementById('doc').textContent = model; };
+  const input = document.getElementById('input').contentDocument;
+  input.body.contentEditable = 'true';
+  input.addEventListener('keypress', (e) => { model += String.fromCharCode(e.charCode); draw(); e.preventDefault(); });
+  input.addEventListener('keydown', (e) => {
+    if (e.keyCode === 8) { model = model.slice(0, -1); draw(); e.preventDefault(); }
+  });
+</script>`;
+
 (async () => {
   // Playwright's default headless browser is a stripped-down shell that cannot
   // load extensions, so ask for its full Chromium unless a build is named.
@@ -72,6 +90,9 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
 
   await context.route('https://**/*', (route) => {
     const u = new URL(route.request().url());
+    if (u.hostname === 'docs.google.com' && u.pathname.includes('/stand-in/')) {
+      return route.fulfill({ contentType: 'text/html', body: DOCS_STAND_IN });
+    }
     if (u.hostname.endsWith('example.test') || u.hostname.endsWith('overleaf.com')
         || u.hostname === 'docs.google.com') {
       return route.fulfill({ contentType: 'text/html', body: PAGE });
@@ -222,6 +243,54 @@ const PAGE = `<!doctype html><meta charset=utf-8><body>
   await fresh('#ta'); await page.keyboard.type('\\alpha ');
   check('off switch is respected', await value('#ta'), '\\alpha ');
   await options.click('label:has(#enabled)');
+
+  // Google Docs mode, against the stand-in.
+  const docs = async (path = '/document/d/stand-in/edit') => {
+    await page.goto('https://docs.google.com' + path);
+    await page.waitForTimeout(500);
+    const frame = page.frames()[1];
+    await frame.click('body');
+    return frame;
+  };
+  const drawn = () => page.$eval('#doc', (e) => e.textContent);
+
+  await docs(); await page.keyboard.type('\\alpha ');
+  check('Google Docs mode is off by default', await drawn(), '\\alpha ');
+
+  await options.click('label:has(#google-docs)');
+  await options.waitForTimeout(300);
+
+  await docs(); await page.keyboard.type('x \\alpha y');
+  check('Google Docs mode: \\alpha', await drawn(), 'x α y');
+
+  await docs(); await page.keyboard.type('$x^2$ and \\frac{1}{2} ');
+  check('Google Docs mode: scripts and fractions', await drawn(), 'x² and ½ ');
+
+  await docs(); await page.keyboard.type('\\alphx');
+  await page.keyboard.press('Backspace'); await page.keyboard.type('a ');
+  check('Google Docs mode follows Backspace', await drawn(), 'α ');
+
+  const docsFrame = await docs(); await page.keyboard.type('\\alp');
+  await page.click('#doc'); await page.waitForTimeout(200); await docsFrame.click('body');
+  await page.keyboard.type('ha ');
+  check('Google Docs mode: a click on the document ends the command', await drawn(), '\\alpha ');
+
+  await docs(); await page.keyboard.type('\\alp');
+  await page.waitForTimeout(4500);
+  await page.keyboard.type('ha ');
+  check('Google Docs mode: a pause of over four seconds ends the command', await drawn(), '\\alpha ');
+
+  await docs(); await page.keyboard.type('\\frac{x+1}{2} ');
+  check('Google Docs mode: an approximation', await drawn(), '(x+1)∕2 ');
+  check('Google Docs mode: its notice appears in the top frame', await notice(), true);
+
+  await docs(); await page.keyboard.type('\\E ');
+  check('Google Docs mode leaves 𝔼 as typed, for now', await drawn(), '\\E ');
+
+  await docs('/spreadsheets/d/stand-in/edit'); await page.keyboard.type('\\alpha ');
+  check('Google Docs mode stays out of Sheets', await drawn(), '\\alpha ');
+
+  await options.click('label:has(#google-docs)');
 
   // Popup, as a page
   const popup = await context.newPage();

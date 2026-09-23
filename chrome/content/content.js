@@ -69,6 +69,11 @@
   // an embedded page could answer first.
   if (window === window.top) {
     chrome.runtime.onMessage.addListener((message, _, reply) => {
+      // Google Docs mode types in a hidden frame and shows its notices here.
+      if (message?.type === "docs-notice") {
+        notify(message.title, message.message);
+        return;
+      }
       if (message?.type !== "status") return;
       reply({ host: location.hostname, excludedBy: excludedBy() });
     });
