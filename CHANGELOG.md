@@ -21,6 +21,11 @@ Windows fixes ship once they have been tested on Windows.
   Overbrace and Underbrace helpers. Alt+Shift+R opens it; Ctrl+Enter copies
   and closes. MathJax 3.2.2 is included in the extension, which fetches
   nothing.
+- **Render selection as image**, on the right-click menu for selected text,
+  opens the renderer with that text, less its `$` or `\[` delimiters. It adds
+  the `contextMenus` permission, which shows no warning.
+- A **history** in the renderer of the last 20 equations copied or saved,
+  closed until opened, with thumbnails drawn only then.
 
 - **Google Docs** in the Chrome extension, on by default with a switch in the
   settings. Docs gives the extension no text to check, so it follows the keys

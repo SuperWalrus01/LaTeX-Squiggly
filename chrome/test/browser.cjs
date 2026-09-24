@@ -608,6 +608,63 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
     }),
     ['\\newcommand{\\N}{\\mathbb{N}}', 2]);
 
+  // MARK: Renderer, from selected text
+
+  check('the menu item exists', await (await worker()).evaluate(() => new Promise((resolve) =>
+    chrome.contextMenus.update('render-selection', {}, () => resolve(!chrome.runtime.lastError)))), true);
+  check('delimiters come off a selection, and only a pair around all of it',
+    await (await worker()).evaluate(() => ['$x^2$', '$$\\frac12$$', '\\[a\\]', '\\(b\\)', '$a$ and $b$', 'costs $5']
+      .map((t) => globalThis.LaTeXSquiggly.stripDelimiters(t))),
+    ['x^2', '\\frac12', 'a', 'b', '$a$ and $b$', 'costs $5']);
+  // What the menu item does with Chrome's selectionText, through the same
+  // window as the shortcut test above.
+  const [selectionPage] = await Promise.all([
+    context.waitForEvent('page'),
+    (await worker()).evaluate(() => {
+      chrome.action.openPopup = () => Promise.reject(new Error('no popup here'));
+      return renderSelection('  $$\\frac{1}{2}$$ ');
+    }),
+  ]);
+  await selectionPage.waitForFunction(() => !!document.querySelector('#preview > svg'));
+  check('the menu item opens the renderer with the selection, delimiters off',
+    await selectionPage.$eval('#latex', (e) => e.value), '\\frac{1}{2}');
+  await selectionPage.close();
+
+  // MARK: History
+
+  const h = await context.newPage();
+  await h.setViewportSize({ width: 480, height: 700 });
+  await h.goto(`chrome-extension://${id}/popup/popup.html#renderer`);
+  await h.evaluate(() => chrome.storage.local.set({ rendererHistory: [] }));
+  await h.waitForFunction(() => !!globalThis.MathJax?.startup?.document?.inputJax);
+  for (let i = 0; i < 25; i++) {
+    await h.fill('#latex', `x^{${i}}`);
+    await h.click('#copy-svg');
+    await h.waitForTimeout(50);
+  }
+  await h.fill('#latex', 'x^{10}');
+  await h.click('#copy-svg');
+  await h.waitForTimeout(200);
+  const stored = await h.evaluate(async () => (await chrome.storage.local.get('rendererHistory')).rendererHistory.map((e) => e.source));
+  check('history: 20 entries, newest first, each once',
+    [stored.length, stored[0], stored[1], stored.filter((s) => s === 'x^{10}').length, stored.includes('x^{4}')],
+    [20, 'x^{10}', 'x^{24}', 1, false]);
+  check('history: closed, with nothing drawn, until opened',
+    [await h.$eval('#history', (e) => e.open), await h.$eval('#history-list', (e) => e.children.length)], [false, 0]);
+  await h.click('#history summary');
+  await h.waitForTimeout(200);
+  check('history: opening it draws every entry',
+    await h.$$eval('#history-list .entry > svg', (e) => e.length), 20);
+  await h.click('#history-list li:nth-child(3) .entry');
+  check('history: an entry loads into the editor', await h.$eval('#latex', (e) => e.value), 'x^{23}');
+  await h.click('#history-list li:nth-child(1) .remove');
+  await h.waitForTimeout(100);
+  check('history: ✕ removes an entry', await h.$$eval('#history-list li', (e) => e.length), 19);
+  await h.click('#history-clear');
+  await h.waitForTimeout(100);
+  check('history: Clear history empties it',
+    [await h.$$eval('#history-list li', (e) => e.length), await h.isVisible('#history-empty')], [0, true]);
+
   console.log(`\n${results.filter(Boolean).length}/${results.length} passed`);
   await context.close();
   if (results.some((ok) => !ok)) process.exitCode = 1;

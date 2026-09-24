@@ -105,6 +105,13 @@
       <button type="button" class="button" id="download-svg" disabled title="SVG is always transparent.">Download SVG</button>
     </div>
 
+    <details class="history" id="history">
+      <summary>History</summary>
+      <ul class="history-list" id="history-list" aria-label="Equations copied or saved"></ul>
+      <p class="muted history-empty" id="history-empty" hidden>Equations you copy or save appear here.</p>
+      <a href="#" id="history-clear" hidden>Clear history</a>
+    </details>
+
     <footer class="renderer-footer muted">
       <span><kbd id="copy-keys">Ctrl+Enter</kbd> copies the PNG and closes.<span id="open-shortcut" hidden>
         <kbd id="open-keys"></kbd> opens this.</span></span>

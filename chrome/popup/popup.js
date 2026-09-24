@@ -12,12 +12,13 @@ const googleDocs = document.getElementById("google-docs");
 // Typing is the switches for the conversion as you type; Renderer is the
 // LaTeX to image editor, in renderer/, loaded only when it is opened. The
 // popup reopens on the tab last used, and on Renderer when the renderer's
-// shortcut opened it, which the background worker says through session
-// storage (#renderer in the address does the same, for tests).
+// shortcut or menu item opened it, which the background worker says through
+// session storage, with the selected text for the menu item (#renderer in the
+// address does the same, for tests).
 const TABS = ["typing", "renderer"];
 let rendererStarted = false;
 
-function showTab(name, { selectAll = false } = {}) {
+function showTab(name, { selectAll = false, input } = {}) {
   for (const tab of TABS) {
     document.getElementById(`tab-${tab}`).setAttribute("aria-selected", String(tab === name));
     document.getElementById(`tab-${tab}`).tabIndex = tab === name ? 0 : -1;
@@ -27,7 +28,7 @@ function showTab(name, { selectAll = false } = {}) {
   chrome.storage.local.set({ popupTab: name }).catch(() => {});
   if (name === "renderer" && !rendererStarted) {
     rendererStarted = true;
-    import("../renderer/panel.js").then((panel) => panel.startRenderer({ selectAll }));
+    import("../renderer/panel.js").then((panel) => panel.startRenderer({ selectAll, input }));
   } else if (name === "renderer") {
     document.getElementById("latex").focus();
   }
@@ -36,10 +37,11 @@ function showTab(name, { selectAll = false } = {}) {
 async function firstTab() {
   if (location.hash === "#renderer") return { tab: "renderer" };
   try {
-    const { openRenderer } = await chrome.storage.session.get("openRenderer");
+    const { openRenderer, rendererSelection } =
+      await chrome.storage.session.get(["openRenderer", "rendererSelection"]);
     if (openRenderer) {
-      await chrome.storage.session.remove("openRenderer");
-      return { tab: "renderer", selectAll: true };
+      await chrome.storage.session.remove(["openRenderer", "rendererSelection"]);
+      return { tab: "renderer", selectAll: true, input: rendererSelection };
     }
   } catch {
     // No session storage: fall through to the last tab used.
@@ -65,7 +67,7 @@ for (const tab of TABS) {
 }
 
 const first = await firstTab();
-showTab(first.tab, { selectAll: first.selectAll });
+showTab(first.tab, { selectAll: first.selectAll, input: first.input });
 
 // MARK: Typing
 

@@ -240,3 +240,45 @@ header h1 { flex: 1; }
   margin-top: 12px;
   font-size: 12px;
 }
+
+.history { margin-top: 12px; font-size: 13px; }
+.history summary { cursor: pointer; color: var(--muted); width: max-content; }
+.history summary:hover { color: var(--fg); }
+.history-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+.history-list li { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.history-list .entry {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 8px;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+}
+.history-list .entry:hover { border-color: var(--accent); }
+.history-list .entry > svg { max-width: 100%; height: auto; }
+.history-list .entry code { background: none; border: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-list .remove {
+  flex: none;
+  border: none;
+  background: none;
+  color: var(--muted);
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.history-list .remove:hover { color: var(--danger); }
+.history-empty { margin: 8px 0 0; font-size: 12px; }
+#history-clear { display: inline-block; margin-top: 4px; font-size: 12px; }

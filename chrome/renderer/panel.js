@@ -5,6 +5,7 @@
 import { loadMathJax, knowsCommand, render, standalone, svgText, pngBlob } from "./render.js";
 import { allCommands } from "./commands.js";
 import { Editor, balanced } from "./editor.js";
+import * as history from "./history.js";
 
 const { rendererSettings, tables } = globalThis.LaTeXSquiggly;
 
@@ -27,6 +28,8 @@ const swatches = [...document.querySelectorAll(".swatch[data-colour]")];
 const custom = $("custom-colour");
 const labelForm = $("label-form");
 const labelInput = $("brace-label");
+const historyPanel = $("history");
+const historyList = $("history-list");
 
 let config;
 let editor;
@@ -42,13 +45,20 @@ let errorTimer = 0;
 let messageTimer = 0;
 let brace = null;
 
-export async function startRenderer({ selectAll }) {
+// input is text selected on a page, from the menu item; otherwise the last
+// input comes back.
+export async function startRenderer({ selectAll, input }) {
   config = await rendererSettings.load();
-  try {
-    const { rendererInput } = await chrome.storage.local.get("rendererInput");
-    if (typeof rendererInput === "string") textarea.value = rendererInput;
-  } catch {
-    // Nothing saved, or local storage unavailable: start empty.
+  if (typeof input === "string") {
+    textarea.value = input;
+    saveInput();
+  } else {
+    try {
+      const { rendererInput } = await chrome.storage.local.get("rendererInput");
+      if (typeof rendererInput === "string") textarea.value = rendererInput;
+    } catch {
+      // Nothing saved, or local storage unavailable: start empty.
+    }
   }
   focusSource(selectAll);
   showSettings();
@@ -76,6 +86,7 @@ export async function startRenderer({ selectAll }) {
   }
   ready = true;
   placeholder.textContent = "Type LaTeX above to see it rendered.";
+  if (historyPanel.open) drawHistory();
   editor = new Editor(textarea, $("suggestions"), { commands: allCommands(tables), knows: knowsCommand });
   update();
   if (!valid && error) showError();
@@ -89,12 +100,16 @@ function focusSource(selectAll) {
 
 // MARK: Rendering
 
-function edited() {
+function saveInput() {
   try {
     chrome.storage.local.set({ rendererInput: textarea.value }).catch(() => {});
   } catch {
     // Saving the input is a convenience; the editor works without it.
   }
+}
+
+function edited() {
+  saveInput();
   pending = true;
   clearTimeout(renderTimer);
   clearTimeout(errorTimer);
@@ -192,6 +207,7 @@ async function copyPng() {
     const blob = pngBlob(image, { scale: config.renderScale, background: config.renderBackground });
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
     say("Copied.");
+    await remember();
     return true;
   } catch (e) {
     say(`Couldn't copy: ${e.message ?? e}`);
@@ -205,6 +221,7 @@ async function copySvg() {
   try {
     await navigator.clipboard.writeText(svgText(image.svg));
     say("Copied the SVG as text.");
+    await remember();
   } catch (e) {
     say(`Couldn't copy: ${e.message ?? e}`);
   }
@@ -222,6 +239,58 @@ async function download(kind) {
   link.download = `equation.${kind}`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  await remember();
+}
+
+// MARK: History
+
+// Kept closed by default and read only when opened, so a long history costs
+// nothing when the popup opens. Thumbnails are drawn afresh each time.
+async function remember() {
+  await history.add(textarea.value);
+  if (historyPanel.open) await drawHistory();
+}
+
+async function drawHistory() {
+  const list = await history.load();
+  historyList.replaceChildren();
+  $("history-empty").hidden = list.length > 0;
+  $("history-clear").hidden = list.length === 0;
+  for (const { source } of list) {
+    const item = document.createElement("li");
+    const entry = document.createElement("button");
+    entry.type = "button";
+    entry.className = "entry";
+    entry.title = source;
+    const drawn = ready ? render(source, config.renderMacros) : {};
+    if (drawn.svg) {
+      entry.append(standalone(drawn.svg, { fontSize: 14, padding: 2, colour: "#000000" }).svg);
+    } else {
+      const code = document.createElement("code");
+      code.textContent = source;
+      entry.append(code);
+    }
+    entry.setAttribute("aria-label", `Load ${source}`);
+    entry.addEventListener("click", () => loadEntry(source));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove";
+    remove.textContent = "✕";
+    remove.setAttribute("aria-label", `Remove ${source} from history`);
+    remove.addEventListener("click", async () => {
+      await history.remove(source);
+      await drawHistory();
+    });
+    item.append(entry, remove);
+    historyList.append(item);
+  }
+}
+
+// Through the editor, so loading an entry is one step of undo.
+function loadEntry(source) {
+  if (editor) editor.replace(0, textarea.value.length, source);
+  else textarea.value = source;
+  textarea.focus();
 }
 
 // MARK: Keys
@@ -246,6 +315,13 @@ async function keydown(event) {
 // MARK: Buttons
 
 function wireButtons() {
+  historyPanel.addEventListener("toggle", () => { if (historyPanel.open) drawHistory(); });
+  $("history-clear").addEventListener("click", async (event) => {
+    event.preventDefault();
+    await history.clear();
+    await drawHistory();
+  });
+
   $("copy-png").addEventListener("click", copyPng);
   $("copy-svg").addEventListener("click", copySvg);
   $("download-png").addEventListener("click", () => download("png"));

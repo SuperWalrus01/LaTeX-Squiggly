@@ -41,7 +41,8 @@
     }
   },
   "permissions": [
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "content_scripts": [
     {

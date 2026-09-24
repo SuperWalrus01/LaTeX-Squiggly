@@ -6,13 +6,15 @@
 // - keeps the toolbar icon honest: orange where it is converting, grey with a
 //   strike where it is not, the same two states as the desktop apps' icons;
 // - pauses and resumes everything from a keyboard shortcut;
-// - opens the popup on its Renderer tab from another shortcut;
+// - opens the popup on its Renderer tab from another shortcut, and from the
+//   "Render selection as image" menu item on selected text;
 // - relays messages between the frames of a Google Docs tab, which cannot reach
 //   each other directly; see content/docs.js.
 //
-// None of it needs a permission beyond storage.
+// None of it needs a permission beyond storage, and contextMenus for the menu
+// item, which asks the user for nothing: Chrome shows no warning for it.
 
-importScripts("../shared/settings.js");
+importScripts("../shared/settings.js", "../renderer/delimiters.js");
 
 const { settings } = globalThis.LaTeXSquiggly;
 
@@ -20,6 +22,7 @@ const { settings } = globalThis.LaTeXSquiggly;
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   showPauseState();
+  addMenuItem();
   if (reason !== chrome.runtime.OnInstalledReason.INSTALL) return;
   chrome.tabs.create({ url: chrome.runtime.getURL("options/options.html#welcome") });
 });
@@ -64,11 +67,15 @@ async function toggleConversion() {
 
 // Declared as open-renderer, Alt+Shift+R unless changed. The popup reads the
 // flag to open on the Renderer tab with its text selected, ready to be typed
-// over. action.openPopup() arrived for every extension in Chrome 127; before
-// that, and when there is no browser window to anchor it to, the popup's page
-// opens in a small window of its own instead.
-async function openRenderer() {
-  await chrome.storage.session.set({ openRenderer: true });
+// over, or with the text it is given in place of it. action.openPopup()
+// arrived for every extension in Chrome 127; before that, and when there is
+// no browser window to anchor it to, the popup's page opens in a small window
+// of its own instead.
+async function openRenderer(input) {
+  await chrome.storage.session.set({
+    openRenderer: true,
+    ...(typeof input === "string" ? { rendererSelection: input } : {}),
+  });
   try {
     await chrome.action.openPopup();
   } catch {
@@ -84,6 +91,33 @@ async function openRenderer() {
 chrome.commands.onCommand.addListener((command) => {
   if (command === "toggle-conversion") toggleConversion();
   if (command === "open-renderer") openRenderer();
+});
+
+// MARK: The menu item
+
+// Selected text, straight into the renderer. Chrome hands over the selection
+// with the click, so no page is read and no page permission is needed. The
+// renderer does the copying: a menu click is not a click in a page, and does
+// not let the extension write an image to the clipboard.
+const MENU_ITEM = "render-selection";
+
+// Items outlive the worker, so they are made once, on install and update.
+function addMenuItem() {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: MENU_ITEM,
+      title: "Render selection as image",
+      contexts: ["selection"],
+    });
+  });
+}
+
+function renderSelection(text) {
+  return openRenderer(globalThis.LaTeXSquiggly.stripDelimiters(text));
+}
+
+chrome.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId === MENU_ITEM) renderSelection(info.selectionText ?? "");
 });
 
 // MARK: Messages from pages

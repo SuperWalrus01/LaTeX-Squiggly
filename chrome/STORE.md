@@ -13,8 +13,9 @@ again: both changed. The steps are under
 
 The extension is built to what the review checks for:
 
-- **One permission**, `storage`, for the settings. No `tabs`, no `scripting`,
-  no `activeTab`, no `<all_urls>`.
+- **Two permissions**, `storage` for the settings and `contextMenus` for the
+  Render selection as image item, neither of which shows the user a warning.
+  No `tabs`, no `scripting`, no `activeTab`, no `<all_urls>`.
 - **Page access is the content script only**, on `http://*/*` and
   `https://*/*`. It has to run everywhere because typing happens everywhere.
   This is the one thing that triggers a closer manual review, and the
@@ -69,7 +70,7 @@ For what Unicode cannot write, such as fractions, matrices and braces, the popup
 • Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
 • In ordinary text boxes, undo brings the command back
 • The toolbar icon turns grey wherever it is not converting, and Alt+Shift+L pauses it anywhere
-• Renderer: maths-mode LaTeX to PNG or SVG, drawn by MathJax inside the extension, with a white or transparent background, colours, your own \newcommand definitions and command autocomplete. Alt+Shift+R opens it, Ctrl+Enter copies
+• Renderer: maths-mode LaTeX to PNG or SVG, drawn by MathJax inside the extension, with a white or transparent background, colours, your own \newcommand definitions, command autocomplete and a history. Alt+Shift+R opens it, or right-click selected LaTeX and choose Render selection as image; Ctrl+Enter copies
 
 Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
 
@@ -109,7 +110,13 @@ Write maths anywhere on the web: LaTeX commands typed into web page text fields 
 **Permission justification: storage**
 
 ```
-Saves the user's settings: whether conversion is on, whether notices are shown, the list of sites where the extension stays off, and the renderer's image settings. Also keeps the last LaTeX typed into the popup's renderer, locally, so it is there when the popup reopens. Nothing typed into web pages is stored.
+Saves the user's settings: whether conversion is on, whether notices are shown, the list of sites where the extension stays off, and the renderer's image settings. Also keeps, locally, the last LaTeX typed into the popup's renderer, so it is there when the popup reopens, and the LaTeX of the last 20 images the user copied or saved, as a history they can clear. Nothing typed into web pages is stored.
+```
+
+**Permission justification: contextMenus**
+
+```
+Adds one item, "Render selection as image", to the menu for selected text. It opens the extension's LaTeX renderer with the selected text in it. The text comes from Chrome with the click; no page is read.
 ```
 
 **Host permission justification** (the content script's `http://*/*` and `https://*/*`)
