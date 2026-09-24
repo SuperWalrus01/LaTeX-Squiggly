@@ -21,8 +21,19 @@ fixes below ship once they have been tested on Windows.
 - Store screenshots of the renderer and of a pasted image, and a new welcome
   page screenshot.
 
+### Changed
+
+- The Chrome extension no longer follows typing at all while it is paused or
+  on an excluded site. Before, it kept the last few characters in memory
+  there too, unused.
+- The Chrome extension's package now includes `REVIEWING.md`, a guide for the
+  Web Store reviewer to where typing is read and what is kept.
+
 ### Fixed
 
+- The Chrome extension's card on `chrome://extensions` no longer shows
+  "No tab with id" errors, left when a tab closed, or a prerendered page was
+  dropped, before its toolbar icon was set.
 - In the renderer, typing a nested group out in full, such as
   `\frac{-b \pm \sqrt{b^2-4ac}}{2a}`, added an extra `}`: the outer brace the
   editor had closed stopped being typed over once an inner one was added. The

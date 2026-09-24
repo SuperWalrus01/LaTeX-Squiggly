@@ -2,8 +2,9 @@
 # Builds the zip the Chrome Web Store takes, after the checks that must pass
 # before anything is uploaded.
 #
-# The zip is the chrome/ folder minus its tests, with manifest.json at the top
-# level, which is where the store looks for it.
+# The zip is the chrome/ folder minus its tests and notes, with manifest.json
+# at the top level, which is where the store looks for it. REVIEWING.md is the
+# one note that goes in: the reviewer sees only the zip.
 #
 # Run:  scripts/package-chrome.sh
 set -euo pipefail
@@ -19,5 +20,6 @@ mkdir -p "$ROOT/build"
 rm -f "$OUT"
 cd "$ROOT/chrome"
 zip -qr -X "$OUT" . -x 'test/*' -x 'store/*' -x '*.md' -x '.DS_Store' -x '*/.DS_Store'
+zip -q -X "$OUT" REVIEWING.md
 
 echo "packaged $(unzip -Z1 "$OUT" | wc -l | tr -d ' ') files into ${OUT#$ROOT/}"

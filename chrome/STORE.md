@@ -23,8 +23,9 @@ The extension is built to what the review checks for:
   justification below answers it.
 - **No remote code.** Every script is in the package, MathJax included.
   Nothing is fetched, and the extension makes no network requests at all.
-  MathJax's bundle contains one `eval("require")`, reached only when it runs
-  under Node, never in Chrome.
+  MathJax's `core.js` and `startup.js` each contain
+  `new Function("return this")`, a fallback for finding the global object
+  that runs only where `globalThis` does not exist, so never in Chrome.
 - **Readable code.** The extension's own code is neither minified nor
   obfuscated. MathJax, in `renderer/mathjax/`, is its standard minified
   release, byte for byte; the policy allows minification and forbids only
@@ -214,7 +215,7 @@ LaTeX Squiggly)
 Expect this review to take longer than an ordinary update: it adds a
 permission and about 1.9 MB of minified code (MathJax), on top of the page
 access that already brings a manual review. If the reviewer asks about the
-minified files or the `eval` in them, the answers are under
+minified files or the `new Function` in them, the answers are under
 [Why this should pass review](#why-this-should-pass-review).
 
 **After uploading**
