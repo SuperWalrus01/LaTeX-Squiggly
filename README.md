@@ -35,6 +35,25 @@ before installing anything.
 When something has no exact Unicode form, it says so instead of guessing, and
 it never leaves a half-converted result.
 
+Maths that plain text cannot hold, like a stacked fraction or a matrix, can be
+turned into an image instead: the Mac app and the Chrome extension have a
+renderer that copies your LaTeX as a PNG, ready to paste. The
+[guide](https://superwalrus01.github.io/LaTeX-Squiggly/guide.html) walks
+through both.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="chrome/store/screenshot-1-typing.png" alt="Typing LaTeX in a message box on a web page, converted to real characters as you type"></td>
+    <td width="50%"><img src="chrome/store/screenshot-2-notice.png" alt="A note explaining that a fraction was written on one line with a slash"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="chrome/store/screenshot-4-renderer.png" alt="The renderer drawing the Gaussian integral, with a Copy PNG button"></td>
+    <td width="50%"><img src="chrome/store/screenshot-5-paste.png" alt="The rendered equation pasted into a message as an image"></td>
+  </tr>
+</table>
+
 ## Install
 
 | Platform | How |
@@ -65,6 +84,8 @@ makes a network request. The source is here so you can check. See the
 
 ## Documentation
 
+- [The guide](https://superwalrus01.github.io/LaTeX-Squiggly/guide.html): how
+  to use it on each platform, for people using it rather than working on it.
 - [How the platforms fit together](docs/architecture.md): one Swift engine,
   with the Windows and Chrome versions generated from it and checked against it
   over 2,030 fragments.
@@ -82,7 +103,8 @@ how to make a change; `scripts/check-all.sh` runs every check before you push.
 
 ## Licence
 
-[MIT](LICENSE). There is no third-party code in it. The symbol table was not
-copied from `unicode-math` or the W3C entity tables:
+[MIT](LICENSE). The only third-party code is MathJax 3.2.2, under the Apache
+License 2.0, bundled in `chrome/renderer/mathjax/` for the renderer. The symbol
+table was not copied from `unicode-math` or the W3C entity tables:
 `scripts/generate-swift-tables.py` pairs each command with a Unicode character
 *name* and resolves it against the Unicode database when it runs.
