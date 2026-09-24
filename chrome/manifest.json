@@ -35,7 +35,7 @@
     },
     "open-renderer": {
       "suggested_key": {
-        "default": "Alt+Shift+R"
+        "default": "Alt+Shift+E"
       },
       "description": "Open the renderer, to turn LaTeX into an image"
     }

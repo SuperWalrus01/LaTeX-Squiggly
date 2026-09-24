@@ -9,8 +9,8 @@ import Carbon.HIToolbox
 /// app; no other key is seen.
 ///
 /// Three modifiers, because a hot key is taken from every app on the Mac. The
-/// extension's Alt+Shift+R is only taken inside Chrome; system-wide, Option
-/// and Shift with a letter is how a Mac types characters such as ‰.
+/// extension's Alt+Shift+E is only taken inside Chrome; system-wide, Option
+/// and Shift with a letter is how a Mac types characters such as ‰ and ´.
 @MainActor
 final class GlobalShortcut {
 

@@ -18,7 +18,7 @@ Windows fixes ship once they have been tested on Windows.
   pasting where LaTeX is not understood. White or transparent background,
   scale 1× to 4×, text colour, your own `\newcommand` definitions,
   autocomplete, closing braces, colour swatches that write `\textcolor`, and
-  Overbrace and Underbrace helpers. Alt+Shift+R opens it; Ctrl+Enter copies
+  Overbrace and Underbrace helpers. Alt+Shift+E opens it; Ctrl+Enter copies
   and closes. MathJax 3.2.2 is included in the extension, which fetches
   nothing.
 - **Renderer in the macOS app**: Render LaTeX as Image… in the menu, or

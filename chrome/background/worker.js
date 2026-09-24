@@ -65,7 +65,9 @@ async function toggleConversion() {
   await settings.save({ enabled: !enabled });
 }
 
-// Declared as open-renderer, Alt+Shift+R unless changed. The popup reads the
+// Declared as open-renderer, Alt+Shift+E unless changed. Not Alt+Shift+R,
+// which Chrome 153 keeps for itself and leaves unassigned; see the check in
+// chrome/test/browser.cjs. The popup reads the
 // flag to open on the Renderer tab with its text selected, ready to be typed
 // over, or with the text it is given in place of it. action.openPopup()
 // arrived for every extension in Chrome 127; before that, and when there is

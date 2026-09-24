@@ -179,7 +179,8 @@ operators Re and Im, and `\braket` takes two arguments.
   page, and is remembered. **Copy SVG** copies the SVG markup as text, because
   few apps accept an SVG image from the clipboard. SVGs are always transparent
   and carry their own glyph outlines, so they open anywhere.
-- **Keyboard:** Alt+Shift+R (changeable at `chrome://extensions/shortcuts`)
+- **Keyboard:** Alt+Shift+E (changeable at `chrome://extensions/shortcuts`;
+  Chrome 153 leaves Alt+Shift+R, P and X unassigned, since it uses them itself)
   opens the popup on this tab with the last input selected. Ctrl+Enter (⌘Enter)
   copies the PNG and closes the popup; Esc closes it. The input is kept for next
   time either way. Before Chrome 127, which cannot open a popup from a

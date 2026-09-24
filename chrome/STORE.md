@@ -71,7 +71,7 @@ For what Unicode cannot write, such as fractions, matrices and braces, the popup
 • Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
 • In ordinary text boxes, undo brings the command back
 • The toolbar icon turns grey wherever it is not converting, and Alt+Shift+L pauses it anywhere
-• Renderer: maths-mode LaTeX to PNG or SVG, drawn by MathJax inside the extension, with a white or transparent background, colours, your own \newcommand definitions, command autocomplete and a history. Alt+Shift+R opens it, or right-click selected LaTeX and choose Render selection as image; Ctrl+Enter copies
+• Renderer: maths-mode LaTeX to PNG or SVG, drawn by MathJax inside the extension, with a white or transparent background, colours, your own \newcommand definitions, command autocomplete and a history. Alt+Shift+E opens it, or right-click selected LaTeX and choose Render selection as image; Ctrl+Enter copies
 
 Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
 
@@ -185,7 +185,7 @@ which has to happen first: the privacy policy is published from `main`.
    does, and the renderer keeps its input and history on the computer, which
    the old policy said nothing typed ever is.
 4. Load the unpacked extension and try by hand what the browser test cannot:
-   the renderer from the toolbar popup, Alt+Shift+R, right-click → Render
+   the renderer from the toolbar popup, Alt+Shift+E, right-click → Render
    selection as image, and a copied PNG pasted into Google Docs, Slack and
    Gmail.
 

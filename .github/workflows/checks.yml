@@ -63,12 +63,6 @@ jobs:
           npm install --no-save --prefix "$RUNNER_TEMP/playwright" playwright
           npx --prefix "$RUNNER_TEMP/playwright" playwright install --with-deps chromium
 
-      # TEMPORARY: which shortcut keys this Chromium assigns to extensions.
-      - name: Probe shortcut keys
-        run: node chrome/test/probe-shortcuts.cjs
-        env:
-          NODE_PATH: ${{ runner.temp }}/playwright/node_modules
-
       - name: Type into real pages
         run: node chrome/test/browser.cjs
         env:
