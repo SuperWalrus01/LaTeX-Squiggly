@@ -25,7 +25,7 @@
           or change fields.</li>
         <li>When you press space after a command, it replaces the command with the character, right
           where you typed it. Undo brings the command back.</li>
-        <li>Nothing you type is saved or sent anywhere. The extension makes no network requests.</li>
+        <li>Nothing you type in a web page is saved or sent anywhere. The extension makes no network requests.</li>
         <li>It stays off on Overleaf and the other sites listed below, and in code editors.</li>
         <li>It works in Google Docs too. Docs does not show the extension your text, so there it
           goes by the keys you press. At the start of a sentence, Docs may capitalise a Greek
@@ -71,6 +71,67 @@
       </div>
     </section>
 
+    <section id="renderer">
+      <h2>Renderer</h2>
+      <p class="muted">
+        The popup's Renderer tab turns maths-mode LaTeX into an image, for pasting where LaTeX is
+        not understood. These settings apply to every image it makes.<span id="renderer-shortcut"></span>
+      </p>
+      <form class="card fields" id="renderer-form">
+        <label class="field">
+          <span>
+            <span>Scale</span>
+            <span class="hint muted">PNG pixels for each pixel of the image. Higher is sharper, and
+              pastes larger.</span>
+          </span>
+          <select id="render-scale"></select>
+        </label>
+        <label class="field">
+          <span>
+            <span>Font size</span>
+            <span class="hint muted">In pixels, 12 to 48.</span>
+          </span>
+          <input id="render-font-size" type="number" min="12" max="48" step="1">
+        </label>
+        <label class="field">
+          <span>
+            <span>Padding</span>
+            <span class="hint muted">Space around the equation, in pixels.</span>
+          </span>
+          <input id="render-padding" type="number" min="0" max="64" step="1">
+        </label>
+        <label class="field">
+          <span>
+            <span>Background</span>
+            <span class="hint muted">For PNG. White shows in dark-mode apps, where black text on
+              transparent would not. SVG is always transparent.</span>
+          </span>
+          <select id="render-background">
+            <option value="white">White</option>
+            <option value="transparent">Transparent</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>
+            <span>Text colour</span>
+            <span class="hint muted">For the whole image. <code>\textcolor</code> in the LaTeX
+              overrides it.</span>
+          </span>
+          <input id="render-colour" type="color">
+        </label>
+        <label class="field stacked" for="render-macros">
+          <span>
+            <span>Your commands</span>
+            <span class="hint muted">Definitions added to every image, such as
+              <code>\newcommand{\R}{\mathbb{R}}</code>, one or more to a line.</span>
+          </span>
+        </label>
+        <textarea id="render-macros" rows="4" spellcheck="false" autocomplete="off"
+                  placeholder="\newcommand{\R}{\mathbb{R}}"></textarea>
+        <p class="error" id="render-save-error" role="alert" hidden></p>
+      </form>
+    </section>
+
     <section>
       <h2>Sites where it stays off</h2>
       <p class="muted">
@@ -108,8 +169,9 @@
     <footer class="muted">
       <p>
         Everything happens on this computer. LaTeX Squiggly keeps only the last few characters you
-        typed, in memory, to recognise a command. It never stores or sends what you type, and these
-        settings sync only through your own Chrome account.
+        typed, in memory, to recognise a command. It never stores or sends what you type in web pages.
+        The renderer keeps the last LaTeX typed into it on this computer, and these settings sync
+        only through your own Chrome account.
         <a href="https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html">Privacy policy</a>
       </p>
       <p id="version"></p>
@@ -118,6 +180,7 @@
 
   <script src="../engine/tables.js"></script>
   <script src="../shared/settings.js"></script>
+  <script src="../renderer/settings.js"></script>
   <script type="module" src="options.js"></script>
 </body>
 </html>

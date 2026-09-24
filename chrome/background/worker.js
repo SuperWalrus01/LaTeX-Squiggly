@@ -6,6 +6,7 @@
 // - keeps the toolbar icon honest: orange where it is converting, grey with a
 //   strike where it is not, the same two states as the desktop apps' icons;
 // - pauses and resumes everything from a keyboard shortcut;
+// - opens the popup on its Renderer tab from another shortcut;
 // - relays messages between the frames of a Google Docs tab, which cannot reach
 //   each other directly; see content/docs.js.
 //
@@ -61,8 +62,28 @@ async function toggleConversion() {
   await settings.save({ enabled: !enabled });
 }
 
+// Declared as open-renderer, Alt+Shift+R unless changed. The popup reads the
+// flag to open on the Renderer tab with its text selected, ready to be typed
+// over. action.openPopup() arrived for every extension in Chrome 127; before
+// that, and when there is no browser window to anchor it to, the popup's page
+// opens in a small window of its own instead.
+async function openRenderer() {
+  await chrome.storage.session.set({ openRenderer: true });
+  try {
+    await chrome.action.openPopup();
+  } catch {
+    await chrome.windows.create({
+      url: chrome.runtime.getURL("popup/popup.html"),
+      type: "popup",
+      width: 520,
+      height: 640,
+    });
+  }
+}
+
 chrome.commands.onCommand.addListener((command) => {
   if (command === "toggle-conversion") toggleConversion();
+  if (command === "open-renderer") openRenderer();
 });
 
 // MARK: Messages from pages

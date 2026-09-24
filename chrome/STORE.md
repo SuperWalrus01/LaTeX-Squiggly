@@ -19,10 +19,14 @@ The extension is built to what the review checks for:
   `https://*/*`. It has to run everywhere because typing happens everywhere.
   This is the one thing that triggers a closer manual review, and the
   justification below answers it.
-- **No remote code.** Every script is in the package. Nothing is fetched,
-  nothing is evaluated, and the extension makes no network requests at all.
-- **Readable code.** Nothing is minified or obfuscated, which the policy
-  requires.
+- **No remote code.** Every script is in the package, MathJax included.
+  Nothing is fetched, and the extension makes no network requests at all.
+  MathJax's bundle contains one `eval("require")`, reached only when it runs
+  under Node, never in Chrome.
+- **Readable code.** The extension's own code is neither minified nor
+  obfuscated. MathJax, in `renderer/mathjax/`, is its standard minified
+  release, byte for byte; the policy allows minification and forbids only
+  obfuscation. Its source is public at <https://github.com/mathjax/MathJax-src>.
 - **Disclosure before and after install.** The store description, the privacy
   policy and a welcome page on first install all say what is read and that it
   never leaves the computer. The 2026 policy update requires this even for
@@ -56,6 +60,8 @@ Type LaTeX in any text box on the web and get real characters. \alpha becomes α
 
 The result is ordinary Unicode text, not an image, so it survives copying and pasting into chat messages, emails, comments and forms.
 
+For what Unicode cannot write, such as fractions, matrices and braces, the popup's renderer turns LaTeX into an image: type it, see it drawn as you type, and copy it as a PNG to paste into Google Docs, Slack or an email.
+
 • 202 symbols: Greek letters, operators, relations, arrows, set theory, logic
 • Superscripts and subscripts inside dollars: $x^2$, $a_1$, $\int_0^1$
 • Fractions, roots, binomials and \mathbb{R}
@@ -63,10 +69,11 @@ The result is ordinary Unicode text, not an image, so it survives copying and pa
 • Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
 • In ordinary text boxes, undo brings the command back
 • The toolbar icon turns grey wherever it is not converting, and Alt+Shift+L pauses it anywhere
+• Renderer: maths-mode LaTeX to PNG or SVG, drawn by MathJax inside the extension, with a white or transparent background, colours, your own \newcommand definitions and command autocomplete. Alt+Shift+R opens it, Ctrl+Enter copies
 
 Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
 
-Privacy: to recognise a command, the extension keeps the last few characters you typed in a text box, in memory only, and forgets them when you click or change fields. Nothing you type is saved or sent anywhere, and the extension makes no network requests. Your settings are stored with Chrome.
+Privacy: to recognise a command, the extension keeps the last few characters you typed in a text box, in memory only, and forgets them when you click or change fields. Nothing you type in a web page is saved or sent anywhere, and the extension makes no network requests. Your settings, and the last LaTeX you typed into the renderer, are stored with Chrome.
 
 Also available as a menu bar app for macOS and a tray app for Windows, which work in every app, not only the browser.
 ```
@@ -96,13 +103,13 @@ Every image is a 24-bit PNG with no alpha channel, which the store requires.
 **Single purpose**
 
 ```
-Converts LaTeX commands the user types into web page text fields into the matching Unicode characters, in place, when the user presses space.
+Write maths anywhere on the web: LaTeX commands typed into web page text fields become the matching Unicode characters when the user presses space, and the popup's renderer turns LaTeX into an image to paste where Unicode cannot show it.
 ```
 
 **Permission justification: storage**
 
 ```
-Saves the user's settings: whether conversion is on, whether notices are shown, and the list of sites where the extension stays off. Nothing else is stored.
+Saves the user's settings: whether conversion is on, whether notices are shown, the list of sites where the extension stays off, and the renderer's image settings. Also keeps the last LaTeX typed into the popup's renderer, locally, so it is there when the popup reopens. Nothing typed into web pages is stored.
 ```
 
 **Host permission justification** (the content script's `http://*/*` and `https://*/*`)
@@ -114,7 +121,7 @@ The extension converts LaTeX wherever the user types, which can be any site, so 
 **Are you using remote code?** No.
 
 ```
-All JavaScript is included in the package. The extension loads no external scripts, uses no eval, and makes no network requests.
+All JavaScript is included in the package, including MathJax 3.2.2 for the popup's LaTeX renderer, which runs only in the extension's own popup. The extension loads no external scripts and makes no network requests.
 ```
 
 **Data usage.** Tick these two. The data never leaves the computer, but the

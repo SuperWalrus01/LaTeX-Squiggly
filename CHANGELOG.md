@@ -13,6 +13,15 @@ Windows fixes ship once they have been tested on Windows.
 
 ### Added
 
+- **Renderer** in the Chrome extension's popup: type maths-mode LaTeX, see it
+  drawn by MathJax as you type, and copy or save it as a PNG or SVG, for
+  pasting where LaTeX is not understood. White or transparent background,
+  scale 1× to 4×, text colour, your own `\newcommand` definitions,
+  autocomplete, closing braces, colour swatches that write `\textcolor`, and
+  Overbrace and Underbrace helpers. Alt+Shift+R opens it; Ctrl+Enter copies
+  and closes. MathJax 3.2.2 is included in the extension, which fetches
+  nothing.
+
 - **Google Docs** in the Chrome extension, on by default with a switch in the
   settings. Docs gives the extension no text to check, so it follows the keys
   pressed instead, forgets them after four seconds or on any click, and

@@ -1,4 +1,4 @@
-const { settings, tables } = globalThis.LaTeXSquiggly;
+const { settings, rendererSettings, tables } = globalThis.LaTeXSquiggly;
 
 const enabled = document.getElementById("enabled");
 const notices = document.getElementById("notices");
@@ -45,6 +45,77 @@ googleDocs.checked = config.googleDocs;
 enabled.addEventListener("change", () => settings.save({ enabled: enabled.checked }));
 notices.addEventListener("change", () => settings.save({ showNotices: notices.checked }));
 googleDocs.addEventListener("change", () => settings.save({ googleDocs: googleDocs.checked }));
+
+// MARK: Renderer
+
+const renderFields = {
+  renderScale: document.getElementById("render-scale"),
+  renderFontSize: document.getElementById("render-font-size"),
+  renderPadding: document.getElementById("render-padding"),
+  renderBackground: document.getElementById("render-background"),
+  renderColour: document.getElementById("render-colour"),
+  renderMacros: document.getElementById("render-macros"),
+};
+const renderSaveError = document.getElementById("render-save-error");
+
+for (const scale of rendererSettings.SCALES) {
+  const option = document.createElement("option");
+  option.value = String(scale);
+  option.textContent = `${scale}×`;
+  renderFields.renderScale.append(option);
+}
+
+function showRendererSettings(values) {
+  for (const [key, field] of Object.entries(renderFields)) {
+    // Leave alone what the user is typing in; it is saved as they go.
+    if (document.activeElement === field && field.type !== "color") continue;
+    field.value = String(values[key]);
+  }
+}
+
+// Numbers are saved once they make sense, on change, and put back in range.
+// The commands are saved shortly after typing stops: sync storage allows 120
+// writes a minute, which saving on every key could use up.
+async function saveRendererField(key) {
+  const field = renderFields[key];
+  const cleaned = rendererSettings.clean({ ...rendererSettings.defaults(), [key]: field.value })[key];
+  try {
+    await rendererSettings.save({ [key]: cleaned });
+    renderSaveError.hidden = true;
+  } catch (e) {
+    // Sync storage holds 8 KB to an item, which only a very long list of
+    // commands reaches.
+    renderSaveError.hidden = false;
+    renderSaveError.textContent = `Couldn't save: ${e.message ?? e}`;
+  }
+  if (key !== "renderMacros") field.value = String(cleaned);
+}
+
+let macrosTimer = 0;
+for (const key of Object.keys(renderFields)) {
+  const field = renderFields[key];
+  if (key === "renderMacros") {
+    field.addEventListener("input", () => {
+      clearTimeout(macrosTimer);
+      macrosTimer = setTimeout(() => saveRendererField(key), 500);
+    });
+    field.addEventListener("blur", () => {
+      clearTimeout(macrosTimer);
+      saveRendererField(key);
+    });
+  } else {
+    field.addEventListener("change", () => saveRendererField(key));
+  }
+}
+document.getElementById("renderer-form").addEventListener("submit", (event) => event.preventDefault());
+
+showRendererSettings(await rendererSettings.load());
+
+const [renderCommand] = (await chrome.commands.getAll()).filter((c) => c.name === "open-renderer");
+if (renderCommand?.shortcut) {
+  document.getElementById("renderer-shortcut").textContent =
+    ` ${renderCommand.shortcut} opens it from any page.`;
+}
 
 // MARK: Sites
 
@@ -97,6 +168,7 @@ document.getElementById("restore").addEventListener("click", () =>
 // Another window, or the popup, may change the same settings.
 chrome.storage.onChanged.addListener(async (_, area) => {
   if (area !== "sync") return;
+  showRendererSettings(await rendererSettings.load());
   config = await settings.load();
   enabled.checked = config.enabled;
   notices.checked = config.showNotices;

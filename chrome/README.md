@@ -42,7 +42,10 @@ This loads the extension into Chromium and types into real fields: a textarea,
 inputs, contenteditable, a controlled field in the React style, a code editor,
 editors in iframes and in a shadow root, keys typed with AltGr, Option and dead
 keys, Google Docs' hidden input frame, Google Docs mode against a stand-in, an
-excluded site, and the off switch. Branded Google Chrome ignores
+excluded site, and the off switch. It then works the renderer in the popup's page:
+the equations it must draw, the errors it must explain, copying and saving,
+autocomplete, braces, colours, the keyboard flow, and that nothing is fetched
+from outside the extension. Branded Google Chrome ignores
 `--load-extension`, so it has to be Playwright's Chromium.
 
 ## How it differs from the desktop apps
@@ -147,6 +150,66 @@ key events, nothing converts and the space is swallowed. If it takes the
 Backspaces but not the keypresses, the command is deleted and nothing is typed,
 which loses text: tell users to switch Google Docs off until a fix is out.
 
+## The renderer
+
+The popup's **Renderer** tab turns maths-mode LaTeX into an image, for pasting
+where LaTeX is not understood and Unicode cannot draw it: fractions, matrices,
+braces, stacked limits. Google Docs, Slack, email.
+
+It is MathJax 3.2.2, in `renderer/mathjax/`, committed as released rather than
+loaded from a CDN, because Manifest V3 allows no remote code. It is loaded only
+when the Renderer tab opens, and only in the extension's own pages: never in a
+web page. Every TeX package MathJax ships is on, `physics` included, except
+`require` and `autoload` (they fetch code), `noerrors` and `noundefined` (they
+would hide errors) and `html` (`\href` and `\style` mean nothing in an image).
+`physics` redefines a few standard commands: `\Re` and `\Im` become the
+operators Re and Im, and `\braket` takes two arguments.
+
+- **Preview** 150 ms after the last key. When the input stops rendering, the
+  last good image stays, dimmed, and the error shows only after 600 ms without
+  a key, so an unfinished `\frac{1}{` is not flagged while it is typed. Copy and
+  save are off whenever the input does not render, so a stale image is never
+  copied.
+- **Copy PNG** puts a PNG on the clipboard at the chosen scale, 3× by default,
+  on white by default: black on transparent vanishes in dark-mode apps. The
+  White / Transparent switch beside it is the same setting as on the settings
+  page, and is remembered. **Copy SVG** copies the SVG markup as text, because
+  few apps accept an SVG image from the clipboard. SVGs are always transparent
+  and carry their own glyph outlines, so they open anywhere.
+- **Keyboard:** Alt+Shift+R (changeable at `chrome://extensions/shortcuts`)
+  opens the popup on this tab with the last input selected. Ctrl+Enter (⌘Enter)
+  copies the PNG and closes the popup; Esc closes it. The input is kept for next
+  time either way. Before Chrome 127, which cannot open a popup from a
+  shortcut, it opens in a small window instead.
+- **Autocomplete** after `\` and a letter: the typing feature's own symbols and
+  operators, from `engine/tables.js`, plus the commands that take arguments,
+  from `renderer/commands.js`. Tab or Enter accepts. `\frac` arrives as
+  `\frac{}{}` with the cursor in the first pair, and Tab moves to the next. `{`
+  brings its `}`, which typing `}` steps over, and Backspace in an empty pair
+  removes both. Every insertion is one step of undo.
+- **Colour:** with text selected, a swatch wraps it in `\textcolor`, so the
+  colour is in the LaTeX. A custom colour is written `[RGB]{r,g,b}`, which both
+  MathJax and LaTeX's xcolor read; MathJax has no `HTML` model. With nothing
+  selected, a swatch sets the colour of the whole image instead.
+- **Overbrace and Underbrace** wrap the selection and ask for a label. A
+  selection with half a pair of braces is refused.
+- **Your commands:** definitions on the settings page apply to every image.
+  `\newcommand` also works in the input itself. Each render starts from only
+  the built-in commands, so a definition deleted from the input stops working
+  at once.
+
+Not done yet: opening the renderer from a right-click on selected text, and a
+history of past equations.
+
+**A pasted PNG may be large.** A PNG can say its own size in inches, but
+Chrome re-encodes a PNG written to the clipboard and drops that: a PNG with a
+`pHYs` chunk, written and read back in Chromium 141 on Linux, came back without
+it. So apps will likely paste the image one pixel to a pixel, and a 3× image of
+20 px maths would paste three times the size it is previewed, much larger than
+the text around it. 1× pastes at the previewed size but looks soft on a
+high-density screen. This needs checking by hand in Google Docs, Slack and
+Gmail before settling the default.
+
 ## What does not work
 
 - **Google Sheets and Slides.** The extension does nothing in any frame inside
@@ -169,8 +232,10 @@ command to act on. This has not been tested.
 | `content/content.js` | Runs in every page: follows typing and replaces text. |
 | `content/docs.js` | Google Docs mode: follows the keys, since Docs shows no text. |
 | `shared/settings.js` | Settings storage and the site rules. |
-| `background/worker.js` | The welcome page on first install, the toolbar icon, the pause shortcut, and the messages between a Google Docs tab's frames. |
+| `background/worker.js` | The welcome page on first install, the toolbar icon, the pause and renderer shortcuts, and the messages between a Google Docs tab's frames. |
 | `popup/`, `options/` | The toolbar popup and the settings page. |
+| `renderer/` | The popup's Renderer tab: `panel.js` runs it, `render.js` drives MathJax, `editor.js` is the LaTeX box, `commands.js` the autocomplete list, `settings.js` its settings. |
+| `renderer/mathjax/` | MathJax, written by `scripts/fetch-mathjax.sh` and checked against its `SHA256SUMS` by `scripts/check-all.sh`. Do not edit by hand. |
 | `icons/` | Generated by `scripts/make-chrome-icons.py` from the menu bar mark: `icon-*` orange, `icon-off-*` grey and struck through. |
 | `store/` | Screenshots and the promo tile for the Web Store. Not packaged. |
 | `STORE.md` | What to fill in on the Web Store, field by field. |

@@ -7,6 +7,68 @@ const note = document.getElementById("site-note");
 const docsRow = document.getElementById("docs-row");
 const googleDocs = document.getElementById("google-docs");
 
+// MARK: Tabs
+
+// Typing is the switches for the conversion as you type; Renderer is the
+// LaTeX to image editor, in renderer/, loaded only when it is opened. The
+// popup reopens on the tab last used, and on Renderer when the renderer's
+// shortcut opened it, which the background worker says through session
+// storage (#renderer in the address does the same, for tests).
+const TABS = ["typing", "renderer"];
+let rendererStarted = false;
+
+function showTab(name, { selectAll = false } = {}) {
+  for (const tab of TABS) {
+    document.getElementById(`tab-${tab}`).setAttribute("aria-selected", String(tab === name));
+    document.getElementById(`tab-${tab}`).tabIndex = tab === name ? 0 : -1;
+    document.getElementById(tab).hidden = tab !== name;
+  }
+  document.body.classList.toggle("wide", name === "renderer");
+  chrome.storage.local.set({ popupTab: name }).catch(() => {});
+  if (name === "renderer" && !rendererStarted) {
+    rendererStarted = true;
+    import("../renderer/panel.js").then((panel) => panel.startRenderer({ selectAll }));
+  } else if (name === "renderer") {
+    document.getElementById("latex").focus();
+  }
+}
+
+async function firstTab() {
+  if (location.hash === "#renderer") return { tab: "renderer" };
+  try {
+    const { openRenderer } = await chrome.storage.session.get("openRenderer");
+    if (openRenderer) {
+      await chrome.storage.session.remove("openRenderer");
+      return { tab: "renderer", selectAll: true };
+    }
+  } catch {
+    // No session storage: fall through to the last tab used.
+  }
+  try {
+    const { popupTab } = await chrome.storage.local.get("popupTab");
+    if (TABS.includes(popupTab)) return { tab: popupTab };
+  } catch {
+    // Nothing remembered.
+  }
+  return { tab: "typing" };
+}
+
+for (const tab of TABS) {
+  const button = document.getElementById(`tab-${tab}`);
+  button.addEventListener("click", () => showTab(tab));
+  button.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    const other = TABS[(TABS.indexOf(tab) + 1) % TABS.length];
+    showTab(other);
+    document.getElementById(`tab-${other}`).focus();
+  });
+}
+
+const first = await firstTab();
+showTab(first.tab, { selectAll: first.selectAll });
+
+// MARK: Typing
+
 let config = await settings.load();
 let status = null;
 

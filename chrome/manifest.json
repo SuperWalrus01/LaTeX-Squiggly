@@ -3,7 +3,7 @@
   "name": "LaTeX Squiggly",
   "short_name": "Squiggly",
   "version": "0.2.2",
-  "description": "Type \\alpha or $x^2$ in any text box and it becomes α or x² as real text. Stays out of Overleaf and code editors.",
+  "description": "Write maths anywhere: type \\alpha or $x^2$ in any text box to get α or x², or render LaTeX to an image to paste.",
   "minimum_chrome_version": "102",
   "icons": {
     "16": "icons/icon-16.png",
@@ -32,6 +32,12 @@
         "default": "Alt+Shift+L"
       },
       "description": "Pause or resume converting"
+    },
+    "open-renderer": {
+      "suggested_key": {
+        "default": "Alt+Shift+R"
+      },
+      "description": "Open the renderer, to turn LaTeX into an image"
     }
   },
   "permissions": [

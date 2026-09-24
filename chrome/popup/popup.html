@@ -10,44 +10,111 @@
   <header>
     <img src="../icons/icon-48.png" alt="" width="24" height="24">
     <h1>LaTeX Squiggly</h1>
+    <nav class="tabs" role="tablist" aria-label="Mode">
+      <button type="button" role="tab" id="tab-typing" aria-controls="typing" aria-selected="true">Typing</button>
+      <button type="button" role="tab" id="tab-renderer" aria-controls="renderer" aria-selected="false">Renderer</button>
+    </nav>
   </header>
 
-  <label class="switch row">
-    <span>Convert as I type</span>
-    <input type="checkbox" id="enabled">
-  </label>
-
-  <section class="row site" id="site">
-    <label class="switch">
-      <span>
-        <span>Convert on this site</span>
-        <span class="host muted" id="host"></span>
-      </span>
-      <input type="checkbox" id="site-enabled">
+  <div id="typing" role="tabpanel" aria-labelledby="tab-typing" hidden>
+    <label class="switch row">
+      <span>Convert as I type</span>
+      <input type="checkbox" id="enabled">
     </label>
-    <p class="note muted" id="site-note" hidden></p>
-  </section>
 
-  <label class="switch row" id="docs-row" hidden>
-    <span>
-      <span>Convert in Google Docs</span>
-      <span class="host muted">Docs goes by the keys you press</span>
-    </span>
-    <input type="checkbox" id="google-docs">
-  </label>
+    <section class="row site" id="site">
+      <label class="switch">
+        <span>
+          <span>Convert on this site</span>
+          <span class="host muted" id="host"></span>
+        </span>
+        <input type="checkbox" id="site-enabled">
+      </label>
+      <p class="note muted" id="site-note" hidden></p>
+    </section>
 
-  <p class="row example muted">
-    Type <code>\alpha</code> then space to get α.
-    <code>$x^2$</code> gives x².
-  </p>
+    <label class="switch row" id="docs-row" hidden>
+      <span>
+        <span>Convert in Google Docs</span>
+        <span class="host muted">Docs goes by the keys you press</span>
+      </span>
+      <input type="checkbox" id="google-docs">
+    </label>
 
-  <footer>
-    <a href="#" id="options">Settings and symbols</a>
-    <p class="shortcut muted" id="shortcut" hidden>Pause anywhere: <kbd id="shortcut-keys"></kbd></p>
-  </footer>
+    <p class="row example muted">
+      Type <code>\alpha</code> then space to get α.
+      <code>$x^2$</code> gives x².
+    </p>
+
+    <footer>
+      <a href="#" id="options">Settings and symbols</a>
+      <p class="shortcut muted" id="shortcut" hidden>Pause anywhere: <kbd id="shortcut-keys"></kbd></p>
+    </footer>
+  </div>
+
+  <div id="renderer" role="tabpanel" aria-labelledby="tab-renderer" hidden>
+    <div class="source">
+      <label for="latex" class="visually-hidden">LaTeX</label>
+      <textarea id="latex" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"
+                placeholder="\frac{1}{2}\int_0^1 x^2\,dx" role="combobox" aria-autocomplete="list"
+                aria-controls="suggestions" aria-expanded="false"></textarea>
+      <ul class="suggestions" id="suggestions" role="listbox" aria-label="Commands" hidden></ul>
+    </div>
+
+    <div class="preview white" id="preview" aria-live="polite">
+      <p class="placeholder muted" id="placeholder">Type LaTeX above to see it rendered.</p>
+    </div>
+    <p class="error" id="render-error" role="alert" hidden></p>
+    <p class="warning" id="render-warning" hidden>The text is white, so it is invisible on this background.</p>
+
+    <div class="tools" role="group" aria-label="Colour and braces">
+      <div class="swatches" id="swatches" role="group" aria-label="Text colour">
+        <button type="button" class="swatch" data-colour="#000000" data-name="black" title="Black" aria-label="Black"></button>
+        <button type="button" class="swatch" data-colour="#ffffff" data-name="white" title="White" aria-label="White"></button>
+        <button type="button" class="swatch" data-colour="#808080" data-name="gray" title="Grey" aria-label="Grey"></button>
+        <button type="button" class="swatch" data-colour="#ff0000" data-name="red" title="Red" aria-label="Red"></button>
+        <button type="button" class="swatch" data-colour="#0000ff" data-name="blue" title="Blue" aria-label="Blue"></button>
+        <button type="button" class="swatch" data-colour="#008000" data-name="green" title="Green" aria-label="Green"></button>
+        <label class="swatch custom" title="Another colour">
+          <span class="visually-hidden">Another colour</span>
+          <input type="color" id="custom-colour" value="#000000">
+        </label>
+      </div>
+      <button type="button" class="button small" id="overbrace" title="Put a brace and a label over the selection">Overbrace</button>
+      <button type="button" class="button small" id="underbrace" title="Put a brace and a label under the selection">Underbrace</button>
+    </div>
+
+    <form class="label-form" id="label-form" hidden>
+      <label for="brace-label" id="brace-label-title">Label</label>
+      <input id="brace-label" type="text" autocomplete="off" spellcheck="false" placeholder="n terms, or leave empty">
+      <button type="submit" class="button small primary">Add</button>
+      <button type="button" class="button small" id="label-cancel">Cancel</button>
+    </form>
+
+    <p class="message muted" id="render-message" role="status"></p>
+
+    <div class="actions">
+      <button type="button" class="button primary" id="copy-png" disabled>Copy PNG</button>
+      <div class="segmented" role="radiogroup" aria-label="Background">
+        <button type="button" role="radio" data-background="white" aria-checked="true">White</button>
+        <button type="button" role="radio" data-background="transparent" aria-checked="false">Transparent</button>
+      </div>
+      <button type="button" class="button" id="copy-svg" disabled
+              title="Copies the SVG as text, which most apps paste as code rather than a picture. SVG is always transparent.">Copy SVG</button>
+      <button type="button" class="button" id="download-png" disabled>Download PNG</button>
+      <button type="button" class="button" id="download-svg" disabled title="SVG is always transparent.">Download SVG</button>
+    </div>
+
+    <footer class="renderer-footer muted">
+      <span><kbd id="copy-keys">Ctrl+Enter</kbd> copies the PNG and closes.<span id="open-shortcut" hidden>
+        <kbd id="open-keys"></kbd> opens this.</span></span>
+      <a href="#" id="image-settings">Image settings</a>
+    </footer>
+  </div>
 
   <script src="../engine/tables.js"></script>
   <script src="../shared/settings.js"></script>
+  <script src="../renderer/settings.js"></script>
   <script type="module" src="popup.js"></script>
 </body>
 </html>

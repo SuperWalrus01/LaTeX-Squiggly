@@ -107,7 +107,8 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
 
   const page = await context.newPage();
   const check = (name, got, want) => {
-    const ok = got === want;
+    // Arrays compare by their contents, for checks of several things at once.
+    const ok = Array.isArray(want) ? JSON.stringify(got) === JSON.stringify(want) : got === want;
     results.push(ok);
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : `\n      want ${JSON.stringify(want)}\n      got  ${JSON.stringify(got)}`}`);
   };
@@ -340,6 +341,272 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   // Chrome writes it as Alt+Shift+L, or as ⌥⇧L on a Mac.
   const keys = await popup.textContent('#shortcut-keys');
   check('popup shows the pause shortcut', ['Alt+Shift+L', '⌥⇧L'].includes(keys), true);
+  check('popup opens on the Typing tab at first', await popup.isVisible('#latex'), false);
+
+  // MARK: Renderer
+
+  // MathJax must reach only extension pages. The page script's world is its
+  // own, so this checks the page's: nothing named MathJax, no script loaded.
+  await page.goto('https://www.example.test/');
+  await page.waitForTimeout(300);
+  check('MathJax is not in web pages',
+    await page.evaluate(() => typeof window.MathJax === 'undefined' &&
+      !document.querySelector('script[src*="mathjax"]')), true);
+
+  // Chrome will not grant clipboard permissions to an extension's origin, so
+  // what was copied is read back from a test page, which shares the clipboard.
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'https://www.example.test' });
+  const onClipboard = async (read) => {
+    await page.bringToFront();
+    const result = await page.evaluate(read);
+    if (!r.isClosed()) await r.bringToFront();
+    return result;
+  };
+  const r = await context.newPage();
+  await r.setViewportSize({ width: 480, height: 560 });
+  const offsite = [];
+  r.on('request', (req) => { if (!/^(chrome-extension|blob|data):/.test(req.url())) offsite.push(req.url()); });
+  const opened = Date.now();
+  await r.goto(`chrome-extension://${id}/popup/popup.html#renderer`);
+  await r.waitForFunction(() => !!globalThis.MathJax?.startup?.document?.inputJax);
+  console.log(`      (renderer ready ${Date.now() - opened} ms after opening)`);
+
+  const source = () => r.$eval('#latex', (e) => e.value);
+  const caret = () => r.$eval('#latex', (e) => [e.selectionStart, e.selectionEnd]);
+  const drawnSvg = () => r.$eval('#preview', (e) => !!e.querySelector(':scope > svg') && !e.classList.contains('stale'));
+  const errorShown = () => r.$eval('#render-error', (e) => (e.hidden ? null : e.textContent));
+  const copyEnabled = () => r.$eval('#copy-png', (e) => !e.disabled);
+  const enter = async (latex) => {
+    await r.fill('#latex', latex);
+    await r.waitForTimeout(700);
+  };
+  const clear = async () => { await r.fill('#latex', ''); await r.focus('#latex'); await r.waitForTimeout(50); };
+  // The PNG on the clipboard: its size, and the alpha of its corner pixel.
+  const clipboardPng = () => onClipboard(async () => {
+    const [item] = await navigator.clipboard.read();
+    if (!item.types.includes('image/png')) return null;
+    const bitmap = await createImageBitmap(await item.getType('image/png'));
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext('2d');
+    context.drawImage(bitmap, 0, 0);
+    return { width: bitmap.width, height: bitmap.height, cornerAlpha: context.getImageData(0, 0, 1, 1).data[3] };
+  });
+  const clearClipboard = () => onClipboard(() => navigator.clipboard.writeText(''));
+  const clipboardText = () => onClipboard(() => navigator.clipboard.readText());
+
+  check('renderer: opens on its tab with the LaTeX box focused',
+    await r.evaluate(() => document.activeElement.id), 'latex');
+
+  await r.evaluate(() => chrome.storage.sync.set({ renderMacros: '\\newcommand{\\R}{\\mathbb{R}}' }));
+  const renders = [
+    '\\int_0^1 x^2\\,dx = \\frac{1}{3}',
+    '\\begin{aligned} a &= b \\\\ c &= d \\end{aligned}',
+    '\\overbrace{1+2+\\cdots+n}^{n\\text{ terms}}',
+    '\\underbrace{x+y}_{\\text{sum}}',
+    '\\overset{!}{=} \\underset{n\\to\\infty}{\\lim}',
+    '\\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}',
+    '\\cancel{x}', '\\ce{H2O}', '\\dv{f}{x}', '\\ket{\\psi}', 'x \\in \\R',
+  ];
+  for (const latex of renders) {
+    await enter(latex);
+    check(`renderer draws ${latex}`, [await drawnSvg(), await errorShown(), await copyEnabled()], [true, null, true]);
+  }
+
+  await enter('\\newcommand{\\half}{\\frac12} \\half');
+  check('renderer: \\newcommand in the input', await drawnSvg(), true);
+  await enter('\\half');
+  check('renderer: a definition does not outlive its input', (await errorShown() ?? '').startsWith('\\half isn'), true);
+
+  await r.evaluate(() => chrome.storage.sync.set({ renderMacros: '\\newcommand{\\R}{\\mathbb{R}' }));
+  await enter('x');
+  check('renderer: a mistake in the settings\' commands is blamed on them',
+    (await errorShown() ?? '').startsWith('In your commands'), true);
+  await r.evaluate(() => chrome.storage.sync.set({ renderMacros: '' }));
+  await enter('\\href{https://example.test}{x}');
+  check('renderer: \\href is not offered', (await errorShown() ?? '').startsWith('\\href isn'), true);
+
+  await enter('\\begin{tikzpicture}\\end{tikzpicture}');
+  check('renderer: TikZ is refused plainly', await errorShown(),
+    "\\begin{tikzpicture} isn't supported: this renderer covers maths-mode LaTeX only.");
+  check('renderer: nothing to copy while the input is wrong', await copyEnabled(), false);
+
+  // Typing \frac{1}{2} key by key passes through wrong states; none of them
+  // should flash an error, and the last good image stays, dimmed.
+  await enter('x');
+  await r.focus('#latex'); await r.keyboard.press('End');
+  let flashed = false;
+  for (const key of ' + \\frac{1}{2'.split('')) {
+    await r.keyboard.type(key);
+    await r.waitForTimeout(80);
+    if (await errorShown()) flashed = true;
+  }
+  check('renderer: no error flashes while typing', flashed, false);
+  await r.fill('#latex', 'x + \\frac{1}{');
+  await r.waitForTimeout(300);
+  check('renderer: the last good image stays, dimmed, and cannot be copied',
+    await r.$eval('#preview', (e) => !!e.querySelector(':scope > svg') && e.classList.contains('stale')) &&
+    !(await copyEnabled()), true);
+  check('renderer: ...and no error yet', await errorShown(), null);
+  await r.waitForTimeout(500);
+  check('renderer: the error shows after a pause', await errorShown(), 'Missing close brace');
+
+  // Copying: white at 3× by default, then transparent, which persists.
+  await enter('\\frac{a}{b}');
+  await clearClipboard();
+  await r.click('#copy-png');
+  await r.waitForTimeout(300);
+  const width = await r.$eval('#preview > svg', (e) => parseFloat(e.getAttribute('width')));
+  const white = await clipboardPng();
+  check('renderer: Copy PNG copies a white image at 3×',
+    [white?.width, white?.cornerAlpha], [Math.ceil(width * 3), 255]);
+  await r.click('[data-background="transparent"]');
+  check('renderer: the preview turns to a checkerboard',
+    await r.$eval('#preview', (e) => e.classList.contains('transparent')), true);
+  await r.click('#copy-png');
+  await r.waitForTimeout(300);
+  check('renderer: the next copy is transparent', (await clipboardPng())?.cornerAlpha, 0);
+  await r.reload();
+  await r.waitForFunction(() => !!document.querySelector('#preview > svg'));
+  check('renderer: the background choice and the input are kept',
+    [await r.$eval('[data-background="transparent"]', (e) => e.getAttribute('aria-checked')), await source()],
+    ['true', '\\frac{a}{b}']);
+  await r.click('[data-background="white"]');
+
+  await r.click('#copy-svg');
+  await r.waitForTimeout(200);
+  const svgText = await clipboardText();
+  check('renderer: Copy SVG copies self-contained markup',
+    svgText.startsWith('<svg') && svgText.includes('xmlns="http://www.w3.org/2000/svg"') && !svgText.includes('<use'), true);
+
+  const [svgFile] = await Promise.all([r.waitForEvent('download'), r.click('#download-svg')]);
+  const [pngFile] = await Promise.all([r.waitForEvent('download'), r.click('#download-png')]);
+  const saved = require('fs').readFileSync(await pngFile.path());
+  check('renderer: downloads are named and are what they say',
+    [svgFile.suggestedFilename(), pngFile.suggestedFilename(), saved.subarray(1, 4).toString()],
+    ['equation.svg', 'equation.png', 'PNG']);
+
+  // Ctrl+Enter copies and closes; with nothing valid it only shows why.
+  await enter('\\frac{1}{');
+  await clearClipboard();
+  await r.focus('#latex');
+  await r.keyboard.press(`${mod}+Enter`);
+  await r.waitForTimeout(600);
+  check('renderer: Ctrl+Enter on wrong input copies nothing and stays open',
+    [r.isClosed(), await clipboardText()], [false, '']);
+
+  // Autocomplete.
+  await clear(); await r.keyboard.type('\\al');
+  check('autocomplete: \\al offers \\alpha first',
+    await r.$eval('#suggestions', (e) => !e.hidden && e.querySelector('li .name').textContent), '\\alpha');
+  await r.keyboard.press('Tab');
+  check('autocomplete: Tab accepts', await source(), '\\alpha');
+  await clear(); await r.keyboard.type('\\lef');
+  await r.keyboard.press('Tab');
+  check('autocomplete: an accepted command does not offer itself again',
+    [await source(), await r.$eval('#suggestions', (e) => e.hidden)], ['\\left', true]);
+  await clear(); await r.keyboard.type('\\fr');
+  await r.keyboard.press('Tab');
+  check('autocomplete: \\frac comes with its braces, the cursor in the first',
+    [await source(), await caret()], ['\\frac{}{}', [6, 6]]);
+  await r.keyboard.type('1');
+  await r.keyboard.press('Tab');
+  await r.keyboard.type('2');
+  check('autocomplete: Tab moves to the next brace', await source(), '\\frac{1}{2}');
+  await clear(); await r.keyboard.type('\\fr');
+  await r.keyboard.press('Enter');
+  await r.keyboard.press(`${mod}+z`);
+  check('autocomplete: undo takes back the insertion', await source(), '\\fr');
+  await clear(); await r.keyboard.type('\\al');
+  await r.keyboard.press('Escape');
+  check('autocomplete: Esc closes the list, not the popup',
+    [await r.$eval('#suggestions', (e) => e.hidden), r.isClosed()], [true, false]);
+
+  // Braces.
+  await clear(); await r.keyboard.type('x^{');
+  check('braces: { brings its }', [await source(), await caret()], ['x^{}', [3, 3]]);
+  await r.keyboard.type('2}');
+  check('braces: } steps over the one added', await source(), 'x^{2}');
+  await clear(); await r.keyboard.type('a_{');
+  await r.keyboard.press('Backspace');
+  check('braces: Backspace in an empty pair takes both', await source(), 'a_');
+
+  // Colour.
+  await enter('x+y');
+  await r.$eval('#latex', (e) => { e.focus(); e.setSelectionRange(0, 1); });
+  await r.click('.swatch[data-name="red"]');
+  await r.waitForTimeout(400);
+  check('colour: a swatch wraps the selection in \\textcolor', await source(), '\\textcolor{red}{x}+y');
+  check('colour: ...and it renders red',
+    await r.$eval('#preview > svg', (e) => !!e.querySelector('[fill="red"]')), true);
+  await r.$eval('#latex', (e) => { e.focus(); e.setSelectionRange(0, 0); });
+  await r.click('.swatch[data-name="white"]');
+  check('colour: with nothing selected, white colours the image and warns on white',
+    [await r.$eval('#preview > svg', (e) => e.style.color), await r.isVisible('#render-warning')],
+    ['rgb(255, 255, 255)', true]);
+  await r.click('.swatch[data-name="black"]');
+  check('colour: black again clears the warning', await r.isVisible('#render-warning'), false);
+
+  // Braces over and under a selection.
+  await enter('a+b+c');
+  await r.$eval('#latex', (e) => { e.focus(); e.select(); });
+  await r.click('#overbrace');
+  await r.fill('#brace-label', '3 terms');
+  await r.press('#brace-label', 'Enter');
+  check('overbrace wraps the selection with its label', await source(), '\\overbrace{a+b+c}^{\\text{3 terms}}');
+  await r.waitForTimeout(400);
+  check('overbrace renders', await drawnSvg(), true);
+  await enter('{a+b}');
+  await r.$eval('#latex', (e) => { e.focus(); e.setSelectionRange(0, 2); });
+  await r.click('#underbrace');
+  check('underbrace refuses a selection with half a pair of braces',
+    [await source(), await r.isVisible('#label-form'), (await r.textContent('#render-message')).includes('brace')],
+    ['{a+b}', false, true]);
+
+  check('renderer: nothing was fetched from outside the extension', offsite.join(' '), '');
+  check('renderer shows its shortcut', ['Alt+Shift+R', '⌥⇧R'].includes(await r.textContent('#open-keys')), true);
+
+  // The shortcut. Headless Chromium accepts openPopup but shows Playwright no
+  // page for it, so openPopup is made to fail, as it does before Chrome 127:
+  // the same page then opens in a window of its own, which proves the rest,
+  // that it opens on the Renderer tab with the last input selected, ready to
+  // be typed over.
+  const [shortcutPage] = await Promise.all([
+    context.waitForEvent('page'),
+    (await worker()).evaluate(() => {
+      chrome.action.openPopup = () => Promise.reject(new Error('no popup here'));
+      return openRenderer();
+    }),
+  ]);
+  await shortcutPage.waitForLoadState();
+  await shortcutPage.waitForFunction(() => document.activeElement?.id === 'latex');
+  check('the renderer shortcut opens it with the input selected',
+    await shortcutPage.$eval('#latex', (e) => [e.selectionStart, e.selectionEnd, e.value.length])
+      .then(([start, end, length]) => start === 0 && end === length && length > 0), true);
+  // The page closes inside the key press, which Playwright reports as an error.
+  await shortcutPage.keyboard.press('Escape').catch(() => {});
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  check('Esc closes it', shortcutPage.isClosed(), true);
+
+  await enter('\\sqrt{2}');
+  await r.focus('#latex');
+  await r.keyboard.press(`${mod}+Enter`);
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  check('Ctrl+Enter copies the PNG and closes', r.isClosed(), true);
+  check('...and the PNG is on the clipboard', !!(await clipboardPng()), true);
+
+  // The options page holds the rest of the settings.
+  const reader = await context.newPage();
+  await reader.goto(`chrome-extension://${id}/options/options.html#renderer`);
+  await reader.fill('#render-macros', '\\newcommand{\\N}{\\mathbb{N}}');
+  await reader.$eval('#render-macros', (e) => e.blur());
+  await reader.selectOption('#render-scale', '2');
+  await reader.waitForTimeout(300);
+  check('options: renderer settings are saved',
+    await reader.evaluate(async () => {
+      const { renderMacros, renderScale } = await chrome.storage.sync.get(['renderMacros', 'renderScale']);
+      return [renderMacros, renderScale];
+    }),
+    ['\\newcommand{\\N}{\\mathbb{N}}', 2]);
 
   console.log(`\n${results.filter(Boolean).length}/${results.length} passed`);
   await context.close();
