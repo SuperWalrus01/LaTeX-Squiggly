@@ -11,7 +11,8 @@
 #   2. engine         the Swift engine builds and passes its own suite
 #   3. generated      every generated file is exactly what its generator makes
 #   4. windows        the C# port gives the Swift engine's answer, every time
-#   5. chrome         the extension's engine does too
+#   5. chrome         the extension's engine does too, and its copy of
+#                     MathJax is the one scripts/fetch-mathjax.sh wrote
 #
 # Step 3 is the one that catches the likeliest mistake: a generated table
 # edited by hand. It regenerates everything from the Swift engine and fails if
@@ -83,6 +84,8 @@ fi
 
 echo "==> 5/5  chrome"
 node chrome/test/conformance.mjs
+(cd chrome/renderer/mathjax && shasum -a 256 --check --quiet SHA256SUMS)
+echo "MathJax matches its checksums"
 
 echo
 echo "All checks passed."

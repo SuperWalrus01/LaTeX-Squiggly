@@ -83,6 +83,11 @@ their output is reviewable in a diff. They must never be edited by hand:
 | `chrome/icons/*.png` | `scripts/make-chrome-icons.py` | `assets/menu-icon.png` |
 | `site/assets/*.png` | `scripts/make-site-images.swift` | `assets/*.png` |
 
+`chrome/renderer/mathjax/` is not generated but copied: MathJax, as released,
+written by `scripts/fetch-mathjax.sh` after checking the download against
+npm's published hash. `scripts/check-all.sh` checks the copy against the
+`SHA256SUMS` beside it.
+
 The image generators are not part of the drift check, because they need macOS
 tools or Pillow and their output only changes when the artwork does. Run them
 after changing anything in `assets/`.

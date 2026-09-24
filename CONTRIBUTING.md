@@ -78,6 +78,7 @@ these. The top level holds only the conventional files: `README.md`,
   | `generate-` | write committed files from the engine | `generate-js-tables.py` |
   | `make-` | write committed files from artwork or the site | `make-site.py` |
   | `package-` | produce an upload for a store | `package-chrome.sh` |
+  | `fetch-` | download a pinned third-party release into the repository | `fetch-mathjax.sh` |
 
   Then the target, platform first where it matters: `build-windows.sh`,
   `make-chrome-icons.py`.
@@ -96,8 +97,11 @@ these. The top level holds only the conventional files: `README.md`,
   a comment saying what it does and how to run it.
 - **Documentation is prose in British English**, written for someone who has
   not read the code. Measured facts say how they were measured.
-- **No dependencies without a strong reason.** The Swift package has none, the
-  extension has none, and the Windows port uses only .NET itself. Scripts may
+- **No dependencies without a strong reason.** The Swift package has none, and
+  the Windows port uses only .NET itself. The extension has one, MathJax, for
+  its renderer, because drawing TeX is not something to write again; it is
+  committed in `chrome/renderer/mathjax/` by `scripts/fetch-mathjax.sh` and is
+  never edited by hand. Scripts may
   use Python's standard library; the image scripts that need Pillow say so.
 
 ## Making a change

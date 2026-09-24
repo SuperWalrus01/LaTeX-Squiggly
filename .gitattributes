@@ -21,3 +21,7 @@ windows/LaTeXSquiggly.Core/Engine/*.g.cs linguist-generated=true
 chrome/engine/tables.js linguist-generated=true
 conformance/*.json linguist-generated=true
 site/assets/data.js linguist-generated=true
+
+# Third-party code, committed byte for byte as scripts/fetch-mathjax.sh copied
+# it, so its SHA256SUMS still verify. Never edited or line-ending converted.
+chrome/renderer/mathjax/** -text -diff linguist-vendored=true
