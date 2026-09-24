@@ -526,6 +526,9 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   check('braces: { brings its }', [await source(), await caret()], ['x^{}', [3, 3]]);
   await r.keyboard.type('2}');
   check('braces: } steps over the one added', await source(), 'x^{2}');
+  await clear(); await r.keyboard.type('\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}');
+  check('braces: typed out in full, nested groups gain no extra }',
+    await source(), '\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}');
   await clear(); await r.keyboard.type('a_{');
   await r.keyboard.press('Backspace');
   check('braces: Backspace in an empty pair takes both', await source(), 'a_');

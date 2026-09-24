@@ -23,6 +23,10 @@ fixes below ship once they have been tested on Windows.
 
 ### Fixed
 
+- In the renderer, typing a nested group out in full, such as
+  `\frac{-b \pm \sqrt{b^2-4ac}}{2a}`, added an extra `}`: the outer brace the
+  editor had closed stopped being typed over once an inner one was added. The
+  Mac app's 0.3.0 has this; the extension's store upload does not.
 - The Windows app's source now matches the build that shipped. The 0.2.0
   executable was rebuilt on 8 September with a fix for the hang, but the
   source of that fix never reached the repository, so building from it gave

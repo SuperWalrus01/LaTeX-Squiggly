@@ -259,6 +259,10 @@ export class Editor {
   replace(start, end, text) {
     this.textarea.focus();
     this.textarea.setSelectionRange(start, end);
+    // execCommand fires input but not beforeinput, so the text before the
+    // edit is recorded here. Without it, the braces already closed would not
+    // move, and a nested group's outer } would stop being typed over.
+    this.remember();
     if (text === "") document.execCommand("delete");
     else document.execCommand("insertText", false, text);
   }
