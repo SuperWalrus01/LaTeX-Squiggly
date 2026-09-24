@@ -92,8 +92,13 @@ Also available as a menu bar app for macOS and a tray app for Windows, which wor
 | Screenshots (1280×800) | `chrome/store/screenshot-1-typing.png`, `screenshot-2-notice.png`, `screenshot-3-welcome.png`, `screenshot-4-renderer.png`, `screenshot-5-paste.png` |
 | Small promo tile (440×280) | `chrome/store/promo-440x280.png` |
 | Marquee promo tile (1400×560), optional | `chrome/store/marquee-1400x560.png` |
+| Promo video, optional | A YouTube link. Upload `build/latex-squiggly-demo.webm` to YouTube (Unlisted is enough) and paste its address. |
 
 The screenshots are real: the extension typing into a page, not a mock-up.
+So is the video: 41 seconds at 1080p, recorded from the loaded extension with
+Playwright, typing, a notice, the renderer, and its PNG pasted into a message.
+The WebM is not committed, because of its size; it is rebuilt when the
+extension's look changes.
 The renderer's two show its actual popup, and the PNG it copied pasted into a
 message.
 Every image is a 24-bit PNG with no alpha channel, which the store requires.
