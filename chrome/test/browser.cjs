@@ -563,7 +563,14 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
     ['{a+b}', false, true]);
 
   check('renderer: nothing was fetched from outside the extension', offsite.join(' '), '');
-  check('renderer shows its shortcut', ['Alt+Shift+R', '⌥⇧R'].includes(await r.textContent('#open-keys')), true);
+  // What Chrome assigned, which is Chrome's decision: a suggested key it
+  // considers taken is left unassigned. Logged so a run shows which; the check
+  // is that the renderer shows whatever Chrome has, and nothing when nothing.
+  const assigned = await r.evaluate(async () =>
+    (await chrome.commands.getAll()).find((c) => c.name === 'open-renderer')?.shortcut || '');
+  console.log(`      (Chrome assigned the renderer shortcut: ${JSON.stringify(assigned)})`);
+  check('renderer shows the shortcut Chrome assigned, or none',
+    [await r.textContent('#open-keys'), await r.isVisible('#open-shortcut')], [assigned, assigned !== '']);
 
   // The shortcut. Headless Chromium accepts openPopup but shows Playwright no
   // page for it, so openPopup is made to fail, as it does before Chrome 127:
