@@ -88,7 +88,10 @@ const FAKE_APP = `
 
   await clearLog();
   await page.click('#copy-png');
-  await page.waitForTimeout(300);
+  // Drawing and encoding the PNG takes as long as the machine takes, so wait
+  // for the message rather than for a fixed time.
+  await page.waitForFunction(() => window.appLog.some((m) => m.op === 'copyImage'), null, { timeout: 5000 })
+    .catch(() => {});
   const [copy] = await log('copyImage');
   const width = await page.$eval('#preview > svg', (e) => parseFloat(e.getAttribute('width')));
   check('Copy PNG hands the app a PNG, with its size in points',
