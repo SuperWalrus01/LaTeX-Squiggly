@@ -12,6 +12,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/SuperWalrus01/LaTeX-Squiggly" alt="MIT licence"></a>
 </p>
 
+<p align="center">
+  <img src="assets/readme-demo.gif" alt="Typing LaTeX in a message box: \epsilon, $|x_n - x|$ and \ge become ϵ, |xₙ - x| and ≥ as each space is pressed. Then the renderer draws the quadratic formula as it is typed, and Copy PNG copies it." width="760">
+</p>
+
 You can't paste LaTeX into a chat, an email or a comment box. LaTeX Squiggly
 lets you type it anyway. Type `\alpha`, press space, and the letters you just
 typed become α, right where you typed them. The result is ordinary Unicode
@@ -43,16 +47,36 @@ through both.
 
 ## Screenshots
 
-<table>
-  <tr>
-    <td width="50%"><img src="chrome/store/screenshot-1-typing.png" alt="Typing LaTeX in a message box on a web page, converted to real characters as you type"></td>
-    <td width="50%"><img src="chrome/store/screenshot-2-notice.png" alt="A note explaining that a fraction was written on one line with a slash"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="chrome/store/screenshot-4-renderer.png" alt="The renderer drawing the Gaussian integral, with a Copy PNG button"></td>
-    <td width="50%"><img src="chrome/store/screenshot-5-paste.png" alt="The rendered equation pasted into a message as an image"></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="chrome/store/screenshot-1-typing.png" alt="Typing LaTeX in a message box on a web page, converted to real characters as you type" width="760">
+  <br><sub>Commands become real characters as you type, in any text box.</sub>
+</p>
+
+<p align="center">
+  <img src="chrome/store/screenshot-4-renderer.png" alt="The renderer drawing the Gaussian integral, with a Copy PNG button" width="760">
+  <br><sub>The renderer turns bigger maths into an image, in the Chrome extension and the Mac app.</sub>
+</p>
+
+<details>
+<summary><b>More screenshots</b></summary>
+<br>
+
+<p align="center">
+  <img src="chrome/store/screenshot-5-paste.png" alt="The rendered equation pasted into a message as an image" width="760">
+  <br><sub>The copied PNG pastes anywhere, even where LaTeX is not understood.</sub>
+</p>
+
+<p align="center">
+  <img src="chrome/store/screenshot-2-notice.png" alt="A note explaining that a fraction was written on one line with a slash" width="760">
+  <br><sub>When plain text can only approximate something, a short note says what happened.</sub>
+</p>
+
+<p align="center">
+  <img src="chrome/store/screenshot-3-welcome.png" alt="The Chrome extension's welcome tour, with a practice box" width="760">
+  <br><sub>The Chrome extension's welcome page has a short tour and a practice box.</sub>
+</p>
+
+</details>
 
 ## Install
 
