@@ -34,8 +34,32 @@
         <li>The toolbar icon turns grey wherever it is not converting. <span
           id="welcome-shortcut">Alt+Shift+L</span> pauses and resumes it anywhere.</li>
       </ul>
-      <p class="muted">Try it: type <code>\alpha</code> and a space in any text box on a web page.
-        Pages that were already open need reloading first.
+
+      <h3>A quick tour</h3>
+      <ol class="tour">
+        <li>
+          <b>Type a command, then a space.</b> Try it in the box below: <code>\alpha</code>,
+          <code>\to</code>, <code>\infty</code>, or <code>$x^2$</code> for a script.
+          <label for="try" class="visually-hidden">Practice box</label>
+          <textarea id="try" class="try" rows="2" spellcheck="false" autocomplete="off"
+                    placeholder="Type \alpha and a space"></textarea>
+          <span class="hint muted" id="try-result" aria-live="polite"></span>
+        </li>
+        <li>
+          <b>Pause it when you need to.</b> Click the toolbar icon and switch it off, or press
+          <kbd id="tour-pause">Alt+Shift+L</kbd>. The icon turns grey while it is off.
+        </li>
+        <li>
+          <b>Turn bigger maths into a picture.</b> Fractions and matrices have no plain-text form.
+          Open the toolbar icon's <b>Renderer</b> tab<span id="tour-render-keys">, or press
+          <kbd>Alt+Shift+E</kbd></span>, type the LaTeX and press <b>Copy PNG</b>. Paste the
+          image anywhere. You can also select LaTeX on a page, right-click and choose
+          <b>Render selection as image</b>.
+        </li>
+      </ol>
+
+      <p class="muted">Pages that were already open need reloading before it works in them.
+        <a href="https://superwalrus01.github.io/LaTeX-Squiggly/guide.html">Full guide</a> ·
         <a href="https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html">Privacy policy</a></p>
       <button class="button primary" type="button" id="welcome-done">Got it</button>
     </section>
@@ -128,6 +152,7 @@
   </main>
 
   <script src="../engine/tables.js"></script>
+  <script src="../engine/engine.js"></script>
   <script src="../shared/settings.js"></script>
   <script src="../renderer/host.js"></script>
   <script src="../renderer/settings.js"></script>

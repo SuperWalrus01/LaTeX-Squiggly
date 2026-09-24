@@ -33,6 +33,7 @@
       <a href="#symbols">Symbols</a>
       <a href="#cost">Cost</a>
       <a href="#install">Get it</a>
+      <a href="guide.html">Guide</a>
     </nav>
   </header>
 
@@ -250,6 +251,8 @@ Try it here — type \theta then press space.</textarea>
         <p class="lede"><b>Windows 10+.</b> <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the .exe</a> and double-click it. No installer, no admin rights, and Windows asks for no permission at all. It is not code-signed, so SmartScreen will say <em>Windows protected your PC</em>: click <b>More info</b>, then <b>Run anyway</b>. Your antivirus may also take an interest, because the app installs a low-level keyboard hook, which is the same mechanism a keylogger uses.</p>
         <p class="lede" style="margin-bottom:0">You should be sceptical of any app that asks you to click past a security warning, particularly one that can see your keystrokes. So, plainly: <b>nothing you type is stored, logged, or sent anywhere.</b> The app holds the last 64 characters in memory only long enough to recognise a command, then forgets them — the instant one completes, and also whenever you click, press return, move the cursor, switch app, or change browser tab. There is no networking code in the project at all: it never opens a connection, so there is nowhere for anything you type to go. Nothing is written to disk except your own settings. You do not have to take that on trust; the source is right there, and on a Mac you can build it yourself in about a minute.</p>
       </div>
+
+      <p class="lede" style="margin-top:1.2rem">Installed it? The <a href="guide.html">guide</a> walks through the first steps on each platform, and how to turn an equation into an image.</p>
 
       <h3>Building it on a Mac</h3>
       <p class="lede">This is the primary path, not a fallback. An app built on the machine it runs on is never downloaded, so it never carries <code>com.apple.quarantine</code> and Gatekeeper never blocks it — no System Settings detour, and nobody has to weaken a security setting to run something that reads their keystrokes. It needs the Command Line Tools; Xcode's 15 GB is not required, which is why the bundle is assembled by hand rather than by an <code>.xcodeproj</code>.</p>

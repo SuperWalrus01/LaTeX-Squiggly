@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaTeX Squiggly Guide</title>
+<meta name="description" content="How to use LaTeX Squiggly on macOS, Windows and Chrome: typing LaTeX that becomes real characters, pausing it, keeping it out of the way, and turning bigger maths into an image.">
+<meta name="theme-color" content="#FAF7EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17130F" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/touch-icon.png">
+<link rel="canonical" href="https://superwalrus01.github.io/LaTeX-Squiggly/guide.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="brandline"><div class="brandmark"></div><b>LaTeX Squiggly</b></div>
+    <nav>
+      <a href="./">Home</a>
+      <a href="#basics">Basics</a>
+      <a href="#mac">Mac</a>
+      <a href="#windows">Windows</a>
+      <a href="#chrome">Chrome</a>
+      <a href="#images">Images</a>
+      <a href="#help">Help</a>
+    </nav>
+  </header>
+
+  <main class="guide">
+    <section style="border-top:0">
+      <p class="eyebrow">Guide</p>
+      <h2>How to use LaTeX Squiggly</h2>
+      <p class="lede">Type a LaTeX command where you would normally type, press space, and the command becomes the real character: <code>\alpha</code> becomes α, <code>\to</code> becomes →. It works the same way in the Mac app, the Windows app and the Chrome extension. Maths that plain text cannot hold, such as a stacked fraction, can be turned into an image instead.</p>
+      <p class="lede">Nothing you type is stored or sent anywhere. The <a href="privacy.html">privacy page</a> says exactly what is read and when.</p>
+    </section>
+
+    <section id="basics">
+      <p class="eyebrow">Everywhere</p>
+      <h2>The basics</h2>
+      <ol class="steps">
+        <li><b>Type a command, then a space.</b> The command is replaced with its character, right where you typed it. On the Mac and Windows, Tab works as well as space. Return never converts, so it cannot send a half-finished message.</li>
+        <li><b>Put scripts inside dollars.</b> <code>$x^2$</code> gives x² and <code>$a_1$</code> gives a₁. The dollars say you meant maths, so an ordinary <code>x^2</code> in a sentence is left alone.</li>
+        <li><b>Undo if you did not want it.</b> ⌘Z or Ctrl+Z brings the command back.</li>
+        <li><b>Read the notice when one appears.</b> If something can only be approximated, such as <code>\frac{\alpha}{2}</code> written as α∕2, or cannot be written in plain text at all, such as <code>\vec{v}</code>, a short note says what happened and why.</li>
+      </ol>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>You type</th><th>You get</th></tr></thead>
+          <tbody>
+            <tr><td><code>\alpha</code>, <code>\beta</code>, <code>\pi</code></td><td>α, β, π</td></tr>
+            <tr><td><code>\to</code>, <code>\Rightarrow</code>, <code>\iff</code></td><td>→, ⇒, ⟺</td></tr>
+            <tr><td><code>\le</code>, <code>\ne</code>, <code>\approx</code>, <code>\in</code></td><td>≤, ≠, ≈, ∈</td></tr>
+            <tr><td><code>\mathbb{R}</code>, <code>\infty</code>, <code>\sum</code></td><td>ℝ, ∞, ∑</td></tr>
+            <tr><td><code>\frac{1}{2}</code>, <code>\frac{3}{4}</code></td><td>½, ¾</td></tr>
+            <tr><td><code>$x^2$</code>, <code>$a_{n+1}$</code></td><td>x², aₙ₊₁</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lede" style="margin-top:1.2rem">There are 202 symbols. Search them all on the <a href="./#symbols">home page</a>, or in the app's or extension's settings.</p>
+      <p class="lede"><b>It stays out of LaTeX editors.</b> In Overleaf, TeX editors and code editors, <code>\alpha</code> has to stay <code>\alpha</code>, so LaTeX Squiggly does nothing there. You can add your own apps and sites to that list.</p>
+    </section>
+
+    <section id="mac">
+      <p class="eyebrow">macOS 13 and later</p>
+      <h2>The Mac app</h2>
+      <h3>Installing</h3>
+      <ol class="steps">
+        <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the disk image</a>, open it, and drag <b>LaTeX Squiggly</b> onto <b>Applications</b>.</li>
+        <li>Open it. The first time, macOS says it cannot be opened, because the app is signed but not notarized. Go to <b>System Settings → Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b>.</li>
+        <li>An <b>LS</b> mark appears in the menu bar. Click it and grant the two permissions it asks for: <b>Accessibility</b>, to replace what you typed, and <b>Input Monitoring</b>, to notice you typing.</li>
+        <li>Open Notes, type <code>\alpha</code> and a space.</li>
+      </ol>
+      <h3>Using it</h3>
+      <ul class="steps">
+        <li><b>Pause:</b> click the LS mark and untick <b>Enable conversion</b>. The mark fades while it is off.</li>
+        <li><b>Keep it out of an app:</b> with that app in front, click the LS mark and choose <b>Do not convert in ‹app›</b>. Sites in your browser, such as Overleaf, are in <b>Settings… → Exclusions</b>.</li>
+        <li><b>Find a symbol:</b> <b>Symbols…</b> in the menu lists every command. Double-click one to copy its symbol.</li>
+        <li><b>Make an image of an equation:</b> press <b>⌃⌥⌘L</b> from any app, or choose <b>Render LaTeX as Image…</b>. See <a href="#images">Turning maths into an image</a>.</li>
+      </ul>
+      <h3>Updating</h3>
+      <p class="lede">Quit from the menu bar, drag the old app to the Trash, and install the new one. Your settings are kept. If macOS asks for the permissions again, first remove the old <b>LaTeX Squiggly</b> entries from both lists in <b>System Settings → Privacy &amp; Security</b>. Left in place, they stay ticked but do nothing.</p>
+    </section>
+
+    <section id="windows">
+      <p class="eyebrow">Windows 10 and later, beta</p>
+      <h2>The Windows app</h2>
+      <h3>Installing</h3>
+      <ol class="steps">
+        <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/tag/v0.2.0">Download the .exe</a> and double-click it. There is no installer and it needs no admin rights.</li>
+        <li>Windows may say <b>Windows protected your PC</b>, because the app is not code-signed. Click <b>More info</b>, then <b>Run anyway</b>.</li>
+        <li>An LS mark appears in the system tray, near the clock. Open Notepad, type <code>\alpha</code> and a space.</li>
+      </ol>
+      <h3>Using it</h3>
+      <ul class="steps">
+        <li><b>Pause:</b> right-click the tray mark and untick <b>Convert LaTeX as I type</b>.</li>
+        <li><b>Keep it out of an app:</b> with that app in front, right-click the tray mark and choose <b>Do not convert in ‹app›</b>.</li>
+        <li><b>Settings and symbols:</b> <b>Settings and Symbols…</b> in the tray menu. <b>Open at login</b> starts it with Windows.</li>
+        <li><b>If it goes quiet:</b> the tray menu says which rule it is following, and <b>Copy diagnostics</b> puts a summary on the clipboard for a bug report.</li>
+      </ul>
+      <p class="lede">The Windows app does not have the image renderer yet.</p>
+    </section>
+
+    <section id="chrome">
+      <p class="eyebrow">Chrome, Edge, Brave and other Chromium browsers</p>
+      <h2>The Chrome extension</h2>
+      <h3>Installing</h3>
+      <ol class="steps">
+        <li>Add <b>LaTeX Squiggly</b> from the Chrome Web Store. A welcome page opens with a practice box to try it in.</li>
+        <li>Pin it: click the puzzle piece in the toolbar, then the pin next to LaTeX Squiggly.</li>
+        <li><b>Reload any tab that was already open.</b> The extension only starts in pages loaded after it was installed.</li>
+        <li>Type <code>\alpha</code> and a space in any text box on a web page.</li>
+      </ol>
+      <h3>Using it</h3>
+      <ul class="steps">
+        <li><b>Pause:</b> click the toolbar icon and switch off <b>Convert as I type</b>, or press <b>Alt+Shift+L</b> (⌥⇧L on a Mac) on any page. The icon turns grey wherever it is not converting.</li>
+        <li><b>Keep it off a site:</b> click the toolbar icon on that site and switch off <b>Convert on this site</b>. Overleaf and other LaTeX sites are off already.</li>
+        <li><b>Google Docs:</b> it works in documents. If Docs capitalises a Greek letter at the start of a sentence, turn off <b>Tools → Preferences → Automatically capitalize words</b> in Docs.</li>
+        <li><b>Settings and symbols:</b> right-click the toolbar icon and choose <b>Options</b>.</li>
+        <li><b>Make an image of an equation:</b> the toolbar icon's <b>Renderer</b> tab, or <b>Alt+Shift+E</b>. See below.</li>
+      </ul>
+      <p class="lede">Only space finishes a command in the browser, because Tab moves between fields on a web page.</p>
+    </section>
+
+    <section id="images">
+      <p class="eyebrow">Mac app and Chrome extension</p>
+      <h2>Turning maths into an image</h2>
+      <p class="lede">Fractions, matrices and sums with limits have no plain-text form. The renderer draws them as a picture you can paste into chats, slides, documents and emails.</p>
+      <div class="guide-figure">
+        <figure>
+          <img src="assets/guide-renderer.png" alt="The extension's Renderer tab, showing the LaTeX for the Gaussian integral above a rendered preview, with Copy PNG, background, Copy SVG and download buttons below." width="480" height="477">
+        </figure>
+        <ol class="steps">
+          <li><b>Open it.</b>
+            <br>Mac: <b>⌃⌥⌘L</b> from any app, or <b>Render LaTeX as Image…</b> in the menu bar.
+            <br>Chrome: the toolbar icon's <b>Renderer</b> tab, or <b>Alt+Shift+E</b>. Or select LaTeX on a page, right-click, and choose <b>Render selection as image</b>.</li>
+          <li><b>Type the LaTeX</b>, without dollars. The preview updates as you type, and a list of commands appears when you type <code>\</code>.</li>
+          <li><b>Click Copy PNG</b>, or press <b>⌘Enter</b> (Ctrl+Enter on Windows). That copies the image and closes the window.</li>
+          <li><b>Paste it</b> wherever you were, with ⌘V or Ctrl+V.</li>
+        </ol>
+      </div>
+      <h3>Options</h3>
+      <ul class="steps">
+        <li><b>White or Transparent</b> sets the background. White is safer: black text on a transparent background disappears in apps using dark mode.</li>
+        <li><b>The colour dots</b> change the colour of the selected part, or of everything if nothing is selected.</li>
+        <li><b>Overbrace and Underbrace</b> put a brace and a label over or under the selected part.</li>
+        <li><b>History</b> keeps your last 10 equations. Click one to load it again.</li>
+        <li><b>Image settings</b> sets the scale, from 1× to 4×, and <b>Your commands</b>: definitions such as <code>\newcommand{\R}{\mathbb{R}}</code> that are added to every image, so you can type <code>\R</code> for ℝ.</li>
+      </ul>
+      <p class="lede"><b>PNG or SVG?</b> Use PNG. It is an ordinary picture and pastes everywhere. SVG is the same image stored as drawing instructions: it stays sharp at any size, but most apps paste it as a block of code. It is for design tools and web pages.</p>
+      <p class="lede"><b>On the Mac,</b> a copied PNG pastes at the size it was previewed and stays sharp. In Chrome, a browser cannot tell the clipboard the image's size, so a 3× image may paste larger than expected. Resize it after pasting, or lower the scale.</p>
+    </section>
+
+    <section id="help">
+      <p class="eyebrow">Help</p>
+      <h2>If nothing happens</h2>
+      <ul class="steps">
+        <li><b>Is it switched on?</b> A faded or grey icon means it is paused or the app or site is excluded. The menu or popup says which.</li>
+        <li><b>Did you press space?</b> A command only converts when it is finished with a space (or Tab, on the desktop).</li>
+        <li><b>Chrome:</b> reload the tab. Pages open before the extension was installed or updated do not have it yet.</li>
+        <li><b>Mac:</b> check both <b>Accessibility</b> and <b>Input Monitoring</b> in <b>System Settings → Privacy &amp; Security</b>. After an update, remove the old entries and grant them again.</li>
+        <li><b>Scripts:</b> put them in dollars. <code>x^2</code> on its own is left alone, <code>$x^2$</code> converts.</li>
+        <li><b>Shortcut does nothing:</b> another app may already use it. In Chrome, change it at <code>chrome://extensions/shortcuts</code>. On the Mac, the menu item always works.</li>
+      </ul>
+      <p class="lede">Still stuck, or found a symbol that should be there? Open a <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">GitHub issue</a>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p style="margin-bottom:0"><a href="./">Home</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly">Source code</a></p>
+  </footer>
+</div>
+</body>
+</html>

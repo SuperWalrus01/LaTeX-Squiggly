@@ -27,6 +27,31 @@ document.getElementById("welcome-done").addEventListener("click", () => {
   history.replaceState(null, "", location.pathname);
 });
 
+// The tour's practice box. The content script does not run on extension pages,
+// so this runs the engine itself, on the text before the caret, the way the
+// content script does on a page.
+const practice = document.getElementById("try");
+const practiceResult = document.getElementById("try-result");
+practice.addEventListener("keydown", (event) => {
+  if (event.key !== " " || event.isComposing || practice.selectionStart !== practice.selectionEnd) return;
+  const caret = practice.selectionStart;
+  const before = practice.value.slice(Math.max(0, caret - 64), caret);
+  const outcome = LaTeXSquiggly.engine.outcome(before, " ");
+  if (outcome.kind === "refuse") {
+    practiceResult.textContent = `Left as typed: ${outcome.reason}`;
+    return;
+  }
+  if (outcome.kind === "none") return;
+  event.preventDefault();
+  practice.setSelectionRange(caret - outcome.source.length, caret);
+  if (!document.execCommand("insertText", false, outcome.insert)) {
+    practice.setRangeText(outcome.insert, caret - outcome.source.length, caret, "end");
+  }
+  practiceResult.textContent = outcome.notice
+    ? `${outcome.source} became ${outcome.insert.trim()}. ${outcome.notice}`
+    : `${outcome.source} became ${outcome.insert.trim()}. Undo brings it back.`;
+});
+
 // MARK: The shortcut
 
 // As Chrome has it, which the user may have changed or cleared.
@@ -35,7 +60,9 @@ if (command?.shortcut) {
   document.getElementById("shortcut-hint").textContent =
     ` ${command.shortcut} does the same from any page; change it at chrome://extensions/shortcuts.`;
   document.getElementById("welcome-shortcut").textContent = command.shortcut;
+  document.getElementById("tour-pause").textContent = command.shortcut;
 } else {
+  document.getElementById("tour-pause").textContent = "the shortcut you set at chrome://extensions/shortcuts";
   document.getElementById("welcome-shortcut").textContent = "A keyboard shortcut, set at chrome://extensions/shortcuts,";
 }
 
@@ -56,6 +83,9 @@ const [renderCommand] = (await chrome.commands.getAll()).filter((c) => c.name ==
 if (renderCommand?.shortcut) {
   document.getElementById("renderer-shortcut").textContent =
     ` ${renderCommand.shortcut} opens it from any page.`;
+  document.querySelector("#tour-render-keys kbd").textContent = renderCommand.shortcut;
+} else {
+  document.getElementById("tour-render-keys").hidden = true;
 }
 
 // MARK: Sites

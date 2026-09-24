@@ -7,6 +7,7 @@ A plain static site: no build step, no framework, no dependencies. Open
 site/
   index.html            the page
   privacy.html          the privacy policy, for all three platforms
+  guide.html            how to use it, on each platform
   assets/styles.css     one stylesheet, tokens for light and dark
   assets/app.js         the live demo and the symbol browser
   assets/data.js        generated: the app's own tables
@@ -27,7 +28,9 @@ absolute URL. The Chrome extension's store listing and settings page link to
 
 ## What is generated, and what is not
 
-`index.html`, `privacy.html`, `styles.css` and `app.js` are written by hand.
+`index.html`, `privacy.html`, `guide.html`, `styles.css` and `app.js` are
+written by hand. `assets/guide-renderer.png` is a screenshot of the
+extension's Renderer tab.
 Edit them.
 
 `assets/data.js` and the worked examples inside `index.html` are not:

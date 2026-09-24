@@ -89,11 +89,13 @@ Also available as a menu bar app for macOS and a tray app for Windows, which wor
 | Field | File |
 |---|---|
 | Store icon (128×128) | `chrome/icons/icon-128.png` |
-| Screenshots (1280×800) | `chrome/store/screenshot-1-typing.png`, `screenshot-2-notice.png`, `screenshot-3-welcome.png` |
+| Screenshots (1280×800) | `chrome/store/screenshot-1-typing.png`, `screenshot-2-notice.png`, `screenshot-3-welcome.png`, `screenshot-4-renderer.png`, `screenshot-5-paste.png` |
 | Small promo tile (440×280) | `chrome/store/promo-440x280.png` |
 | Marquee promo tile (1400×560), optional | `chrome/store/marquee-1400x560.png` |
 
 The screenshots are real: the extension typing into a page, not a mock-up.
+The renderer's two show its actual popup, and the PNG it copied pasted into a
+message.
 Every image is a 24-bit PNG with no alpha channel, which the store requires.
 
 **Homepage URL:** `https://superwalrus01.github.io/LaTeX-Squiggly/`
@@ -194,8 +196,10 @@ LaTeX Squiggly)
 
 1. **Package → Upload new package**, and choose the 0.3.0 zip.
 2. **Store listing**: paste the description above; it now mentions Google Docs
-   and the renderer. A screenshot of the Renderer tab helps the reviewer match
-   the listing to the extension; the current three show only typing.
+   and the renderer. Upload all five screenshots: the new
+   `screenshot-3-welcome.png` shows the welcome tour, and `screenshot-4-renderer.png`
+   and `screenshot-5-paste.png` show the renderer, which helps the reviewer match
+   the listing to the extension.
 3. **Privacy**: paste, from above, the single purpose, the storage and host
    permission justifications, the new contextMenus justification, and the
    remote code answer. The data usage ticks stay as they are: text selected

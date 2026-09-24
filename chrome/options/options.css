@@ -116,4 +116,21 @@ footer { margin-top: 40px; font-size: 13px; }
 }
 .welcome ul { margin: 0 0 12px; padding-left: 20px; }
 .welcome li { margin-bottom: 6px; }
+.welcome h3 { font-size: 14px; margin: 16px 0 8px; }
+.welcome .tour { margin: 0 0 12px; padding-left: 20px; }
+.welcome .tour li { margin-bottom: 10px; }
+.welcome .try {
+  display: block;
+  width: 100%;
+  margin: 8px 0 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  resize: vertical;
+}
+.welcome .try:focus { border-color: var(--accent); outline: none; }
+.welcome .hint { display: block; min-height: 1.5em; font-size: 13px; }
 

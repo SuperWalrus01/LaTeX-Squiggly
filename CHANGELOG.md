@@ -8,7 +8,18 @@ Every release, newest first. The format follows
 
 ## Unreleased
 
-The Windows fixes below ship once they have been tested on Windows.
+The Chrome additions go out in the extension's 0.3.0 store upload. The Windows
+fixes below ship once they have been tested on Windows.
+
+### Added
+
+- A **guide** on the website, `guide.html`: first steps on macOS, Windows and
+  Chrome, pausing and excluding, turning an equation into an image, and what
+  to check when nothing happens. Linked from the home and privacy pages.
+- A **quick tour** on the Chrome extension's welcome page, with a practice box
+  that converts as you type, and a link to the guide.
+- Store screenshots of the renderer and of a pasted image, and a new welcome
+  page screenshot.
 
 ### Fixed
 

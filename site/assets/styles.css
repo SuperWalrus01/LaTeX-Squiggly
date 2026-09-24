@@ -279,6 +279,19 @@ pre {
   border-radius: 10px; padding: .9rem 1.05rem; overflow-x: auto; margin: 0 0 1rem;
 }
 pre .c { color: var(--ink-faint); }
+/* ---------- guide ---------- */
+.steps { color: var(--ink-soft); max-width: 66ch; margin: 0 0 1.6rem; padding-left: 1.35rem; }
+.steps li { margin-bottom: .7rem; padding-left: .2rem; }
+.steps li::marker { color: var(--squiggle); font-weight: 600; }
+.steps b { color: var(--ink); font-weight: 600; }
+.guide h3:first-of-type { margin-top: 1.6rem; }
+.guide .lede a, .steps a { color: var(--squiggle); text-underline-offset: .18em; }
+.guide .tablewrap { max-width: 40rem; }
+.guide-figure { display: grid; gap: 1.5rem 2.5rem; grid-template-columns: minmax(0, 24rem) minmax(0, 1fr); align-items: start; margin-bottom: 1rem; }
+.guide-figure figure { margin: 0; border: 1px solid var(--rule-firm); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.guide-figure img { display: block; width: 100%; height: auto; }
+@media (max-width: 44rem) { .guide-figure { grid-template-columns: minmax(0, 1fr); } }
+
 footer { border-top: 1px solid var(--rule); padding-block: 2rem 3rem; color: var(--ink-faint); font-size: .85rem; }
 footer a { color: var(--squiggle); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
