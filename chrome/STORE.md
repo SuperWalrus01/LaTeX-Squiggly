@@ -3,10 +3,11 @@
 Everything the Developer Dashboard asks for, in the order it asks. The text in
 the boxes is ready to paste.
 
-The text here is for the next upload, 0.2.2, which adds Google Docs. Version
-0.2.1's listing said the extension does not work in Google Docs, so when
-uploading 0.2.2, paste the description and the host permission justification
-again: both changed. The steps are under
+The text here is for the next upload, 0.2.2, which adds Google Docs and the
+renderer. Much of what the dashboard holds from 0.2.1 has changed: the
+description, the single purpose, the storage and host permission
+justifications, the remote code answer, and a new justification for
+`contextMenus`. The steps are under
 [Uploading the next version](#uploading-the-next-version).
 
 ## Why this should pass review
@@ -160,8 +161,11 @@ first. Unlisted items go through the same review.
 
 ## Uploading the next version
 
-The next version is **0.2.2**, and it is ready on `main`: the version is set
-everywhere, and the file to upload is `build/LaTeX-Squiggly-0.2.2-chrome.zip`.
+The next version is **0.2.2**: Google Docs mode and the renderer. The version
+is set everywhere, and the file to upload is
+`build/LaTeX-Squiggly-0.2.2-chrome.zip`. The renderer is on the branch
+`claude/chrome-extension-feasibility-6kahfo` until it is merged into `main`,
+which has to happen first: the privacy policy is published from `main`.
 
 **Before uploading**
 
@@ -173,18 +177,34 @@ everywhere, and the file to upload is `build/LaTeX-Squiggly-0.2.2-chrome.zip`.
    ```
 
    It checks the version and runs the tests before it packages anything.
-3. The privacy policy has its Google Docs paragraph live at
+3. The privacy policy has its Google Docs and renderer paragraphs live at
    <https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html>. It deploys
-   when `main` is pushed.
+   when `main` is pushed. The reviewer compares it with what the extension
+   does, and the renderer keeps its input and history on the computer, which
+   the old policy said nothing typed ever is.
+4. Load the unpacked extension and try by hand what the browser test cannot:
+   the renderer from the toolbar popup, Alt+Shift+R, right-click → Render
+   selection as image, and a copied PNG pasted into Google Docs, Slack and
+   Gmail.
 
 **In the dashboard** (<https://chrome.google.com/webstore/devconsole>, then
 LaTeX Squiggly)
 
 1. **Package → Upload new package**, and choose the 0.2.2 zip.
-2. **Store listing**: paste the description above; it now mentions Google Docs.
-3. **Privacy**: paste the host permission justification above; it now describes
-   Google Docs. Every other answer stays as it is.
+2. **Store listing**: paste the description above; it now mentions Google Docs
+   and the renderer. A screenshot of the Renderer tab helps the reviewer match
+   the listing to the extension; the current three show only typing.
+3. **Privacy**: paste, from above, the single purpose, the storage and host
+   permission justifications, the new contextMenus justification, and the
+   remote code answer. The data usage ticks stay as they are: text selected
+   and sent to the renderer is website content, already declared.
 4. **Submit for review**. 0.2.1 stays live until 0.2.2 is approved.
+
+Expect this review to take longer than an ordinary update: it adds a
+permission and about 1.9 MB of minified code (MathJax), on top of the page
+access that already brings a manual review. If the reviewer asks about the
+minified files or the `eval` in them, the answers are under
+[Why this should pass review](#why-this-should-pass-review).
 
 **After uploading**
 
@@ -198,6 +218,9 @@ LaTeX Squiggly)
 change, run `scripts/check-all.sh`, commit, and rebuild the zip. The version
 stays 0.2.2 until it is uploaded.
 
-Adding a permission shows every existing user a warning and disables the
-extension until they accept it, so keep the permission list as it is unless a
-feature cannot work without the change. 0.2.2 adds none.
+A permission that Chrome shows a warning for disables the extension for every
+existing user until they accept it, so add one only if a feature cannot work
+without it. 0.2.2 adds `contextMenus`, which Chrome shows no warning for, so
+existing users update without being asked. That is worth confirming before
+uploading: install 0.2.1 unpacked, replace its files with 0.2.2's, reload it
+at `chrome://extensions`, and check that nothing is asked for.
