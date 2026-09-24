@@ -5,6 +5,10 @@ The same engine as the macOS and Windows apps, as a Chrome extension. Type
 `$x^2$` gives `x²`. It stays off on Overleaf and the other TeX sites, and in
 code editors on any site.
 
+<p align="center">
+  <img src="../assets/readme-demo.gif" alt="Typing LaTeX in a message box: \epsilon, $|x_n - x|$ and \ge become ϵ, |xₙ - x| and ≥ as each space is pressed. Then the renderer draws the quadratic formula as it is typed, and Copy PNG copies it." width="760">
+</p>
+
 It only reaches the browser, so it is not a replacement for the desktop apps.
 It is for Chromebooks, and for computers where you cannot install software.
 
