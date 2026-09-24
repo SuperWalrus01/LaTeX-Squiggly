@@ -97,8 +97,8 @@ Also available as a menu bar app for macOS and a tray app for Windows, which wor
 The screenshots are real: the extension typing into a page, not a mock-up.
 So is the video: 41 seconds at 1080p, recorded from the loaded extension with
 Playwright, typing, a notice, the renderer, and its PNG pasted into a message.
-The WebM is not committed, because of its size; it is rebuilt when the
-extension's look changes.
+The WebM is not committed, because of its size. Once it is on YouTube, the
+link is what the listing keeps.
 The renderer's two show its actual popup, and the PNG it copied pasted into a
 message.
 Every image is a 24-bit PNG with no alpha channel, which the store requires.
