@@ -1,0 +1,11 @@
+{
+  "comment": "Where each file of the renderer window comes from, relative to the repository. scripts/build-mac-app.sh copies them into the app's Resources/web/, and the app serves them from there, or from the repository when run unbundled. A path ending in / is a whole folder.",
+  "files": {
+    "index.html": "Sources/LaTeXSquigglyApp/Web/renderer.html",
+    "window.js": "Sources/LaTeXSquigglyApp/Web/window.js",
+    "window.css": "Sources/LaTeXSquigglyApp/Web/window.css",
+    "shared/ui.css": "chrome/shared/ui.css",
+    "engine/tables.js": "chrome/engine/tables.js",
+    "renderer/": "chrome/renderer/"
+  }
+}

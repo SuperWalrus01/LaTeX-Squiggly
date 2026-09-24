@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let tap = EventTapController()
     private let notices = NoticePanel()
     private let browser = SymbolBrowser()
+    private let renderer = RendererWindow()
+    private lazy var rendererShortcut = GlobalShortcut { [weak self] in self?.renderer.show() }
     private let exclusions = ExclusionStore()
     private lazy var gate = SuppressionGate(store: exclusions)
     private lazy var settings = SettingsWindow(store: exclusions)
@@ -55,6 +57,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installMainMenu()
         permissions = Permissions.current()
 
+        // Taken or not, the renderer is still in the menu.
+        if !rendererShortcut.register() {
+            NSLog("LaTeX Squiggly: \(GlobalShortcut.symbols) is taken by another app; the renderer is in the menu")
+        }
+
         // Permission can be revoked while we run, and the only reliable signal
         // is to keep asking.
         permissionTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
@@ -73,6 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // to click a menu bar icon.
         if CommandLine.arguments.contains("--symbols") { browser.show() }
         if CommandLine.arguments.contains("--settings") { settings.show() }
+        if CommandLine.arguments.contains("--renderer") { renderer.show() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -333,6 +341,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         symbols.target = self
         menu.addItem(symbols)
 
+        // The key equivalent is only shown here; the global shortcut is what
+        // answers it, from any app.
+        let render = NSMenuItem(title: "Render LaTeX as Image\u{2026}",
+                                action: #selector(showRenderer),
+                                keyEquivalent: "l")
+        render.keyEquivalentModifierMask = [.control, .option, .command]
+        render.target = self
+        menu.addItem(render)
+
         menu.addItem(.separator())
 
         menu.addItem(NSMenuItem(title: "Quit LaTeX Squiggly",
@@ -368,9 +385,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         browser.show()
     }
 
+    @objc private func showRenderer() {
+        renderer.show()
+    }
+
     /// An accessory app has no menu bar of its own, which leaves the symbol
-    /// browser's search field without ⌘C, ⌘V or ⌘W. This is the minimum that
-    /// makes a window behave like a window.
+    /// browser's search field and the renderer without ⌘Z, ⌘C, ⌘V or ⌘W. This
+    /// is the minimum that makes a window behave like a window.
     private func installMainMenu() {
         let mainMenu = NSMenu()
 
@@ -386,6 +407,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let editItem = NSMenuItem()
         let editMenu = NSMenu(title: "Edit")
+        // The renderer's LaTeX box is a web view, which takes undo from here.
+        editMenu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = editMenu.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+        redo.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(.separator())
         editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
         editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
         editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")

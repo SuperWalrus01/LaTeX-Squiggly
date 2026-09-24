@@ -67,3 +67,10 @@ jobs:
         run: node chrome/test/browser.cjs
         env:
           NODE_PATH: ${{ runner.temp }}/playwright/node_modules
+
+      # The macOS app's renderer window is the same page; this runs it against
+      # a stand-in for the app. The app's side is built by the job above.
+      - name: The macOS renderer window's page
+        run: node chrome/test/mac-window.cjs
+        env:
+          NODE_PATH: ${{ runner.temp }}/playwright/node_modules

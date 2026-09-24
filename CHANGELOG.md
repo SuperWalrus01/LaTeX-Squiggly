@@ -21,6 +21,11 @@ Windows fixes ship once they have been tested on Windows.
   Overbrace and Underbrace helpers. Alt+Shift+R opens it; Ctrl+Enter copies
   and closes. MathJax 3.2.2 is included in the extension, which fetches
   nothing.
+- **Renderer in the macOS app**: Render LaTeX as Image… in the menu, or
+  ⌃⌥⌘L from any app, opens the extension's renderer in a window. Copy PNG
+  puts the image on the clipboard at the size it was previewed, which Chrome
+  cannot do, and ⌘Enter copies and hands the focus back to the app you were
+  in.
 - **Render selection as image**, on the right-click menu for selected text,
   opens the renderer with that text, less its `$` or `\[` delimiters. It adds
   the `contextMenus` permission, which shows no warning.

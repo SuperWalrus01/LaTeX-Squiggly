@@ -150,7 +150,7 @@ ignores its own output instead of feeding on it.
 The status item shows state at a glance, the LS mark when converting and a
 faded, struck-through one when not, and carries the enable toggle, permission
 shortcuts when something is missing, **Do not convert in ‹app›**,
-**Settings…** and **Symbols…**.
+**Settings…**, **Symbols…** and **Render LaTeX as Image…**.
 
 **Do not convert in ‹app›** is the only exclusion the menu carries, because it
 is the only one that needs the app in front of you to mean anything: a default
@@ -173,6 +173,46 @@ artwork in `assets/` by `scripts/make-mac-icons.sh`: the app icon into
 rather than bundled as a resource because `swift run LaTeXSquigglyApp` has no
 `Resources` directory to read from, and a project that builds with only the
 Command Line Tools should look the same however it was started.
+
+## The renderer
+
+**Render LaTeX as Image…** from the menu, or ⌃⌥⌘L from any app, opens a window
+that turns maths-mode LaTeX into an image, for pasting where LaTeX is not
+understood and Unicode cannot draw it. It is the Chrome extension's renderer,
+the same files, in a web view: live preview, autocomplete, colours, braces,
+history and settings all behave as
+[the extension's](../chrome/README.md#the-renderer) do. The app adds what a
+page cannot do for itself:
+
+- **The clipboard.** Copy PNG puts the PNG on the pasteboard with its size in
+  points, and a TIFF beside it. Chrome cannot do this, so there a 3× image
+  pastes three times too large; on the Mac, apps that read the size, which is
+  most of them, paste it at the size it was previewed, and sharp.
+- **Saving,** through the standard save panel.
+- **Settings,** kept in the app's own defaults: `rendererSettings` for the
+  image settings and `rendererLocal` for the last input and the history, each
+  a JSON object, because the page's values can include null.
+- **The shortcut,** a Carbon hot key, which needs no permission and works with
+  conversion off. It takes three modifiers because a hot key is taken from
+  every app on the Mac, and Option-Shift with a letter types a character.
+  When another app already holds it, the menu item still works.
+
+⌘Enter copies the PNG, closes the window and hands the focus back to the app
+that was in front, so ⌘V pastes where you were. Esc closes without copying.
+The window is hidden rather than closed, so MathJax loads once per launch, the
+first time it opens, and after that it appears at once.
+
+A web view will not load modules or fetch files from `file://` pages, so the
+files are served at `squiggly://app/` by `RendererFiles.swift`.
+`Sources/LaTeXSquigglyApp/Web/files.json` says where each comes from: the
+page and its script from `Web/`, everything else from `chrome/`.
+`scripts/build-mac-app.sh` copies them into the bundle's `Resources/web/`, and
+`swift run LaTeXSquigglyApp` reads them from the repository by the same map.
+`LaTeXSquigglyApp --renderer` opens the window at launch.
+
+`chrome/test/mac-window.cjs` runs the page in Chromium against a stand-in for
+the app's side of the bridge. The app's side itself, the window, clipboard,
+save panel and hot key, can only be tried on a Mac.
 
 ## Settings
 

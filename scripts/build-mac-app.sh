@@ -73,6 +73,22 @@ else
     ICON_NAME=""
 fi
 
+# The renderer window's page and the extension files it is made of, laid out
+# as Sources/LaTeXSquigglyApp/Web/files.json says. The app serves them from
+# here; see RendererFiles.swift.
+python3 - "$CONTENTS/Resources/web" <<'PY'
+import json, pathlib, shutil, sys
+out = pathlib.Path(sys.argv[1])
+files = json.loads(pathlib.Path("Sources/LaTeXSquigglyApp/Web/files.json").read_text())["files"]
+for served, source in files.items():
+    target = out / served
+    if served.endswith("/"):
+        shutil.copytree(source, target, dirs_exist_ok=True)
+    else:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+PY
+
 # LSUIElement is what makes this a menu bar app with no Dock icon.
 cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

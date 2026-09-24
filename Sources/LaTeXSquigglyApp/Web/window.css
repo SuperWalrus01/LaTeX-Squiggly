@@ -1,0 +1,16 @@
+/* The Mac app's renderer window. The renderer's own styles are in
+   renderer/renderer.css; this is only the page around them. */
+
+body { padding: 16px; }
+
+.settings { margin-top: 16px; font-size: 13px; }
+.settings summary { cursor: pointer; color: var(--muted); width: max-content; }
+.settings summary:hover { color: var(--fg); }
+.settings .card {
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+}
+.settings .hint { display: block; font-size: 12px; }
+.settings .error { color: var(--danger); margin: 0 0 8px; }

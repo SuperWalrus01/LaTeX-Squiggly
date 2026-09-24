@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LaTeX Squiggly Renderer</title>
+  <link rel="stylesheet" href="shared/ui.css">
+  <link rel="stylesheet" href="renderer/renderer.css">
+  <link rel="stylesheet" href="window.css">
+</head>
+<body>
+  <!-- The Mac app's renderer window: the extension's renderer, in a WKWebView.
+       Served to it as index.html; files.json says where every file comes from. -->
+  <main id="renderer"></main>
+
+  <details class="settings" id="settings">
+    <summary>Image settings</summary>
+    <div id="renderer-settings"></div>
+  </details>
+
+  <script src="engine/tables.js"></script>
+  <script src="renderer/host.js"></script>
+  <script src="renderer/settings.js"></script>
+  <script type="module" src="window.js"></script>
+</body>
+</html>

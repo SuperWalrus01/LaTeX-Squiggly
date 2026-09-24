@@ -26,8 +26,11 @@ let package = Package(
         .target(name: "AppSuppression"),
 
         // Phase 1: the menu bar app. Bundle it with scripts/build-mac-app.sh.
+        // Web/ is the renderer window's page, which the build script copies
+        // into the bundle itself, so SwiftPM is told to leave it alone.
         .executableTarget(name: "LaTeXSquigglyApp",
-                          dependencies: ["LaTeXUnicode", "InputTracking", "AppSuppression"]),
+                          dependencies: ["LaTeXUnicode", "InputTracking", "AppSuppression"],
+                          exclude: ["Web"]),
 
         // Try conversions by hand: `swift run latex-squiggly`.
         .executableTarget(name: "latex-squiggly", dependencies: ["LaTeXUnicode", "InputTracking"]),
