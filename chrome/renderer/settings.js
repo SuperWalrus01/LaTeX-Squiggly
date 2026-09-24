@@ -1,9 +1,10 @@
-// The renderer's settings, shared by the popup and the options page. Kept
-// apart from shared/settings.js, which every web page loads, because nothing
-// here is any page's business.
+// The renderer's settings, shared by the popup, the options page and the Mac
+// app's renderer window. Kept apart from shared/settings.js, which every web
+// page loads, because nothing here is any page's business.
 //
-// Stored in chrome.storage.sync like the typing settings. The last input is
-// not a setting: the popup keeps it in chrome.storage.local.
+// Stored in the host's sync area: chrome.storage.sync like the typing
+// settings in the extension, the app's own defaults on the Mac. The last input
+// is not a setting: it goes in the local area. Needs renderer/host.js first.
 
 (() => {
   const ns = (globalThis.LaTeXSquiggly ??= {});
@@ -41,13 +42,13 @@
 
   async function load() {
     try {
-      return clean(await chrome.storage.sync.get(defaults()));
+      return clean(await ns.host.get("sync", defaults()));
     } catch {
       return defaults();
     }
   }
 
-  const save = (changes) => chrome.storage.sync.set(changes);
+  const save = (changes) => ns.host.set("sync", changes);
 
   ns.rendererSettings = { SCALES, FONT_SIZE, PADDING, BACKGROUNDS, defaults, clean, load, save };
 })();

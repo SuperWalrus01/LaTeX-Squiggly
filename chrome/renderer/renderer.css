@@ -1,0 +1,274 @@
+/* The renderer's styles, shared by the extension's popup and the Mac app's
+   renderer window. Both pages load shared/ui.css first, for the palette and
+   the buttons. */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.source { position: relative; }
+#latex {
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  padding: 6px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--fg);
+  font: 13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 2;
+  left: 8px;
+  top: calc(100% - 4px);
+  min-width: 220px;
+  max-width: calc(100% - 16px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.18);
+}
+.suggestions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.suggestions li[aria-selected="true"] { background: var(--accent); color: var(--accent-fg); }
+.suggestions .name { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+.suggestions .glyph { min-width: 1.2em; text-align: center; }
+
+/* The preview shows the image as it will be: white, or a light checkerboard
+   where it will be transparent, whatever the popup's own theme. */
+.preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  max-height: 240px;
+  margin-top: 10px;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  color: #000000;
+}
+.preview.white { background: #ffffff; }
+.preview.transparent {
+  background: repeating-conic-gradient(#e6e6e6 0 25%, #ffffff 0 50%) 0 0 / 16px 16px;
+}
+/* Only the outer SVG: MathJax draws the straight parts of stretched braces
+   and arrows as SVGs nested inside it, which must keep their own sizes. */
+.preview > svg { max-width: 100%; height: auto; flex: none; }
+.preview.stale > svg { opacity: 0.4; }
+.preview .placeholder { margin: 0; font-size: 12px; color: #6b5d50; }
+
+.error, .warning {
+  margin: 6px 0 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.error { color: var(--danger); }
+.warning { color: var(--muted); }
+.error.flash { animation: flash 400ms ease; }
+@keyframes flash {
+  0%, 100% { background: transparent; }
+  30% { background: color-mix(in srgb, var(--danger) 20%, transparent); }
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.swatches { display: flex; gap: 4px; margin-right: auto; }
+.swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  background: var(--colour);
+  cursor: pointer;
+  position: relative;
+}
+.swatch[data-colour="#000000"] { --colour: #000000; }
+.swatch[data-colour="#ffffff"] { --colour: #ffffff; }
+.swatch[data-colour="#808080"] { --colour: #808080; }
+.swatch[data-colour="#ff0000"] { --colour: #ff0000; }
+.swatch[data-colour="#0000ff"] { --colour: #0000ff; }
+.swatch[data-colour="#008000"] { --colour: #008000; }
+.swatch[aria-pressed="true"], .swatch.custom.active {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+.swatch.custom {
+  display: inline-block;
+  background: var(--chosen, conic-gradient(red, yellow, lime, aqua, blue, magenta, red));
+}
+.swatch.custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.swatch.custom:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.button.small { padding: 3px 10px; font-size: 13px; }
+.button:disabled { opacity: 0.45; cursor: not-allowed; }
+.button:disabled:hover { border-color: var(--edge); }
+.button.primary:disabled:hover { border-color: var(--accent); }
+
+.label-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+.label-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.message { min-height: 1.5em; margin: 6px 0 0; font-size: 12px; }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: auto;
+}
+.segmented button {
+  border: none;
+  background: var(--surface);
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.segmented button + button { border-left: 1px solid var(--edge); }
+.segmented button[aria-checked="true"] { background: var(--accent); color: var(--accent-fg); }
+.segmented button:focus-visible { outline-offset: -3px; }
+
+.renderer-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.history { margin-top: 12px; font-size: 13px; }
+.history summary { cursor: pointer; color: var(--muted); width: max-content; }
+.history summary:hover { color: var(--fg); }
+.history-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+.history-list li { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.history-list .entry {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 8px;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+}
+.history-list .entry:hover { border-color: var(--accent); }
+.history-list .entry > svg { max-width: 100%; height: auto; }
+.history-list .entry code { background: none; border: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-list .remove {
+  flex: none;
+  border: none;
+  background: none;
+  color: var(--muted);
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.history-list .remove:hover { color: var(--danger); }
+.history-empty { margin: 8px 0 0; font-size: 12px; }
+#history-clear { display: inline-block; margin-top: 4px; font-size: 12px; }
+
+/* MARK: Settings form, renderer/settings-form.html */
+
+.fields { padding: 4px 16px 12px; }
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+}
+.field + .field { border-top: 1px solid var(--edge); }
+.field.stacked { padding-bottom: 8px; }
+.field select, .field input[type="number"] {
+  flex: none;
+  width: 132px;
+  padding: 4px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--bg);
+  font: inherit;
+  color: inherit;
+}
+.field input[type="color"] {
+  flex: none;
+  width: 48px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  background: var(--bg);
+}
+#render-macros {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--bg);
+  color: inherit;
+  font: 13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  resize: vertical;
+}

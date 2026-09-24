@@ -1,13 +1,16 @@
-// The popup's Renderer tab: a LaTeX box, a live preview, and buttons that copy
-// or save the result as PNG or SVG. Loaded only when the tab is opened, so the
-// Typing tab never pays for MathJax.
+// The renderer: a LaTeX box, a live preview, and buttons that copy or save the
+// result as PNG or SVG. The extension's popup loads it only when its Renderer
+// tab is opened, so the Typing tab never pays for MathJax; the Mac app's
+// renderer window loads it straight away. Its markup is renderer/panel.html,
+// and everything it asks of the browser or the app goes through
+// renderer/host.js.
 
 import { loadMathJax, knowsCommand, render, standalone, svgText, pngBlob } from "./render.js";
 import { allCommands } from "./commands.js";
 import { Editor, balanced } from "./editor.js";
 import * as history from "./history.js";
 
-const { rendererSettings, tables } = globalThis.LaTeXSquiggly;
+const { rendererSettings, tables, host } = globalThis.LaTeXSquiggly;
 
 // Measured by feel in the popup: 150 ms is past the gap between keys in
 // ordinary typing, so the preview does not redraw on every key. An error waits
@@ -54,7 +57,7 @@ export async function startRenderer({ selectAll, input }) {
     saveInput();
   } else {
     try {
-      const { rendererInput } = await chrome.storage.local.get("rendererInput");
+      const { rendererInput } = await host.get("local", "rendererInput");
       if (typeof rendererInput === "string") textarea.value = rendererInput;
     } catch {
       // Nothing saved, or local storage unavailable: start empty.
@@ -68,7 +71,7 @@ export async function startRenderer({ selectAll, input }) {
   document.addEventListener("keydown", keydown);
   wireButtons();
 
-  chrome.storage.onChanged.addListener(async (changes, area) => {
+  host.onChanged(async (changes, area) => {
     if (area !== "sync" || !Object.keys(changes).some((key) => key.startsWith("render"))) return;
     const macrosChanged = "renderMacros" in changes;
     config = await rendererSettings.load();
@@ -102,7 +105,7 @@ function focusSource(selectAll) {
 
 function saveInput() {
   try {
-    chrome.storage.local.set({ rendererInput: textarea.value }).catch(() => {});
+    host.set("local", { rendererInput: textarea.value }).catch(() => {});
   } catch {
     // Saving the input is a convenience; the editor works without it.
   }
@@ -202,10 +205,9 @@ async function copyPng() {
   const image = currentImage();
   if (!image) return false;
   try {
-    // The blob is handed over as a promise, so the copy starts inside the
-    // click, while the page still has the user's permission to write.
+    // Not awaited: the host needs the copy started inside the click.
     const blob = pngBlob(image, { scale: config.renderScale, background: config.renderBackground });
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    await host.copyImage(blob, { width: image.width, height: image.height });
     say("Copied.");
     await remember();
     return true;
@@ -219,7 +221,7 @@ async function copySvg() {
   const image = currentImage();
   if (!image) return;
   try {
-    await navigator.clipboard.writeText(svgText(image.svg));
+    await host.copyText(svgText(image.svg));
     say("Copied the SVG as text.");
     await remember();
   } catch (e) {
@@ -233,13 +235,7 @@ async function download(kind) {
   const blob = kind === "png"
     ? await pngBlob(image, { scale: config.renderScale, background: config.renderBackground })
     : new Blob([svgText(image.svg)], { type: "image/svg+xml" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `equation.${kind}`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  await remember();
+  if (await host.save(blob, `equation.${kind}`)) await remember();
 }
 
 // MARK: History
@@ -299,7 +295,7 @@ async function keydown(event) {
   if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.altKey) {
     event.preventDefault();
     if (!labelForm.hidden) return;
-    if (await copyPng()) setTimeout(() => window.close(), CLOSE_DELAY);
+    if (await copyPng()) setTimeout(() => host.close(), CLOSE_DELAY);
     return;
   }
   if (event.key === "Escape" && !event.defaultPrevented) {
@@ -308,7 +304,7 @@ async function keydown(event) {
       closeLabelForm();
       return;
     }
-    window.close();
+    host.close();
   }
 }
 
@@ -356,8 +352,7 @@ function wireButtons() {
 
   $("image-settings").addEventListener("click", (event) => {
     event.preventDefault();
-    chrome.tabs.create({ url: chrome.runtime.getURL("options/options.html#renderer") });
-    window.close();
+    host.openSettings();
   });
 }
 
@@ -451,9 +446,9 @@ function showSettings() {
 async function showShortcuts() {
   if (/Mac/.test(navigator.platform)) $("copy-keys").textContent = "⌘Enter";
   try {
-    const [command] = (await chrome.commands.getAll()).filter((c) => c.name === "open-renderer");
-    if (command?.shortcut) {
-      $("open-keys").textContent = command.shortcut;
+    const shortcut = await host.shortcut("open-renderer");
+    if (shortcut) {
+      $("open-keys").textContent = shortcut;
       $("open-shortcut").hidden = false;
     }
   } catch {

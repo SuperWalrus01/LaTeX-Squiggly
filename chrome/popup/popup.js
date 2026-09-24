@@ -28,9 +28,10 @@ function showTab(name, { selectAll = false, input } = {}) {
   chrome.storage.local.set({ popupTab: name }).catch(() => {});
   if (name === "renderer" && !rendererStarted) {
     rendererStarted = true;
-    import("../renderer/panel.js").then((panel) => panel.startRenderer({ selectAll, input }));
+    import("../renderer/mount.js").then(({ mountRenderer }) =>
+      mountRenderer(document.getElementById("renderer"), { selectAll, input }));
   } else if (name === "renderer") {
-    document.getElementById("latex").focus();
+    document.getElementById("latex")?.focus();
   }
 }
 

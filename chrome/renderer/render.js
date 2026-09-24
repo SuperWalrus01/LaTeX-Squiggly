@@ -1,9 +1,11 @@
-// LaTeX to SVG and PNG, with MathJax, for the popup's renderer. Runs only in
-// extension pages: MathJax is never loaded into a web page.
+// LaTeX to SVG and PNG, with MathJax, for the renderer. Runs only in the
+// extension's own pages and the Mac app's renderer window: MathJax is never
+// loaded into a web page.
 //
 // MathJax is loaded on first use, from the copy in renderer/mathjax/ that
 // scripts/fetch-mathjax.sh wrote, because Manifest V3 allows no remote code.
 
+const { host } = globalThis.LaTeXSquiggly;
 let loading = null;
 
 // Every TeX package MathJax has, and physics, which it ships but leaves out of
@@ -17,7 +19,7 @@ export function loadMathJax() {
     globalThis.MathJax = {
       loader: {
         load: ["input/tex-full", "output/svg"],
-        paths: { mathjax: chrome.runtime.getURL("renderer/mathjax") },
+        paths: { mathjax: host.url("renderer/mathjax") },
       },
       tex: {
         packages: { "[+]": ["physics"], "[-]": ["require", "autoload", "noerrors", "noundefined", "html"] },
@@ -35,7 +37,7 @@ export function loadMathJax() {
       },
     };
     const script = document.createElement("script");
-    script.src = chrome.runtime.getURL("renderer/mathjax/startup.js");
+    script.src = host.url("renderer/mathjax/startup.js");
     script.onerror = () => reject(new Error("MathJax could not be loaded."));
     document.head.append(script);
   });

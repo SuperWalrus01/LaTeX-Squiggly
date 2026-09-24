@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LaTeX Squiggly Settings</title>
   <link rel="stylesheet" href="../shared/ui.css">
+  <link rel="stylesheet" href="../renderer/renderer.css">
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
@@ -77,59 +78,7 @@
         The popup's Renderer tab turns maths-mode LaTeX into an image, for pasting where LaTeX is
         not understood. These settings apply to every image it makes.<span id="renderer-shortcut"></span>
       </p>
-      <form class="card fields" id="renderer-form">
-        <label class="field">
-          <span>
-            <span>Scale</span>
-            <span class="hint muted">PNG pixels for each pixel of the image. Higher is sharper, and
-              pastes larger.</span>
-          </span>
-          <select id="render-scale"></select>
-        </label>
-        <label class="field">
-          <span>
-            <span>Font size</span>
-            <span class="hint muted">In pixels, 12 to 48.</span>
-          </span>
-          <input id="render-font-size" type="number" min="12" max="48" step="1">
-        </label>
-        <label class="field">
-          <span>
-            <span>Padding</span>
-            <span class="hint muted">Space around the equation, in pixels.</span>
-          </span>
-          <input id="render-padding" type="number" min="0" max="64" step="1">
-        </label>
-        <label class="field">
-          <span>
-            <span>Background</span>
-            <span class="hint muted">For PNG. White shows in dark-mode apps, where black text on
-              transparent would not. SVG is always transparent.</span>
-          </span>
-          <select id="render-background">
-            <option value="white">White</option>
-            <option value="transparent">Transparent</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>
-            <span>Text colour</span>
-            <span class="hint muted">For the whole image. <code>\textcolor</code> in the LaTeX
-              overrides it.</span>
-          </span>
-          <input id="render-colour" type="color">
-        </label>
-        <label class="field stacked" for="render-macros">
-          <span>
-            <span>Your commands</span>
-            <span class="hint muted">Definitions added to every image, such as
-              <code>\newcommand{\R}{\mathbb{R}}</code>, one or more to a line.</span>
-          </span>
-        </label>
-        <textarea id="render-macros" rows="4" spellcheck="false" autocomplete="off"
-                  placeholder="\newcommand{\R}{\mathbb{R}}"></textarea>
-        <p class="error" id="render-save-error" role="alert" hidden></p>
-      </form>
+      <div id="renderer-settings"></div>
     </section>
 
     <section>
@@ -180,6 +129,7 @@
 
   <script src="../engine/tables.js"></script>
   <script src="../shared/settings.js"></script>
+  <script src="../renderer/host.js"></script>
   <script src="../renderer/settings.js"></script>
   <script type="module" src="options.js"></script>
 </body>
