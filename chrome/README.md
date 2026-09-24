@@ -206,7 +206,7 @@ operators Re and Im, and `\braket` takes two arguments.
   only permission is `contextMenus`, which shows the user no warning. Chrome
   turns line breaks in a selection into spaces, so a `%` comment in selected
   LaTeX comments out the rest of it.
-- **History:** the LaTeX of the last 20 images copied or saved, newest first,
+- **History:** the LaTeX of the last 10 images copied or saved, newest first,
   each once, in local storage. No images are kept; the thumbnails are drawn
   when the list is opened, which it is not by default, so a full history
   costs the popup nothing when it opens. Click one to load it, ✕ to remove it.

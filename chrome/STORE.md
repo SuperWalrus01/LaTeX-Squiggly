@@ -110,7 +110,7 @@ Write maths anywhere on the web: LaTeX commands typed into web page text fields 
 **Permission justification: storage**
 
 ```
-Saves the user's settings: whether conversion is on, whether notices are shown, the list of sites where the extension stays off, and the renderer's image settings. Also keeps, locally, the last LaTeX typed into the popup's renderer, so it is there when the popup reopens, and the LaTeX of the last 20 images the user copied or saved, as a history they can clear. Nothing typed into web pages is stored.
+Saves the user's settings: whether conversion is on, whether notices are shown, the list of sites where the extension stays off, and the renderer's image settings. Also keeps, locally, the last LaTeX typed into the popup's renderer, so it is there when the popup reopens, and the LaTeX of the last 10 images the user copied or saved, as a history they can clear. Nothing typed into web pages is stored.
 ```
 
 **Permission justification: contextMenus**

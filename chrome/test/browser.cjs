@@ -646,20 +646,20 @@ const DOCS_STAND_IN = `<!doctype html><meta charset=utf-8><body>
   await h.click('#copy-svg');
   await h.waitForTimeout(200);
   const stored = await h.evaluate(async () => (await chrome.storage.local.get('rendererHistory')).rendererHistory.map((e) => e.source));
-  check('history: 20 entries, newest first, each once',
-    [stored.length, stored[0], stored[1], stored.filter((s) => s === 'x^{10}').length, stored.includes('x^{4}')],
-    [20, 'x^{10}', 'x^{24}', 1, false]);
+  check('history: 10 entries, newest first, each once',
+    [stored.length, stored[0], stored[1], stored.filter((s) => s === 'x^{10}').length, stored.includes('x^{15}')],
+    [10, 'x^{10}', 'x^{24}', 1, false]);
   check('history: closed, with nothing drawn, until opened',
     [await h.$eval('#history', (e) => e.open), await h.$eval('#history-list', (e) => e.children.length)], [false, 0]);
   await h.click('#history summary');
   await h.waitForTimeout(200);
   check('history: opening it draws every entry',
-    await h.$$eval('#history-list .entry > svg', (e) => e.length), 20);
+    await h.$$eval('#history-list .entry > svg', (e) => e.length), 10);
   await h.click('#history-list li:nth-child(3) .entry');
   check('history: an entry loads into the editor', await h.$eval('#latex', (e) => e.value), 'x^{23}');
   await h.click('#history-list li:nth-child(1) .remove');
   await h.waitForTimeout(100);
-  check('history: ✕ removes an entry', await h.$$eval('#history-list li', (e) => e.length), 19);
+  check('history: ✕ removes an entry', await h.$$eval('#history-list li', (e) => e.length), 9);
   await h.click('#history-clear');
   await h.waitForTimeout(100);
   check('history: Clear history empties it',

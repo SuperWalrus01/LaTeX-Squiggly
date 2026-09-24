@@ -24,7 +24,7 @@ Windows fixes ship once they have been tested on Windows.
 - **Render selection as image**, on the right-click menu for selected text,
   opens the renderer with that text, less its `$` or `\[` delimiters. It adds
   the `contextMenus` permission, which shows no warning.
-- A **history** in the renderer of the last 20 equations copied or saved,
+- A **history** in the renderer of the last 10 equations copied or saved,
   closed until opened, with thumbnails drawn only then.
 
 - **Google Docs** in the Chrome extension, on by default with a switch in the
