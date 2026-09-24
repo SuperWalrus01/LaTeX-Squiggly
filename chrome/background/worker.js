@@ -37,10 +37,16 @@ const ICONS = {
 // Two states, not three. The icon answers "is it converting here", which has
 // the same answer whether the extension is paused or staying quiet on
 // Overleaf; the tooltip and the popup say which.
+//
+// The tab may be gone by the time this runs: closed at once, or a page Chrome
+// prerendered and never showed. Reading lastError in a callback is what tells
+// Chrome the failure was expected. setIcon logs one to the extensions page
+// even when its promise is caught.
 function showState(on, title, tabId) {
   const where = tabId === undefined ? {} : { tabId };
-  chrome.action.setIcon({ ...where, path: on ? ICONS.on : ICONS.off }).catch(() => {});
-  chrome.action.setTitle({ ...where, title }).catch(() => {});
+  const ignoreError = () => void chrome.runtime.lastError;
+  chrome.action.setIcon({ ...where, path: on ? ICONS.on : ICONS.off }, ignoreError);
+  chrome.action.setTitle({ ...where, title }, ignoreError);
 }
 
 // The default for every tab, which a page's own report then overrides. Pages
