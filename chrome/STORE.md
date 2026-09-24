@@ -3,7 +3,7 @@
 Everything the Developer Dashboard asks for, in the order it asks. The text in
 the boxes is ready to paste.
 
-The text here is for the next upload, 0.2.2, which adds Google Docs and the
+The text here is for the next upload, 0.3.0, which adds Google Docs and the
 renderer. Much of what the dashboard holds from 0.2.1 has changed: the
 description, the single purpose, the storage and host permission
 justifications, the remote code answer, and a new justification for
@@ -161,9 +161,11 @@ first. Unlisted items go through the same review.
 
 ## Uploading the next version
 
-The next version is **0.2.2**: Google Docs mode and the renderer. The version
+The next version is **0.3.0**: Google Docs mode and the renderer. It goes
+straight from 0.2.1 to 0.3.0, a minor version for new behaviour, as
+`docs/releasing.md` says; there is no 0.2.2. The version
 is set everywhere, and the file to upload is
-`build/LaTeX-Squiggly-0.2.2-chrome.zip`. The renderer is on the branch
+`build/LaTeX-Squiggly-0.3.0-chrome.zip`. The renderer is on the branch
 `claude/chrome-extension-feasibility-6kahfo` until it is merged into `main`,
 which has to happen first: the privacy policy is published from `main`.
 
@@ -190,7 +192,7 @@ which has to happen first: the privacy policy is published from `main`.
 **In the dashboard** (<https://chrome.google.com/webstore/devconsole>, then
 LaTeX Squiggly)
 
-1. **Package → Upload new package**, and choose the 0.2.2 zip.
+1. **Package → Upload new package**, and choose the 0.3.0 zip.
 2. **Store listing**: paste the description above; it now mentions Google Docs
    and the renderer. A screenshot of the Renderer tab helps the reviewer match
    the listing to the extension; the current three show only typing.
@@ -198,7 +200,7 @@ LaTeX Squiggly)
    permission justifications, the new contextMenus justification, and the
    remote code answer. The data usage ticks stay as they are: text selected
    and sent to the renderer is website content, already declared.
-4. **Submit for review**. 0.2.1 stays live until 0.2.2 is approved.
+4. **Submit for review**. 0.2.1 stays live until 0.3.0 is approved.
 
 Expect this review to take longer than an ordinary update: it adds a
 permission and about 1.9 MB of minified code (MathJax), on top of the page
@@ -208,19 +210,19 @@ minified files or the `eval` in them, the answers are under
 
 **After uploading**
 
-1. In `CHANGELOG.md`, rename **Unreleased** to `[0.2.2]` with the date.
-2. Tag it: `git tag v0.2.2 && git push origin v0.2.2`.
-3. From then on, 0.2.2 is fixed. The next change goes into 0.2.3: set it in
+1. In `CHANGELOG.md`, rename **Unreleased** to `[0.3.0]` with the date.
+2. Tag it: `git tag v0.3.0 && git push origin v0.3.0`.
+3. From then on, 0.3.0 is fixed. The next change goes into 0.3.1: set it in
    `VERSION`, `chrome/manifest.json` and `windows/LaTeXSquiggly.App/app.manifest`
-   (as `0.2.3.0`), and `scripts/check-version.py` checks that all three agree.
+   (as `0.3.1.0`), and `scripts/check-version.py` checks that all three agree.
 
-**Changing something before 0.2.2 is uploaded** needs none of that: make the
+**Changing something before 0.3.0 is uploaded** needs none of that: make the
 change, run `scripts/check-all.sh`, commit, and rebuild the zip. The version
-stays 0.2.2 until it is uploaded.
+stays 0.3.0 until it is uploaded.
 
 A permission that Chrome shows a warning for disables the extension for every
 existing user until they accept it, so add one only if a feature cannot work
-without it. 0.2.2 adds `contextMenus`, which Chrome shows no warning for, so
+without it. 0.3.0 adds `contextMenus`, which Chrome shows no warning for, so
 existing users update without being asked. That is worth confirming before
-uploading: install 0.2.1 unpacked, replace its files with 0.2.2's, reload it
+uploading: install 0.2.1 unpacked, replace its files with 0.3.0's, reload it
 at `chrome://extensions`, and check that nothing is asked for.

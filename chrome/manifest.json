@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "LaTeX Squiggly",
   "short_name": "Squiggly",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Write maths anywhere: type \\alpha or $x^2$ in any text box to get α or x², or render LaTeX to an image to paste.",
   "minimum_chrome_version": "102",
   "icons": {

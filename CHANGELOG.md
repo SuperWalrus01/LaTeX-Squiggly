@@ -8,7 +8,7 @@ Every release, newest first. The format follows
 
 ## Unreleased
 
-To be released as 0.2.2. The Chrome extension goes to the store first; the
+To be released as 0.3.0. The Chrome extension goes to the store first; the
 Windows fixes ship once they have been tested on Windows.
 
 ### Added
