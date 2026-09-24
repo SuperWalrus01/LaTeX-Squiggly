@@ -54,6 +54,7 @@
         "engine/tables.js",
         "engine/engine.js",
         "shared/settings.js",
+        "content/keyboard.js",
         "content/content.js",
         "content/docs.js"
       ],

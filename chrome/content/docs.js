@@ -1,5 +1,20 @@
 // Google Docs mode: on by default, and switched off in the settings.
 //
+// What this script reads, keeps, sends and types:
+//
+// - It runs only on docs.google.com, and only follows keys in a document's
+//   hidden input frame while Google Docs mode is on and the extension is not
+//   paused.
+// - It keeps the last 64 characters typed, in memory, and forgets them after
+//   4 seconds without a key, and on every click, arrow key and shortcut.
+//   Nothing typed is ever stored.
+// - Its messages stay inside the extension: "docs-forget", which carries
+//   nothing, and "docs-notice", the text of a notice to show in the top frame.
+//   Nothing goes over the network.
+// - It types into Docs by sending the page Backspace and character key
+//   events, and only to replace a command the user has just finished with a
+//   space. See typeIntoDocs, at the end.
+//
 // Everywhere else the extension reads the text in front of the caret and only
 // replaces it when it is exactly what was typed. Google Docs gives nothing to
 // read: it draws the document itself and takes typing through a hidden frame,
@@ -21,7 +36,8 @@
 // "Google Docs" in chrome/README.md, and re-run that test after any change here.
 
 (() => {
-  const { engine, settings } = globalThis.LaTeXSquiggly;
+  const { engine, settings, keyboard } = globalThis.LaTeXSquiggly;
+  const { trimmed, MODIFIERS, isShortcut, framedHosts } = keyboard;
 
   const DOCS_HOSTS = ["docs.google.com"];
 
@@ -31,16 +47,6 @@
 
   // More deletes than any real command needs means the record is wrong.
   const MAXIMUM_DELETES = 40;
-
-  const CAPACITY = 64;
-
-  function framedHosts() {
-    const hosts = [location.hostname];
-    for (const origin of location.ancestorOrigins ?? []) {
-      try { hosts.push(new URL(origin).hostname); } catch { /* an opaque origin has no host */ }
-    }
-    return hosts;
-  }
 
   if (settings.matchingSite(framedHosts(), DOCS_HOSTS) === null) return;
 
@@ -82,21 +88,9 @@
     if (message?.type === "docs-forget") forget();
   });
 
-  function trimmed(text) {
-    const characters = engine.characters(text);
-    return characters.length <= CAPACITY ? text : characters.slice(-CAPACITY).join("");
-  }
-
   // The top frame shows the notice; nothing in this frame is visible.
   function notify(title, message) {
     chrome.runtime.sendMessage({ type: "docs-notice", title, message }).catch(() => {});
-  }
-
-  const MODIFIERS = new Set(["Shift", "Control", "Alt", "AltGraph", "Meta", "CapsLock", "Fn", "OS"]);
-
-  function isShortcut(event) {
-    const altGr = event.getModifierState?.("AltGraph") || (event.ctrlKey && event.altKey);
-    return (event.ctrlKey || event.metaKey) && !altGr;
   }
 
   // Only real keys are followed. The keys this script sends are not trusted,

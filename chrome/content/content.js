@@ -1,6 +1,18 @@
 // Watches typing in the page and replaces LaTeX with Unicode when a space
 // completes it.
 //
+// What this script reads, keeps and sends:
+//
+// - It reads what is typed, and the text just before the caret, only in text
+//   boxes and rich text editors: never in password fields or code editors,
+//   and not at all while paused or on an excluded site.
+// - It keeps the last 64 characters typed, in memory, and forgets them on
+//   every click, arrow key and focus change. Nothing typed is ever stored.
+// - It tells the background worker whether this tab is converting, so the
+//   toolbar icon can show it, and answers the popup's question of which site
+//   the tab is on. Neither carries anything typed, and nothing goes over the
+//   network.
+//
 // The desktop apps count keystrokes and type backspaces, trusting that the
 // buffer matches what is on screen. A page gives us something better: the text
 // itself. So the buffer here only decides *what* the user just typed, and
@@ -8,15 +20,22 @@
 // exactly that. When the two disagree, because a site rewrote the field or the
 // typing went to a hidden element (Google Docs does this), the space goes
 // through untouched. Doing nothing is always a correct outcome.
-//
-// Nothing typed is stored or sent anywhere. The buffer holds at most 64
-// characters, in memory, and is cleared on every click, arrow key and focus
-// change.
 
 (() => {
-  const { engine, settings } = globalThis.LaTeXSquiggly;
+  const { engine, settings, keyboard } = globalThis.LaTeXSquiggly;
+  const { trimmed, MODIFIERS, isShortcut, framedHosts } = keyboard;
 
-  const CAPACITY = 64;
+  // Google Docs, Sheets and Slides draw their own text and take typing through
+  // a hidden frame, which Docs reads and empties. Converting there could hand
+  // Docs a second copy of what was typed, so inside Docs every frame below the
+  // top one does nothing at all. The check cannot rest on the frame's address:
+  // a frame the page has written into with document.open takes the page's
+  // own address, so it looks like any other docs.google.com frame. Docs' own
+  // text boxes, such as comments, are in the top frame and still convert.
+  const HIDDEN_INPUT_HOSTS = ["docs.google.com"];
+  if (window !== window.top && settings.matchingSite(framedHosts(), HIDDEN_INPUT_HOSTS) !== null) {
+    return;
+  }
 
   // Code editors write LaTeX source too, and on the web they are components
   // rather than apps, so they are recognised by the editor's own markup.
@@ -36,27 +55,8 @@
 
   // MARK: Settings and suppression
 
-  function framedHosts() {
-    const hosts = [location.hostname];
-    for (const origin of location.ancestorOrigins ?? []) {
-      try { hosts.push(new URL(origin).hostname); } catch { /* an opaque origin has no host */ }
-    }
-    return hosts;
-  }
-
   const excludedBy = () => settings.matchingSite(framedHosts(), config?.excludedSites ?? []);
 
-  // Google Docs, Sheets and Slides draw their own text and take typing through
-  // a hidden frame, which Docs reads and empties. Converting there could hand
-  // Docs a second copy of what was typed, so inside Docs every frame below the
-  // top one does nothing at all. The check cannot rest on the frame's address:
-  // a frame the page has written into with document.open takes the page's
-  // own address, so it looks like any other docs.google.com frame. Docs' own
-  // text boxes, such as comments, are in the top frame and still convert.
-  const HIDDEN_INPUT_HOSTS = ["docs.google.com"];
-  if (window !== window.top && settings.matchingSite(framedHosts(), HIDDEN_INPUT_HOSTS) !== null) {
-    return;
-  }
   const active = () => config !== null && config.enabled && excludedBy() === null;
 
   settings.load().then((loaded) => { config = loaded; report(); });
@@ -127,6 +127,25 @@
     return null;
   }
 
+  // The selection that covers the host. A shadow root keeps its own, and the
+  // document's only reports the shadow host, so an editor inside a web
+  // component was never found.
+  function selectionFor(host) {
+    const root = host.getRootNode();
+    if (root instanceof ShadowRoot && typeof root.getSelection === "function") return root.getSelection();
+    return getSelection();
+  }
+
+  // Whether the element has a selection rather than a caret, in which case a
+  // deletion removes more than the one character the buffer would drop.
+  function hasSelection(element) {
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      return element.selectionStart !== element.selectionEnd;
+    }
+    const selection = selectionFor(element);
+    return !!selection && !selection.isCollapsed;
+  }
+
   // MARK: Listening
 
   // Every listener this script puts on the window, so they can be put back.
@@ -150,25 +169,9 @@
 
   // MARK: Following what is typed
 
-  function trimmed(text) {
-    if (text.length <= CAPACITY) return text;
-    const characters = engine.characters(text);
-    return characters.length <= CAPACITY ? text : characters.slice(-CAPACITY).join("");
-  }
-
-  // Whether the element has a selection rather than a caret, in which case a
-  // deletion removes more than the one character the buffer would drop.
-  function hasSelection(element) {
-    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      return element.selectionStart !== element.selectionEnd;
-    }
-    const selection = selectionFor(element);
-    return !!selection && !selection.isCollapsed;
-  }
-
   on("beforeinput", (event) => {
     if (replacing) return;
-    const target = editable(deepActiveElement());
+    const target = active() ? editable(deepActiveElement()) : null;
     if (!target) { reset(); return; }
 
     // Text being composed arrives in pieces and may still change. It is
@@ -203,24 +206,11 @@
   on("compositionstart", () => { composing = true; }, true);
   on("compositionend", (event) => {
     composing = false;
-    const target = editable(deepActiveElement());
+    const target = active() ? editable(deepActiveElement()) : null;
     if (!target) { reset(); return; }
     if (buffer.element !== target.element) buffer = { element: target.element, text: "" };
     if (event.data) buffer.text = trimmed(buffer.text + event.data);
   }, true);
-
-  // Pressed on their own, these change nothing.
-  const MODIFIERS = new Set(["Shift", "Control", "Alt", "AltGraph", "Meta", "CapsLock", "Fn", "OS"]);
-
-  // A shortcut, as opposed to a modifier used for typing. AltGr is Control
-  // and Alt together as far as the browser is concerned, and on most
-  // European keyboards it is how { } \ are typed; Option does the same on a
-  // Mac. Neither is a shortcut. Resetting on every modified key used to mean
-  // \frac{1}{2} could never convert on those keyboards.
-  function isShortcut(event) {
-    const altGr = event.getModifierState?.("AltGraph") || (event.ctrlKey && event.altKey);
-    return (event.ctrlKey || event.metaKey) && !altGr;
-  }
 
   // MARK: The terminator
 
@@ -293,15 +283,6 @@
   // Walks back from the caret through the text nodes of the editing host,
   // collecting exactly as many code units as the source has, and returns the
   // range covering them when they match.
-  // The selection that covers the host. A shadow root keeps its own, and the
-  // document's only reports the shadow host, so an editor inside a web
-  // component was never found.
-  function selectionFor(host) {
-    const root = host.getRootNode();
-    if (root instanceof ShadowRoot && typeof root.getSelection === "function") return root.getSelection();
-    return getSelection();
-  }
-
   function richSource(host, source) {
     const selection = selectionFor(host);
     if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) return null;
