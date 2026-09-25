@@ -1,0 +1,63 @@
+# Starts the Windows app on a real Windows machine and checks it stays running,
+# for the report that it closes as soon as it opens. The current source and
+# the released 0.2.0 exe are both launched, so the two can be compared.
+# Logs and screenshots are uploaded as an artifact.
+
+name: Windows smoke test
+
+on:
+  push:
+    paths:
+      - "windows/**"
+      - ".github/workflows/windows-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Start the app (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build the current source
+        shell: pwsh
+        run: .\windows\build.ps1
+
+      - name: Start the current build
+        id: current
+        continue-on-error: true
+        shell: pwsh
+        run: .\windows\smoke-test.ps1 -Exe "windows\dist\win-x64\LaTeX Squiggly.exe" -Label current
+
+      - name: Start the released 0.2.0 exe
+        id: released
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $url = "https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/download/v0.2.0/LaTeX-Squiggly-0.2.0-windows-x64.exe"
+          Invoke-WebRequest $url -OutFile "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe"
+          .\windows\smoke-test.ps1 -Exe "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe" -Label released-0.2.0
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-${{ matrix.os }}
+          path: smoke-results/
+
+      - name: Fail if either build did not stay up
+        if: steps.current.outcome == 'failure' || steps.released.outcome == 'failure'
+        shell: pwsh
+        run: |
+          Write-Host "current: ${{ steps.current.outcome }}, released 0.2.0: ${{ steps.released.outcome }}"
+          exit 1
