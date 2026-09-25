@@ -4,8 +4,13 @@
 // that answers as the app does and records what it was asked. It proves the
 // page's side of the bridge; the app's side can only be tried on a Mac.
 //
+// With --windows it is the Windows app's window instead: the same page, whose
+// bridge is WebView2's chrome.webview, where each answer is a message back
+// carrying the id of the question. The app's side of that is tried on real
+// Windows by windows/renderer-test.ps1.
+//
 // Needs Playwright, as chrome/test/browser.cjs does:
-//   NODE_PATH=/tmp/squiggly-test/node_modules node chrome/test/mac-window.cjs
+//   NODE_PATH=/tmp/squiggly-test/node_modules node chrome/test/mac-window.cjs [--windows]
 
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -27,21 +32,39 @@ function source(served) {
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 
+const WINDOWS = process.argv.includes('--windows');
+const SHORTCUT = WINDOWS ? 'Win+Alt+L' : '⌃⌥⌘L';
+
 // The app's side of the bridge: storage in two areas, and a log of the rest.
 const FAKE_APP = `
   window.appLog = [];
   window.appStore = { sync: {}, local: {} };
-  window.webkit = { messageHandlers: { squiggly: { postMessage: async (message) => {
+  const answer = (message) => {
     window.appLog.push(message);
     const store = window.appStore;
     switch (message.op) {
       case 'get': return Object.fromEntries(message.keys.filter((k) => k in store[message.area]).map((k) => [k, store[message.area][k]]));
       case 'set': Object.assign(store[message.area], message.items); return null;
-      case 'shortcut': return message.name === 'open-renderer' ? '⌃⌥⌘L' : null;
+      case 'shortcut': return message.name === 'open-renderer' ? ${JSON.stringify(SHORTCUT)} : null;
       case 'save': return true;
       default: return null;
     }
-  } } } };
+  };
+  if (${WINDOWS}) {
+    // WebView2: postMessage returns nothing, and the answer arrives later as
+    // a message event with the same id, as RendererWindow.Reply sends it.
+    const listeners = [];
+    const webview = {
+      addEventListener: (type, listener) => { if (type === 'message') listeners.push(listener); },
+      postMessage: (message) => {
+        const result = answer(message);
+        setTimeout(() => listeners.forEach((l) => l({ data: { id: message.id, result } })), 0);
+      },
+    };
+    window.chrome = Object.assign(window.chrome ?? {}, { webview });
+  } else {
+    window.webkit = { messageHandlers: { squiggly: { postMessage: async (message) => answer(message) } } };
+  }
 `;
 
 (async () => {
@@ -77,14 +100,14 @@ const FAKE_APP = `
   await page.waitForFunction(() => document.body.dataset.ready === 'true' && !!globalThis.MathJax?.startup?.document);
 
   check('the page starts with no errors', errors.join(' | '), '');
-  check('the renderer is the host the app provides', await page.evaluate(() => LaTeXSquiggly.host.kind), 'mac');
+  check('the renderer is the host the app provides', await page.evaluate(() => LaTeXSquiggly.host.kind), WINDOWS ? 'windows' : 'mac');
 
   await page.fill('#latex', '\\frac{a}{b}');
   await page.waitForTimeout(400);
   check('it renders', await page.$eval('#preview', (e) => !!e.querySelector(':scope > svg')), true);
   check('the input is kept, in the app\'s local area',
     await page.evaluate(() => window.appStore.local.rendererInput), '\\frac{a}{b}');
-  check('the open shortcut is the app\'s', await page.textContent('#open-keys'), '⌃⌥⌘L');
+  check('the open shortcut is the app\'s', await page.textContent('#open-keys'), SHORTCUT);
 
   await clearLog();
   await page.click('#copy-png');
@@ -135,9 +158,9 @@ const FAKE_APP = `
     await page.$eval('#latex', (e) => document.activeElement === e && e.selectionStart === 0 && e.selectionEnd === e.value.length), true);
 
   await clearLog();
-  await page.keyboard.press('Meta+Enter');
+  await page.keyboard.press(WINDOWS ? 'Control+Enter' : 'Meta+Enter');
   await page.waitForTimeout(700);
-  check('⌘Enter copies, then asks the app to close the window',
+  check(`${WINDOWS ? 'Ctrl+' : '⌘'}Enter copies, then asks the app to close the window`,
     [(await log('copyImage')).length, (await log('close')).length], [1, 1]);
   await clearLog();
   await page.keyboard.press('Escape');
