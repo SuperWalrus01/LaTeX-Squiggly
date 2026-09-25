@@ -15,10 +15,13 @@ namespace LaTeXSquiggly.App.Platform;
 /// app's window, in a WebView2, with the app doing what a page cannot: the
 /// clipboard, the save dialog, and keeping its settings.
 ///
-/// The page talks to the app through chrome.webview messages, each carrying an
-/// id that the answer echoes; chrome/renderer/host.js is the other side. The
-/// window is kept once made, so MathJax loads once per launch and the shortcut
-/// brings it back at once.
+/// The page is used exactly as the Mac app has it, unchanged. It talks to its
+/// host through window.webkit.messageHandlers.squiggly, whose postMessage
+/// returns the app's answer (see chrome/renderer/host.js). WebView2 has no
+/// such thing, so Bridge, run before the page's own scripts, provides it: each
+/// call becomes a chrome.webview message carrying an id, and the answer comes
+/// back as a message with the same id. The window is kept once made, so
+/// MathJax loads once per launch and the shortcut brings it back at once.
 ///
 /// The page's files are embedded in the exe and served from memory at
 /// https://app.squiggly/, never written to disk: a web view will not load ES
@@ -27,6 +30,36 @@ namespace LaTeXSquiggly.App.Platform;
 internal sealed class RendererWindow : Form
 {
     private const string Origin = "https://app.squiggly/";
+
+    /// <summary>
+    /// The Mac app's message handler, as the page expects to find it, carried
+    /// over WebView2's messages. A promise per call, settled by the reply with
+    /// its id; Reply is the app's half.
+    /// </summary>
+    private const string Bridge = """
+        (() => {
+          const webview = window.chrome?.webview;
+          if (!webview) return;
+          const pending = new Map();
+          let nextId = 0;
+          webview.addEventListener("message", (event) => {
+            const { id, result, error } = event.data ?? {};
+            const waiting = pending.get(id);
+            if (!waiting) return;
+            pending.delete(id);
+            if (error) waiting.reject(new Error(error));
+            else waiting.resolve(result ?? null);
+          });
+          const squiggly = {
+            postMessage: (message) => new Promise((resolve, reject) => {
+              const id = ++nextId;
+              pending.set(id, { resolve, reject });
+              webview.postMessage({ ...message, id });
+            }),
+          };
+          window.webkit = { messageHandlers: { squiggly } };
+        })();
+        """;
 
     private static readonly Dictionary<string, string> Types = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -172,6 +205,7 @@ internal sealed class RendererWindow : Form
             e.Handled = true;
             OpenOutside(e.Uri);
         };
+        await core.AddScriptToExecuteOnDocumentCreatedAsync(Bridge);
         core.NavigationCompleted += (_, e) =>
             Diagnostics.Log(e.IsSuccess ? "renderer: page loaded" : "renderer: page failed, " + e.WebErrorStatus);
 
