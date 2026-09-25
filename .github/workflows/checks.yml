@@ -74,3 +74,9 @@ jobs:
         run: node chrome/test/mac-window.cjs
         env:
           NODE_PATH: ${{ runner.temp }}/playwright/node_modules
+
+      # The Windows app's window is the same page, whose bridge is WebView2's.
+      - name: The Windows renderer window's page
+        run: node chrome/test/mac-window.cjs --windows
+        env:
+          NODE_PATH: ${{ runner.temp }}/playwright/node_modules

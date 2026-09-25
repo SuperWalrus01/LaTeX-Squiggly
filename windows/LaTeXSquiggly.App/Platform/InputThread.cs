@@ -63,6 +63,8 @@ internal sealed class InputThread : IDisposable
     /// </summary>
     private const long SlowCallbackMicroseconds = 10_000;
 
+    private static readonly uint OwnProcessId = (uint)Environment.ProcessId;
+
     private readonly InputBuffer _buffer = new();
     private readonly ForegroundWatcher _watcher = new();
 
@@ -458,6 +460,16 @@ internal sealed class InputThread : IDisposable
         // excluded app no buffer accumulates, so a replacement there is not
         // declined late, it is structurally impossible.
         var window = Native.GetForegroundWindow();
+
+        // Never inside our own windows. The renderer's input is LaTeX, and
+        // turning \alpha into a Greek letter there would break the equation.
+        Native.GetWindowThreadProcessId(window, out var owner);
+        if (owner == OwnProcessId)
+        {
+            if (!_buffer.IsEmpty) _buffer.Reset();
+            return false;
+        }
+
         if (Decision(window, fresh: false).IsSuppressed)
         {
             if (!_buffer.IsEmpty) _buffer.Reset();

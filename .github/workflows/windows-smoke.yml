@@ -1,7 +1,11 @@
 # Starts the Windows app on a real Windows machine and checks it stays running,
 # for the report that it closes as soon as it opens. The current source and
-# the released 0.2.0 exe are both launched, so the two can be compared.
-# Logs and screenshots are uploaded as an artifact.
+# the released 0.2.0 exe are both launched, so the two can be compared. Then
+# the renderer window is driven end to end. Logs, screenshots and the copied
+# image are uploaded as an artifact.
+#
+# Defender's real-time scanning is off on these runners and cannot be turned
+# on, so an antivirus kill is the one start-up failure this cannot see.
 
 name: Windows smoke test
 
@@ -9,6 +13,8 @@ on:
   push:
     paths:
       - "windows/**"
+      - "chrome/renderer/**"
+      - "Sources/LaTeXSquigglyApp/Web/**"
       - ".github/workflows/windows-smoke.yml"
   workflow_dispatch:
 
@@ -49,28 +55,13 @@ jobs:
           Invoke-WebRequest $url -OutFile "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe"
           .\windows\smoke-test.ps1 -Exe "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe" -Label released-0.2.0
 
-      # Runners ship with Defender's real-time scanning off, which a user's
-      # machine does not. An unsigned app with a keyboard hook is exactly
-      # what a behaviour scanner looks at, so run both builds again with it on.
-      - name: Start both builds with Defender real-time protection on
-        id: defender
+      # Opens the renderer with its shortcut, renders, and copies the image.
+      # Windows PowerShell, whose single-threaded apartment the clipboard needs.
+      - name: Render an image with the current build
+        id: renderer
         continue-on-error: true
-        shell: pwsh
-        run: |
-          Set-MpPreference -DisableRealtimeMonitoring $false -DisableBehaviorMonitoring $false -DisableIOAVProtection $false
-          Get-MpComputerStatus | Format-List AMServiceEnabled, AntivirusEnabled, RealTimeProtectionEnabled, BehaviorMonitorEnabled, IoavProtectionEnabled
-          # A fresh copy, so the download-scan path sees it as new.
-          Copy-Item "windows\dist\win-x64\LaTeX Squiggly.exe" "$env:RUNNER_TEMP\current-defender.exe"
-          Copy-Item "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe" "$env:RUNNER_TEMP\released-defender.exe"
-          $failed = $false
-          .\windows\smoke-test.ps1 -Exe "$env:RUNNER_TEMP\current-defender.exe" -Label current-defender
-          if ($LASTEXITCODE -ne 0) { $failed = $true }
-          .\windows\smoke-test.ps1 -Exe "$env:RUNNER_TEMP\released-defender.exe" -Label released-defender
-          if ($LASTEXITCODE -ne 0) { $failed = $true }
-          Write-Host "==> Defender detections"
-          Get-MpThreatDetection | Format-List
-          Get-MpThreat | Format-List
-          if ($failed) { exit 1 }
+        shell: powershell
+        run: .\windows\renderer-test.ps1 -Exe "windows\dist\win-x64\LaTeX Squiggly.exe"
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -78,9 +69,9 @@ jobs:
           name: smoke-${{ matrix.os }}
           path: smoke-results/
 
-      - name: Fail if either build did not stay up
-        if: steps.current.outcome == 'failure' || steps.released.outcome == 'failure' || steps.defender.outcome == 'failure'
+      - name: Fail if any step did not pass
+        if: steps.current.outcome == 'failure' || steps.released.outcome == 'failure' || steps.renderer.outcome == 'failure'
         shell: pwsh
         run: |
-          Write-Host "current: ${{ steps.current.outcome }}, released 0.2.0: ${{ steps.released.outcome }}, with Defender: ${{ steps.defender.outcome }}"
+          Write-Host "current: ${{ steps.current.outcome }}, released 0.2.0: ${{ steps.released.outcome }}, renderer: ${{ steps.renderer.outcome }}"
           exit 1

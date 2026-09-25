@@ -43,9 +43,19 @@ internal sealed class TrayApplication : ApplicationContext
     /// </summary>
     private volatile ExclusionList _rules;
 
+    private readonly GlobalShortcut _shortcut;
+
     private Icon? _activeIcon;
     private Icon? _inactiveIcon;
     private SettingsWindow? _window;
+    private RendererWindow? _renderer;
+
+    /// <summary>
+    /// The last window in front that was not one of ours. Opening the tray menu
+    /// or the renderer brings this app to the front, and the menu is about the
+    /// app the user was typing in, not about itself.
+    /// </summary>
+    private IntPtr _lastOutside;
 
     /// <summary>Set once quitting starts, so nothing posted late touches a disposed control.</summary>
     private bool _quitting;
@@ -61,7 +71,10 @@ internal sealed class TrayApplication : ApplicationContext
         // for the UI, so both only post.
         _hook.Rules = () => _rules;
         _hook.OnNotice = message => Post(() => ShowNotice(message));
-        _hook.OnForegroundChanged = () => Post(RefreshIcon);
+        _hook.OnForegroundChanged = () => Post(ForegroundChanged);
+
+        _shortcut = new GlobalShortcut(ShowRenderer);
+        _shortcut.Register();
 
         _tray.Text = "LaTeX Squiggly";
         _tray.Visible = true;
@@ -116,7 +129,28 @@ internal sealed class TrayApplication : ApplicationContext
     /// own decisions, with its own watcher; see InputThread.
     /// </summary>
     private SuppressionDecision CurrentDecision() =>
-        _rules.Decision(_watcher.Current());
+        _rules.Decision(OutsideContext());
+
+    /// <summary>What the user is typing into: the window in front, or the last one before ours.</summary>
+    private TypingContext OutsideContext()
+    {
+        var front = Native.GetForegroundWindow();
+        if (front != IntPtr.Zero && !IsOwn(front)) _lastOutside = front;
+        return _lastOutside != IntPtr.Zero ? _watcher.Current(_lastOutside) : _watcher.Current(front);
+    }
+
+    private static bool IsOwn(IntPtr window)
+    {
+        Native.GetWindowThreadProcessId(window, out var pid);
+        return pid == (uint)Environment.ProcessId;
+    }
+
+    private void ForegroundChanged()
+    {
+        var front = Native.GetForegroundWindow();
+        if (front != IntPtr.Zero && !IsOwn(front)) _lastOutside = front;
+        RefreshIcon();
+    }
 
     /// <summary>
     /// Builds the keyboard layout table for the layout in front, if it has
@@ -317,7 +351,7 @@ internal sealed class TrayApplication : ApplicationContext
         // One click to fix a miss. A default list cannot know about every TeX
         // editor, and the moment the user notices is the moment they are
         // looking at the wrong app.
-        var context = _watcher.Current();
+        var context = OutsideContext();
         if (context.ProcessName is not null)
         {
             var excluded = _settings.Exclusions.Contains(context.ProcessName);
@@ -340,6 +374,11 @@ internal sealed class TrayApplication : ApplicationContext
         diagnostics.Click += (_, _) => CopyDiagnostics();
         menu.Items.Add(diagnostics);
 
+        var render = new ToolStripMenuItem("Render LaTeX as Image...");
+        if (_shortcut.IsRegistered) render.ShortcutKeyDisplayString = GlobalShortcut.Keys;
+        render.Click += (_, _) => ShowRenderer();
+        menu.Items.Add(render);
+
         var settings = new ToolStripMenuItem("Settings and Symbols...");
         settings.Click += (_, _) => ShowSettings();
         menu.Items.Add(settings);
@@ -361,7 +400,7 @@ internal sealed class TrayApplication : ApplicationContext
     /// </summary>
     private void CopyDiagnostics()
     {
-        var context = _watcher.Current();
+        var context = OutsideContext();
         var decision = CurrentDecision();
         var text = string.Join(Environment.NewLine,
             "LaTeX Squiggly " + Application.ProductVersion,
@@ -394,6 +433,16 @@ internal sealed class TrayApplication : ApplicationContext
         _window.Activate();
     }
 
+    private void ShowRenderer()
+    {
+        if (_quitting) return;
+        if (_renderer is null || _renderer.IsDisposed)
+        {
+            _renderer = new RendererWindow(() => _shortcut.IsRegistered ? GlobalShortcut.Keys : null);
+        }
+        _renderer.ShowRenderer();
+    }
+
     private void ShowWelcome()
     {
         _settings.ConversionEnabled = true;
@@ -419,6 +468,12 @@ internal sealed class TrayApplication : ApplicationContext
         _tabPoll.Stop();
         _tabPoll.Dispose();
         _hook.Dispose();
+        _shortcut.Dispose();
+        if (_renderer is not null)
+        {
+            _renderer.Quitting = true;
+            _renderer.Dispose();
+        }
         _tray.Visible = false;
         _tray.Dispose();
         _notices.Dispose();
@@ -433,6 +488,8 @@ internal sealed class TrayApplication : ApplicationContext
             _quitting = true;
             _tabPoll?.Dispose();
             _hook.Dispose();
+            _shortcut.Dispose();
+            _renderer?.Dispose();
             _tray.Dispose();
             _notices.Dispose();
             _ui.Dispose();
