@@ -69,6 +69,13 @@ jobs:
           name: smoke-${{ matrix.os }}
           path: smoke-results/
 
+      # The exe these steps tested, to download and try. Once, not per runner.
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'windows-2025'
+        with:
+          name: LaTeX-Squiggly-windows-x64
+          path: windows/dist/win-x64/LaTeX Squiggly.exe
+
       - name: Fail if any step did not pass
         if: steps.current.outcome == 'failure' || steps.released.outcome == 'failure' || steps.renderer.outcome == 'failure'
         shell: pwsh
