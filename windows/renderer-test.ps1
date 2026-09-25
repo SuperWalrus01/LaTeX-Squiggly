@@ -68,8 +68,11 @@ Start-Sleep -Seconds 2
 
 Write-Host "==> Win+Alt+L"
 [Keys]::Chord(0x5B, 0x12, 0x4C)   # left Windows, Alt, L
-if (Wait-Log "renderer: page loaded" 30) {
-    Write-Host "   ok: the page loaded" -ForegroundColor Green
+$opened = Get-Date
+# The first open starts the WebView2 runtime and makes its profile, which on a
+# freshly booted runner has taken 37 s; on a desktop it is a second or two.
+if (Wait-Log "renderer: page loaded" 90) {
+    Write-Host ("   ok: the page loaded, {0:N1} s after the shortcut" -f ((Get-Date) - $opened).TotalSeconds) -ForegroundColor Green
 } else {
     Write-Host "   FAIL: the page did not load" -ForegroundColor Red
     $failures += "the renderer page did not load"
