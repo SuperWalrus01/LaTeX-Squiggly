@@ -49,6 +49,29 @@ jobs:
           Invoke-WebRequest $url -OutFile "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe"
           .\windows\smoke-test.ps1 -Exe "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe" -Label released-0.2.0
 
+      # Runners ship with Defender's real-time scanning off, which a user's
+      # machine does not. An unsigned app with a keyboard hook is exactly
+      # what a behaviour scanner looks at, so run both builds again with it on.
+      - name: Start both builds with Defender real-time protection on
+        id: defender
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          Set-MpPreference -DisableRealtimeMonitoring $false -DisableBehaviorMonitoring $false -DisableIOAVProtection $false
+          Get-MpComputerStatus | Format-List AMServiceEnabled, AntivirusEnabled, RealTimeProtectionEnabled, BehaviorMonitorEnabled, IoavProtectionEnabled
+          # A fresh copy, so the download-scan path sees it as new.
+          Copy-Item "windows\dist\win-x64\LaTeX Squiggly.exe" "$env:RUNNER_TEMP\current-defender.exe"
+          Copy-Item "$env:RUNNER_TEMP\LaTeX-Squiggly-0.2.0.exe" "$env:RUNNER_TEMP\released-defender.exe"
+          $failed = $false
+          .\windows\smoke-test.ps1 -Exe "$env:RUNNER_TEMP\current-defender.exe" -Label current-defender
+          if ($LASTEXITCODE -ne 0) { $failed = $true }
+          .\windows\smoke-test.ps1 -Exe "$env:RUNNER_TEMP\released-defender.exe" -Label released-defender
+          if ($LASTEXITCODE -ne 0) { $failed = $true }
+          Write-Host "==> Defender detections"
+          Get-MpThreatDetection | Format-List
+          Get-MpThreat | Format-List
+          if ($failed) { exit 1 }
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -56,8 +79,8 @@ jobs:
           path: smoke-results/
 
       - name: Fail if either build did not stay up
-        if: steps.current.outcome == 'failure' || steps.released.outcome == 'failure'
+        if: steps.current.outcome == 'failure' || steps.released.outcome == 'failure' || steps.defender.outcome == 'failure'
         shell: pwsh
         run: |
-          Write-Host "current: ${{ steps.current.outcome }}, released 0.2.0: ${{ steps.released.outcome }}"
+          Write-Host "current: ${{ steps.current.outcome }}, released 0.2.0: ${{ steps.released.outcome }}, with Defender: ${{ steps.defender.outcome }}"
           exit 1
