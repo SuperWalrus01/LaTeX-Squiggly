@@ -42,7 +42,8 @@ function Save-Screenshot([string] $name) {
 }
 
 function Stop-App {
-    Get-Process -Name "LaTeX Squiggly", "LaTeX-Squiggly*" -ErrorAction SilentlyContinue |
+    $name = [System.IO.Path]::GetFileNameWithoutExtension($Exe)
+    Get-Process -Name $name, "LaTeX Squiggly", "LaTeX-Squiggly*" -ErrorAction SilentlyContinue |
         Stop-Process -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
 }
