@@ -53,6 +53,27 @@ $x^2$           ->  x squared
 The tray menu says what it is doing and why. If it has gone quiet, the menu is
 where it tells you which rule it is obeying.
 
+## Rendering LaTeX as an image
+
+Some maths has no Unicode form: a fraction, a matrix, a sum with limits. The
+renderer turns it into a picture you can paste anywhere.
+
+Press **Win+Alt+L** from any app, or choose **Render LaTeX as Image...** from
+the tray menu. Type maths-mode LaTeX and it is drawn as you type. **Copy PNG**,
+or **Ctrl+Enter**, puts the image on the clipboard, closes the window and goes
+back to the app you were in, so **Ctrl+V** pastes it there. Word, PowerPoint
+and OneNote paste it at the size you saw in the preview, and sharp. **Esc**
+closes without copying.
+
+It is the same renderer as the Mac app's and the Chrome extension's, and
+MathJax is inside the exe: it fetches nothing from the internet. It needs the
+Microsoft Edge WebView2 Runtime, which Windows 11 has, and Windows 10 has had
+through updates since 2021; if it is missing, the app says where to get it.
+
+The shortcut is Win+Alt+L because any Ctrl+Alt combination is AltGr on most
+European keyboards, and would take a character from someone. If another
+program already uses Win+Alt+L, the menu item still works.
+
 ## Removing it, and installing a newer one
 
 There is no installer, so there is nothing to uninstall — but the app is running
@@ -404,6 +425,8 @@ windows/
       TrayApplication.cs      the tray icon, the menu, the wiring
       SettingsWindow.cs       switches, the exclusion editor, the symbol table
       NoticeWindow.cs         the transient message above the tray
+      RendererWindow.cs       LaTeX to an image, in a WebView2, and the clipboard
+      GlobalShortcut.cs       Win+Alt+L
       Settings.cs             persistence, and open-at-login
       Diagnostics.cs          the log, for the failures a user cannot see
       AppIcon.cs              the mark, drawn from the Mac artwork
