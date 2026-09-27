@@ -40,10 +40,10 @@ When something has no exact Unicode form, it says so instead of guessing, and
 it never leaves a half-converted result.
 
 Maths that plain text cannot hold, like a stacked fraction or a matrix, can be
-turned into an image instead: the Mac app and the Chrome extension have a
-renderer that copies your LaTeX as a PNG, ready to paste. The
+turned into an image instead: the Mac app, the Windows app and the Chrome
+extension have a renderer that copies your LaTeX as a PNG, ready to paste. The
 [guide](https://superwalrus01.github.io/LaTeX-Squiggly/guide.html) walks
-through both.
+through each.
 
 ## Screenshots
 
@@ -84,7 +84,7 @@ through both.
 |---|---|
 | **macOS** 13+ | Download the `.dmg` from the [latest release](https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest) and drag the app to Applications, or [build it from source](docs/macos.md#installing). |
 | **Windows** 10+ *(beta)* | Download the `.exe` from the [releases](https://github.com/SuperWalrus01/LaTeX-Squiggly/releases) and double-click it. No installer, no admin rights. See [windows/](windows/README.md). |
-| **Chrome** | Coming to the Chrome Web Store. Until then, [load it unpacked](chrome/README.md#trying-it-locally). |
+| **Chrome** | Add it from the [Chrome Web Store](https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb). Works in Edge, Brave and other Chromium browsers too. |
 
 Neither desktop app is signed with a paid certificate, so macOS and Windows
 each show a warning the first time. The platform guides above say exactly what

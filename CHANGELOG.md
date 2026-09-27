@@ -8,8 +8,7 @@ Every release, newest first. The format follows
 
 ## Unreleased
 
-The Chrome additions go out in the extension's 0.3.0 store upload. The Windows
-fixes below ship once they have been tested on Windows.
+The Chrome additions go out in the extension's 0.3.0 store upload.
 
 ### Added
 
@@ -38,6 +37,19 @@ fixes below ship once they have been tested on Windows.
   `\frac{-b \pm \sqrt{b^2-4ac}}{2a}`, added an extra `}`: the outer brace the
   editor had closed stopped being typed over once an inner one was added. The
   Mac app's 0.3.0 has this; the extension's store upload does not.
+
+## [0.3.0] - 2026-09-24
+
+macOS, the Chrome extension and, from 27 September, Windows. The Windows
+executable was added to this release after it had run on real Windows in CI.
+
+### Windows
+
+- **Renderer in the Windows app**: Render LaTeX as Image... in the tray menu,
+  or Win+Alt+L from any app, opens the same renderer as the Mac app's and the
+  extension's. Copy PNG, or Ctrl+Enter, copies the image at the size it was
+  previewed and goes back to the app you were in. MathJax is inside the exe.
+  It needs the Microsoft Edge WebView2 Runtime.
 - The Windows app's source now matches the build that shipped. The 0.2.0
   executable was rebuilt on 8 September with a fix for the hang, but the
   source of that fix never reached the repository, so building from it gave
@@ -45,10 +57,9 @@ fixes below ship once they have been tested on Windows.
   thread of its own again, with no mouse hook, a keyboard layout table built
   off the hook, and a diagnostics log, and the source compiles to the same
   code as the published executable.
-
-## [0.3.0] - 2026-09-24
-
-macOS and the Chrome extension. Windows stays on 0.2.0.
+- A smoke test in CI starts the Windows app on Windows Server 2022 and 2025,
+  with Defender's real-time scanning on, and checks it stays up and that the
+  renderer opens.
 
 ### Added
 

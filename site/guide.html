@@ -90,7 +90,7 @@
       <h2>The Windows app</h2>
       <h3>Installing</h3>
       <ol class="steps">
-        <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/tag/v0.2.0">Download the .exe</a> and double-click it. There is no installer and it needs no admin rights.</li>
+        <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the .exe</a> and double-click it. There is no installer and it needs no admin rights.</li>
         <li>Windows may say <b>Windows protected your PC</b>, because the app is not code-signed. Click <b>More info</b>, then <b>Run anyway</b>.</li>
         <li>An LS mark appears in the system tray, near the clock. Open Notepad, type <code>\alpha</code> and a space.</li>
       </ol>
@@ -101,7 +101,7 @@
         <li><b>Settings and symbols:</b> <b>Settings and Symbols…</b> in the tray menu. <b>Open at login</b> starts it with Windows.</li>
         <li><b>If it goes quiet:</b> the tray menu says which rule it is following, and <b>Copy diagnostics</b> puts a summary on the clipboard for a bug report.</li>
       </ul>
-      <p class="lede">The Windows app does not have the image renderer yet.</p>
+      <p class="lede">The Windows app also turns maths into an image: see <a href="#images">below</a>. It needs the Microsoft Edge WebView2 Runtime, which Windows 11 has and Windows 10 gets through updates.</p>
     </section>
 
     <section id="chrome">
@@ -109,7 +109,7 @@
       <h2>The Chrome extension</h2>
       <h3>Installing</h3>
       <ol class="steps">
-        <li>Add <b>LaTeX Squiggly</b> from the Chrome Web Store. A welcome page opens with a practice box to try it in.</li>
+        <li>Add <b>LaTeX Squiggly</b> from the <a href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">Chrome Web Store</a>. A welcome page opens with a practice box to try it in.</li>
         <li>Pin it: click the puzzle piece in the toolbar, then the pin next to LaTeX Squiggly.</li>
         <li><b>Reload any tab that was already open.</b> The extension only starts in pages loaded after it was installed.</li>
         <li>Type <code>\alpha</code> and a space in any text box on a web page.</li>
@@ -126,7 +126,7 @@
     </section>
 
     <section id="images">
-      <p class="eyebrow">Mac app and Chrome extension</p>
+      <p class="eyebrow">Mac app, Windows app and Chrome extension</p>
       <h2>Turning maths into an image</h2>
       <p class="lede">Fractions, matrices and sums with limits have no plain-text form. The renderer draws them as a picture you can paste into chats, slides, documents and emails.</p>
       <div class="guide-figure">
@@ -136,6 +136,7 @@
         <ol class="steps">
           <li><b>Open it.</b>
             <br>Mac: <b>⌃⌥⌘L</b> from any app, or <b>Render LaTeX as Image…</b> in the menu bar.
+            <br>Windows: <b>Win+Alt+L</b> from any app, or <b>Render LaTeX as Image...</b> in the tray menu.
             <br>Chrome: the toolbar icon's <b>Renderer</b> tab, or <b>Alt+Shift+E</b>. Or select LaTeX on a page, right-click, and choose <b>Render selection as image</b>.</li>
           <li><b>Type the LaTeX</b>, without dollars. The preview updates as you type, and a list of commands appears when you type <code>\</code>.</li>
           <li><b>Click Copy PNG</b>, or press <b>⌘Enter</b> (Ctrl+Enter on Windows). That copies the image and closes the window.</li>
