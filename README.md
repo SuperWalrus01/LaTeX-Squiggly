@@ -12,9 +12,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/SuperWalrus01/LaTeX-Squiggly" alt="MIT licence"></a>
 </p>
 
-<p align="center">
-  <img src="assets/readme-demo.gif" alt="Typing LaTeX in a message box: \epsilon, $|x_n - x|$ and \ge become ϵ, |xₙ - x| and ≥ as each space is pressed. Then the renderer draws the quadratic formula as it is typed, and Copy PNG copies it." width="760">
-</p>
+https://github.com/user-attachments/assets/7ef23e5e-e6aa-4d46-bef0-994f63926a17
 
 You can't paste LaTeX into a chat, an email or a comment box. LaTeX Squiggly
 lets you type it anyway. Type `\alpha`, press space, and the letters you just
