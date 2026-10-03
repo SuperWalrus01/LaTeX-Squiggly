@@ -301,14 +301,25 @@ pre .c { color: var(--ink-faint); }
 .clip figcaption b { color: var(--ink); font-weight: 600; }
 .clip figcaption span, .watch li span { font-family: var(--mono); font-size: .8rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 .clip.solo { margin: .4rem 0 2.2rem; }
-.carousel { margin: .6rem 0 2.4rem; scroll-margin-top: 1.5rem; }
+.carousel { position: relative; container-type: inline-size; margin: .6rem 0 2.4rem; scroll-margin-top: 1.5rem; }
 .carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; outline-offset: 4px; border-radius: 14px; }
 .carousel-track::-webkit-scrollbar { display: none; }
 .carousel .slide { flex: 0 0 100%; scroll-snap-align: start; }
 .carousel-bar { display: flex; align-items: center; gap: .6rem; margin-top: .9rem; }
-.carousel-step { flex: none; width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid var(--rule-firm); background: var(--card); color: var(--ink); font-size: 1.05rem; cursor: pointer; }
+/* The arrows sit beside the video, centred on it (its height is 9/16 of the
+   carousel's width): outside it where the page has room, over its edges where
+   it does not. */
+.carousel-step { position: absolute; z-index: 2; top: calc(100cqw * 9 / 32 - 1.5rem); width: 3rem; height: 3rem; border-radius: 50%; border: 1px solid var(--rule-firm); background: var(--card); color: var(--ink); font-size: 1.2rem; line-height: 1; cursor: pointer; box-shadow: var(--shadow); }
+.carousel-step.prev { left: -4.2rem; }
+.carousel-step.next { right: -4.2rem; }
 .carousel-step:hover:not(:disabled) { border-color: var(--squiggle); color: var(--squiggle); }
-.carousel-step:disabled { opacity: .35; cursor: default; }
+.carousel-step:disabled { opacity: .3; cursor: default; box-shadow: none; }
+@media (max-width: 72rem) {
+  .carousel-step { width: 2.6rem; height: 2.6rem; top: calc(100cqw * 9 / 32 - 1.3rem); background: color-mix(in srgb, var(--card) 88%, transparent); }
+  .carousel-step.prev { left: .6rem; }
+  .carousel-step.next { right: .6rem; }
+  .carousel-step:disabled { opacity: 0; pointer-events: none; }
+}
 .carousel-tabs { display: flex; gap: .4rem; list-style: none; margin: 0; padding: 0; overflow-x: auto; scrollbar-width: none; flex: 1; }
 .carousel-tabs::-webkit-scrollbar { display: none; }
 @media (min-width: 48rem) { .carousel-tabs { flex-wrap: wrap; overflow: visible; } }
