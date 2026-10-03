@@ -12,6 +12,7 @@ site/
   assets/app.js         the live demo and the symbol browser
   assets/data.js        generated: the app's own tables
   assets/*.png          the artwork, the icons, the link cards
+  assets/videos/        the guide's tutorial videos (720p MP4) and their posters
 ```
 
 ## Publishing it
@@ -30,7 +31,9 @@ absolute URL. The Chrome extension's store listing and settings page link to
 
 `index.html`, `privacy.html`, `guide.html`, `styles.css` and `app.js` are
 written by hand. `assets/guide-renderer.png` is a screenshot of the
-extension's Renderer tab.
+extension's Renderer tab. The videos in `assets/videos/` are rendered from the
+real extension, engine and renderer; their music is "Voxel Revolution" by Kevin
+MacLeod (incompetech.com), CC BY 4.0, credited in the guide's footer.
 Edit them.
 
 `assets/data.js` and the worked examples inside `index.html` are not:

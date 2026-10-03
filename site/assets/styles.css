@@ -292,6 +292,21 @@ pre .c { color: var(--ink-faint); }
 .guide-figure img { display: block; width: 100%; height: auto; }
 @media (max-width: 44rem) { .guide-figure { grid-template-columns: minmax(0, 1fr); } }
 
+/* ---------- video tutorials ---------- */
+.clips { display: grid; gap: 1.4rem 1.2rem; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); margin: 0 0 2rem; }
+.clip { margin: 0; scroll-margin-top: 1.5rem; }
+.clip video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 1px solid var(--rule-firm); border-radius: 12px; background: var(--paper-sunk); box-shadow: var(--shadow); }
+.clip figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-top: .55rem; font-size: .92rem; color: var(--ink-soft); }
+.clip figcaption b { color: var(--ink); font-weight: 600; }
+.clip figcaption span, .watch li span { font-family: var(--mono); font-size: .8rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.watch { display: grid; gap: .4rem 2rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); max-width: 62rem; }
+.watch h3 { margin: 0 0 .5rem; }
+.watch ul { list-style: none; margin: 0 0 1rem; padding: 0; }
+.watch li { margin-bottom: .45rem; color: var(--ink-soft); }
+.watch a { color: var(--squiggle); text-underline-offset: .18em; }
+footer .credit { font-size: .82rem; color: var(--ink-faint); margin: 0; }
+footer .credit a { color: inherit; }
+
 footer { border-top: 1px solid var(--rule); padding-block: 2rem 3rem; color: var(--ink-faint); font-size: .85rem; }
 footer a { color: var(--squiggle); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
