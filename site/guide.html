@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/styles.css">
+<script src="assets/guide.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -42,12 +43,12 @@
     <section id="videos">
       <p class="eyebrow">Video tutorials</p>
       <h2>Watch it work</h2>
-      <p class="lede">Each step below has a short video, between 10 and 18 seconds long, made from the real app. The Chrome videos were made on a Mac, so they show ⌥⇧ and ⌘ where Windows and ChromeOS use Alt+Shift and Ctrl.</p>
+      <p class="lede">Each step below has a short video, between 10 and 18 seconds long, made from the real app. New in Chrome: <a href="#watch-rightclick">select any LaTeX on a page, right-click, and render it</a>. The Chrome videos were made on a Mac, so they show ⌥⇧ and ⌘ where Windows and ChromeOS use Alt+Shift and Ctrl.</p>
       <div class="watch">
         <div><h3>Everywhere</h3><ul><li><a href="#watch-basics">Type a command, press space</a> <span>0:11</span></li><li><a href="#watch-scripts">Scripts, fractions and sums</a> <span>0:11</span></li><li><a href="#watch-undo">Undo a conversion</a> <span>0:10</span></li><li><a href="#watch-honest">When it can&#x27;t be exact</a> <span>0:13</span></li><li><a href="#watch-quiet">Where it stays out of your way</a> <span>0:14</span></li></ul></div>
         <div><h3>Mac and Windows</h3><ul><li><a href="#watch-mac">The Mac app</a> <span>0:18</span></li><li><a href="#watch-windows">The Windows app</a> <span>0:18</span></li></ul></div>
         <div><h3>Chrome</h3><ul><li><a href="#watch-chat">Writing maths in a chat</a> <span>0:13</span></li><li><a href="#watch-pause">Pausing it</a> <span>0:12</span></li></ul></div>
-        <div><h3>Images</h3><ul><li><a href="#watch-renderer">The renderer, from start to paste</a> <span>0:17</span></li><li><a href="#watch-rightclick">Right-click to render a selection</a> <span>0:13</span></li><li><a href="#watch-options">Colours, braces and History</a> <span>0:11</span></li><li><a href="#watch-commands">Your own commands</a> <span>0:14</span></li><li><a href="#watch-anywhere">Pasting the picture anywhere</a> <span>0:12</span></li></ul></div>
+        <div><h3>Images</h3><ul><li><a href="#watch-rightclick">Select LaTeX, right-click, render it</a> <span>0:13</span></li><li><a href="#watch-renderer">The renderer, from start to paste</a> <span>0:17</span></li><li><a href="#watch-options">Colours, braces and History</a> <span>0:11</span></li><li><a href="#watch-commands">Your own commands</a> <span>0:14</span></li><li><a href="#watch-anywhere">Pasting the picture anywhere</a> <span>0:12</span></li></ul></div>
       </div>
     </section>
 
@@ -73,37 +74,44 @@
           </tbody>
         </table>
       </div>
-      <div class="clips" style="margin-top:1.6rem">
-        <figure class="clip" id="watch-basics">
+      <div class="carousel" data-carousel role="region" aria-roledescription="carousel" aria-label="The basics, in videos">
+        <div class="carousel-track" tabindex="0">
+        <figure class="clip slide" id="watch-basics" aria-roledescription="slide" aria-label="1 of 5: Type a command, press space">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/basics.jpg" aria-label="Video: Type a command, press space">
             <source src="assets/videos/basics.mp4" type="video/mp4">
           </video>
           <figcaption><b>Type a command, press space</b><span>0:11</span></figcaption>
         </figure>
-        <figure class="clip" id="watch-scripts">
+        <figure class="clip slide" id="watch-scripts" aria-roledescription="slide" aria-label="2 of 5: Scripts, fractions and sums">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/scripts.jpg" aria-label="Video: Scripts, fractions and sums">
             <source src="assets/videos/scripts.mp4" type="video/mp4">
           </video>
           <figcaption><b>Scripts, fractions and sums</b><span>0:11</span></figcaption>
         </figure>
-        <figure class="clip" id="watch-undo">
+        <figure class="clip slide" id="watch-undo" aria-roledescription="slide" aria-label="3 of 5: Undo a conversion">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/undo.jpg" aria-label="Video: Undo a conversion">
             <source src="assets/videos/undo.mp4" type="video/mp4">
           </video>
           <figcaption><b>Undo a conversion</b><span>0:10</span></figcaption>
         </figure>
-        <figure class="clip" id="watch-honest">
+        <figure class="clip slide" id="watch-honest" aria-roledescription="slide" aria-label="4 of 5: When it can&#x27;t be exact">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/honest.jpg" aria-label="Video: When it can&#x27;t be exact">
             <source src="assets/videos/honest.mp4" type="video/mp4">
           </video>
           <figcaption><b>When it can&#x27;t be exact</b><span>0:13</span></figcaption>
         </figure>
-        <figure class="clip" id="watch-quiet">
+        <figure class="clip slide" id="watch-quiet" aria-roledescription="slide" aria-label="5 of 5: Where it stays out of your way">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/quiet.jpg" aria-label="Video: Where it stays out of your way">
             <source src="assets/videos/quiet.mp4" type="video/mp4">
           </video>
           <figcaption><b>Where it stays out of your way</b><span>0:14</span></figcaption>
         </figure>
+        </div>
+        <div class="carousel-bar">
+          <button type="button" class="carousel-step" data-step="-1" aria-label="Previous video">←</button>
+          <ol class="carousel-tabs"><li><button type="button" data-slide="0" aria-current="true">Type a command, press space</button></li><li><button type="button" data-slide="1">Scripts, fractions and sums</button></li><li><button type="button" data-slide="2">Undo a conversion</button></li><li><button type="button" data-slide="3">When it can&#x27;t be exact</button></li><li><button type="button" data-slide="4">Where it stays out of your way</button></li></ol>
+          <button type="button" class="carousel-step" data-step="1" aria-label="Next video">→</button>
+        </div>
       </div>
       <p class="lede" style="margin-top:1.2rem">There are 202 symbols. Search them all on the <a href="./#symbols">home page</a>, or in the app's or extension's settings.</p>
       <p class="lede"><b>It stays out of LaTeX editors.</b> In Overleaf, TeX editors and code editors, <code>\alpha</code> has to stay <code>\alpha</code>, so LaTeX Squiggly does nothing there. You can add your own apps and sites to that list.</p>
@@ -126,14 +134,12 @@
         <li><b>Find a symbol:</b> <b>Symbols…</b> in the menu lists every command. Double-click one to copy its symbol.</li>
         <li><b>Make an image of an equation:</b> press <b>⌃⌥⌘L</b> from any app, or choose <b>Render LaTeX as Image…</b>. See <a href="#images">Turning maths into an image</a>.</li>
       </ul>
-      <div class="clips">
-        <figure class="clip" id="watch-mac">
+      <figure class="clip solo" id="watch-mac">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/mac.jpg" aria-label="Video: The Mac app">
             <source src="assets/videos/mac.mp4" type="video/mp4">
           </video>
           <figcaption><b>The Mac app</b><span>0:18</span></figcaption>
-        </figure>
-      </div>
+      </figure>
       <h3>Updating</h3>
       <p class="lede">Quit from the menu bar, drag the old app to the Trash, and install the new one. Your settings are kept. If macOS asks for the permissions again, first remove the old <b>LaTeX Squiggly</b> entries from both lists in <b>System Settings → Privacy &amp; Security</b>. Left in place, they stay ticked but do nothing.</p>
     </section>
@@ -154,14 +160,12 @@
         <li><b>Settings and symbols:</b> <b>Settings and Symbols…</b> in the tray menu. <b>Open at login</b> starts it with Windows.</li>
         <li><b>If it goes quiet:</b> the tray menu says which rule it is following, and <b>Copy diagnostics</b> puts a summary on the clipboard for a bug report.</li>
       </ul>
-      <div class="clips">
-        <figure class="clip" id="watch-windows">
+      <figure class="clip solo" id="watch-windows">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/windows.jpg" aria-label="Video: The Windows app">
             <source src="assets/videos/windows.mp4" type="video/mp4">
           </video>
           <figcaption><b>The Windows app</b><span>0:18</span></figcaption>
-        </figure>
-      </div>
+      </figure>
       <p class="lede">The Windows app also turns maths into an image: see <a href="#images">below</a>. It needs the Microsoft Edge WebView2 Runtime, which Windows 11 has and Windows 10 gets through updates.</p>
     </section>
 
@@ -177,6 +181,7 @@
       </ol>
       <h3>Using it</h3>
       <ul class="steps">
+        <li><b>Render LaTeX you see on a page:</b> select it, right-click, and choose <b>Render selection as image</b>. It opens in the renderer, ready to copy as a picture.</li>
         <li><b>Pause:</b> click the toolbar icon and switch off <b>Convert as I type</b>, or press <b>Alt+Shift+L</b> (⌥⇧L on a Mac) on any page. The icon turns grey wherever it is not converting.</li>
         <li><b>Keep it off a site:</b> click the toolbar icon on that site and switch off <b>Convert on this site</b>. Overleaf and other LaTeX sites are off already.</li>
         <li><b>Google Docs:</b> it works in documents. If Docs capitalises a Greek letter at the start of a sentence, turn off <b>Tools → Preferences → Automatically capitalize words</b> in Docs.</li>
@@ -184,19 +189,26 @@
         <li><b>Make an image of an equation:</b> the toolbar icon's <b>Renderer</b> tab, or <b>Alt+Shift+E</b>. See below.</li>
       </ul>
       <p class="lede">Only space finishes a command in the browser, because Tab moves between fields on a web page.</p>
-      <div class="clips">
-        <figure class="clip" id="watch-chat">
+      <div class="carousel" data-carousel role="region" aria-roledescription="carousel" aria-label="The Chrome extension, in videos">
+        <div class="carousel-track" tabindex="0">
+        <figure class="clip slide" id="watch-chat" aria-roledescription="slide" aria-label="1 of 2: Writing maths in a chat">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/chat.jpg" aria-label="Video: Writing maths in a chat">
             <source src="assets/videos/chat.mp4" type="video/mp4">
           </video>
           <figcaption><b>Writing maths in a chat</b><span>0:13</span></figcaption>
         </figure>
-        <figure class="clip" id="watch-pause">
+        <figure class="clip slide" id="watch-pause" aria-roledescription="slide" aria-label="2 of 2: Pausing it">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/pause.jpg" aria-label="Video: Pausing it">
             <source src="assets/videos/pause.mp4" type="video/mp4">
           </video>
           <figcaption><b>Pausing it</b><span>0:12</span></figcaption>
         </figure>
+        </div>
+        <div class="carousel-bar">
+          <button type="button" class="carousel-step" data-step="-1" aria-label="Previous video">←</button>
+          <ol class="carousel-tabs"><li><button type="button" data-slide="0" aria-current="true">Writing maths in a chat</button></li><li><button type="button" data-slide="1">Pausing it</button></li></ol>
+          <button type="button" class="carousel-step" data-step="1" aria-label="Next video">→</button>
+        </div>
       </div>
 
     </section>
@@ -205,6 +217,10 @@
       <p class="eyebrow">Mac app, Windows app and Chrome extension</p>
       <h2>Turning maths into an image</h2>
       <p class="lede">Fractions, matrices and sums with limits have no plain-text form. The renderer draws them as a picture you can paste into chats, slides, documents and emails.</p>
+      <div class="callout">
+        <p class="callout-title">Quickest in Chrome: select, right-click, render</p>
+        <p>Select LaTeX on any page, right-click, and choose <b>Render selection as image</b>. The renderer opens with it already drawn, even if it is wrapped in dollar signs. Click <b>Copy PNG</b> and paste it wherever you are.</p>
+      </div>
       <div class="guide-figure">
         <figure>
           <img src="assets/guide-renderer.png" alt="The extension's Renderer tab, showing the LaTeX for the Gaussian integral above a rendered preview, with Copy PNG, background, Copy SVG and download buttons below." width="480" height="477">
@@ -219,19 +235,44 @@
           <li><b>Paste it</b> wherever you were, with ⌘V or Ctrl+V.</li>
         </ol>
       </div>
-      <div class="clips">
-        <figure class="clip" id="watch-renderer">
+      <div class="carousel" data-carousel role="region" aria-roledescription="carousel" aria-label="Turning maths into an image, in videos">
+        <div class="carousel-track" tabindex="0">
+        <figure class="clip slide" id="watch-rightclick" aria-roledescription="slide" aria-label="1 of 5: Select LaTeX, right-click, render it">
+          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/rightclick.jpg" aria-label="Video: Select LaTeX, right-click, render it">
+            <source src="assets/videos/rightclick.mp4" type="video/mp4">
+          </video>
+          <figcaption><b>Select LaTeX, right-click, render it</b><span>0:13</span></figcaption>
+        </figure>
+        <figure class="clip slide" id="watch-renderer" aria-roledescription="slide" aria-label="2 of 5: The renderer, from start to paste">
           <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/renderer.jpg" aria-label="Video: The renderer, from start to paste">
             <source src="assets/videos/renderer.mp4" type="video/mp4">
           </video>
           <figcaption><b>The renderer, from start to paste</b><span>0:17</span></figcaption>
         </figure>
-        <figure class="clip" id="watch-rightclick">
-          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/rightclick.jpg" aria-label="Video: Right-click to render a selection">
-            <source src="assets/videos/rightclick.mp4" type="video/mp4">
+        <figure class="clip slide" id="watch-options" aria-roledescription="slide" aria-label="3 of 5: Colours, braces and History">
+          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/options.jpg" aria-label="Video: Colours, braces and History">
+            <source src="assets/videos/options.mp4" type="video/mp4">
           </video>
-          <figcaption><b>Right-click to render a selection</b><span>0:13</span></figcaption>
+          <figcaption><b>Colours, braces and History</b><span>0:11</span></figcaption>
         </figure>
+        <figure class="clip slide" id="watch-commands" aria-roledescription="slide" aria-label="4 of 5: Your own commands">
+          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/commands.jpg" aria-label="Video: Your own commands">
+            <source src="assets/videos/commands.mp4" type="video/mp4">
+          </video>
+          <figcaption><b>Your own commands</b><span>0:14</span></figcaption>
+        </figure>
+        <figure class="clip slide" id="watch-anywhere" aria-roledescription="slide" aria-label="5 of 5: Pasting the picture anywhere">
+          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/anywhere.jpg" aria-label="Video: Pasting the picture anywhere">
+            <source src="assets/videos/anywhere.mp4" type="video/mp4">
+          </video>
+          <figcaption><b>Pasting the picture anywhere</b><span>0:12</span></figcaption>
+        </figure>
+        </div>
+        <div class="carousel-bar">
+          <button type="button" class="carousel-step" data-step="-1" aria-label="Previous video">←</button>
+          <ol class="carousel-tabs"><li><button type="button" data-slide="0" aria-current="true">Select LaTeX, right-click, render it</button></li><li><button type="button" data-slide="1">The renderer, from start to paste</button></li><li><button type="button" data-slide="2">Colours, braces and History</button></li><li><button type="button" data-slide="3">Your own commands</button></li><li><button type="button" data-slide="4">Pasting the picture anywhere</button></li></ol>
+          <button type="button" class="carousel-step" data-step="1" aria-label="Next video">→</button>
+        </div>
       </div>
       <h3>Options</h3>
       <ul class="steps">
@@ -241,26 +282,6 @@
         <li><b>History</b> keeps your last 10 equations. Click one to load it again.</li>
         <li><b>Image settings</b> sets the scale, from 1× to 4×, and <b>Your commands</b>: definitions such as <code>\newcommand{\R}{\mathbb{R}}</code> that are added to every image, so you can type <code>\R</code> for ℝ.</li>
       </ul>
-      <div class="clips">
-        <figure class="clip" id="watch-options">
-          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/options.jpg" aria-label="Video: Colours, braces and History">
-            <source src="assets/videos/options.mp4" type="video/mp4">
-          </video>
-          <figcaption><b>Colours, braces and History</b><span>0:11</span></figcaption>
-        </figure>
-        <figure class="clip" id="watch-commands">
-          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/commands.jpg" aria-label="Video: Your own commands">
-            <source src="assets/videos/commands.mp4" type="video/mp4">
-          </video>
-          <figcaption><b>Your own commands</b><span>0:14</span></figcaption>
-        </figure>
-        <figure class="clip" id="watch-anywhere">
-          <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/anywhere.jpg" aria-label="Video: Pasting the picture anywhere">
-            <source src="assets/videos/anywhere.mp4" type="video/mp4">
-          </video>
-          <figcaption><b>Pasting the picture anywhere</b><span>0:12</span></figcaption>
-        </figure>
-      </div>
       <p class="lede"><b>PNG or SVG?</b> Use PNG. It is an ordinary picture and pastes everywhere. SVG is the same image stored as drawing instructions: it stays sharp at any size, but most apps paste it as a block of code. It is for design tools and web pages.</p>
       <p class="lede"><b>On the Mac,</b> a copied PNG pastes at the size it was previewed and stays sharp. In Chrome, a browser cannot tell the clipboard the image's size, so a 3× image may paste larger than expected. Resize it after pasting, or lower the scale.</p>
     </section>
