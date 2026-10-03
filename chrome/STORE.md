@@ -58,27 +58,22 @@ access. Updates that do not add permissions are usually faster.
 
 **Description**
 
+Short on purpose: the first two lines are what most people read, so they say
+what it does and lead with the renderer's right-click item.
+
 ```
-Type LaTeX in any text box on the web and get real characters. \alpha becomes α, \Rightarrow becomes ⇒, and $x^2$ becomes x², right where you typed it, as soon as you press space.
+Type LaTeX in any text box and get real characters: \alpha becomes α and $x^2$ becomes x² the moment you press space.
 
-The result is ordinary Unicode text, not an image, so it survives copying and pasting into chat messages, emails, comments and forms.
+Select LaTeX on any page, right-click, and choose Render selection as image. It opens already drawn: copy it as a PNG and paste it into a chat, an email, a slide or a doc.
 
-For what Unicode cannot write, such as fractions, matrices and braces, the popup's renderer turns LaTeX into an image: type it, see it drawn as you type, and copy it as a PNG to paste into Google Docs, Slack or an email.
+• 202 symbols, plus superscripts, subscripts, fractions and roots
+• The renderer: live preview, command suggestions, colours, braces, a transparent background and a history. Alt+Shift+E opens it, Ctrl+Enter copies
+• If something can't be written exactly in plain text, a short note says what it did
+• Quiet on Overleaf, other LaTeX sites and code editors. Alt+Shift+L pauses it anywhere
+• Works in text boxes, comment fields and Google Docs (not Sheets, Slides or the address bar)
+• Private: nothing you type is stored or sent, and it makes no network requests
 
-• 202 symbols: Greek letters, operators, relations, arrows, set theory, logic
-• Superscripts and subscripts inside dollars: $x^2$, $a_1$, $\int_0^1$
-• Fractions, roots, binomials and \mathbb{R}
-• Honest when it has to approximate: if something cannot be written exactly in plain text, a short note says what it did, and if it cannot be written at all, your text is left as typed
-• Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
-• In ordinary text boxes, undo brings the command back
-• The toolbar icon turns grey wherever it is not converting, and Alt+Shift+L pauses it anywhere
-• Renderer: maths-mode LaTeX to PNG or SVG, drawn by MathJax inside the extension, with a white or transparent background, colours, your own \newcommand definitions, command autocomplete and a history. Alt+Shift+E opens it, or right-click selected LaTeX and choose Render selection as image; Ctrl+Enter copies
-
-Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
-
-Privacy: to recognise a command, the extension keeps the last few characters you typed in a text box, in memory only, and forgets them when you click or change fields. Nothing you type in a web page is saved or sent anywhere, and the extension makes no network requests. Your settings, and the last LaTeX you typed into the renderer, are stored with Chrome.
-
-Also available as a menu bar app for macOS and a tray app for Windows, which work in every app, not only the browser.
+Also a free menu bar app for Mac and tray app for Windows, which work in every app.
 ```
 
 **Category:** Productivity (or Tools, whichever the dashboard offers).
@@ -90,9 +85,9 @@ Also available as a menu bar app for macOS and a tray app for Windows, which wor
 | Field | File |
 |---|---|
 | Store icon (128×128) | `chrome/icons/icon-128.png` |
-| Screenshots (1280×800) | `chrome/store/screenshot-1-typing.png`, `screenshot-2-notice.png`, `screenshot-3-welcome.png`, `screenshot-4-renderer.png`, `screenshot-5-paste.png` |
-| Small promo tile (440×280) | `chrome/store/promo-440x280.png` |
-| Marquee promo tile (1400×560), optional | `chrome/store/marquee-1400x560.png` |
+| Screenshots (1280×800) | `chrome/store/chrome-v2/screenshot-1-type-anywhere.png`, `screenshot-3-right-click.png`, `screenshot-2-renderer.png`, `screenshot-4-paste-anywhere.png`, `screenshot-5-control-privacy.png`, in that order, so right-click to render is second |
+| Small promo tile (440×280) | `chrome/store/chrome-v2/promo-small-440x280.png` |
+| Marquee promo tile (1400×560), optional | `chrome/store/chrome-v2/promo-marquee-1400x560.png` |
 | Promo video, optional | A YouTube link. Upload `build/latex-squiggly-demo.webm` to YouTube (Unlisted is enough) and paste its address. |
 
 The screenshots are real: the extension typing into a page, not a mock-up.
