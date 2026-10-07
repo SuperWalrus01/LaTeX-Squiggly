@@ -1,0 +1,129 @@
+# The iPhone app and its keyboard, as an XcodeGen spec.
+#
+#   brew install xcodegen
+#   cd ios && xcodegen && open LaTeXSquiggly.xcodeproj
+#
+# The .xcodeproj is generated and gitignored; edit this file instead.
+# DEVELOPMENT_TEAM is the Personal Team; change it to sign with another
+# team (Xcode > Settings > Accounts).
+
+name: LaTeXSquiggly
+options:
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+packages:
+  # The repository's own package: the keyboard reuses the Mac app's engine.
+  LaTeXSquiggly:
+    path: ..
+  # Native TeX typesetting, light enough for a keyboard extension.
+  SwiftMath:
+    url: https://github.com/mgriebling/SwiftMath
+    majorVersion: 1.0.0
+
+settings:
+  base:
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+    DEVELOPMENT_TEAM: DL65G3N2U3
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1"
+
+targets:
+  LaTeXSquiggly:
+    type: application
+    platform: iOS
+    # KeyboardUI too, for the debug-only keyboard preview.
+    sources: [App, Shared, KeyboardUI, Render]
+    dependencies:
+      - target: Keyboard
+      - target: Share
+      - target: MessagesExtension
+      - package: LaTeXSquiggly
+        product: LaTeXUnicode
+      - package: LaTeXSquiggly
+        product: InputTracking
+      - package: SwiftMath
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: LaTeX Squiggly
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIRequiresFullScreen: true
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+  Keyboard:
+    type: app-extension
+    platform: iOS
+    sources: [Keyboard, KeyboardUI, Shared]
+    dependencies:
+      - package: LaTeXSquiggly
+        product: LaTeXUnicode
+      - package: LaTeXSquiggly
+        product: InputTracking
+      - package: SwiftMath
+    info:
+      path: Keyboard/Info.plist
+      properties:
+        CFBundleDisplayName: LaTeX Squiggly
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            PrimaryLanguage: en-US
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            # Full Access is only for copying rendered images. Everything
+            # else works without it, which App Review requires.
+            RequestsOpenAccess: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios.keyboard
+
+  # Select LaTeX in any app, tap Share, and it is rendered there.
+  Share:
+    type: app-extension
+    platform: iOS
+    sources: [Share, Shared, Render]
+    dependencies:
+      - package: SwiftMath
+    info:
+      path: Share/Info.plist
+      properties:
+        CFBundleDisplayName: LaTeX Squiggly
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios.share
+
+  # In Messages' app drawer: write LaTeX and send it as an image. Not named
+  # Messages, which would hide Apple's framework of that name.
+  MessagesExtension:
+    type: app-extension.messages
+    platform: iOS
+    sources: [Messages, Shared, Render]
+    dependencies:
+      - package: SwiftMath
+    info:
+      path: Messages/Info.plist
+      properties:
+        CFBundleDisplayName: LaTeX Squiggly
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.message-payload-provider
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).MessagesViewController
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios.messages
+        ASSETCATALOG_COMPILER_APPICON_NAME: iMessage App Icon

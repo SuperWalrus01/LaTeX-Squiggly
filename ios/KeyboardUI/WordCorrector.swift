@@ -1,0 +1,122 @@
+import UIKit
+
+/// Spelling for plain words, with the system's dictionary: what the bar
+/// suggests, and what space corrects a misspelling to. LaTeX is never
+/// touched; the model only asks about words outside math.
+@MainActor
+final class WordCorrector {
+
+    struct Offer: Equatable {
+        /// The word as typed.
+        let typed: String
+        /// What space will change it to, if anything.
+        let correction: String?
+        /// More words to offer: completions, or other spellings.
+        let others: [String]
+    }
+
+    private let checker = UITextChecker()
+    private let language: String
+    /// The user's text replacements from Settings, by shortcut.
+    private var replacements: [String: String] = [:]
+    /// Names from Contacts, and the like, never corrected.
+    private var known: Set<String> = []
+    /// Words the user undid a correction of this session.
+    private var rejected: Set<String> = []
+
+    init() {
+        let languages = UITextChecker.availableLanguages
+        language = languages.first { $0.hasPrefix("en_US") }
+            ?? languages.first { $0.hasPrefix("en") } ?? "en_US"
+    }
+
+    func use(_ lexicon: UILexicon) {
+        for entry in lexicon.entries {
+            if entry.userInput == entry.documentText {
+                known.insert(entry.userInput.lowercased())
+            } else {
+                replacements[entry.userInput.lowercased()] = entry.documentText
+            }
+        }
+    }
+
+    /// Stops correcting a word the user put back.
+    func reject(_ word: String) {
+        rejected.insert(word.lowercased())
+        UITextChecker.learnWord(word)
+    }
+
+    /// The word being typed at the end of `before`. Nil for the end of a
+    /// LaTeX command, `\alpha`, or of something like `x_ab` or `2nd`.
+    static func currentWord(in before: String) -> String? {
+        let word = before.reversed().prefix { $0.isLetter || $0 == "'" || $0 == "’" }
+        guard !word.isEmpty, word.contains(where: \.isLetter) else { return nil }
+        if let previous = before.dropLast(word.count).last,
+           previous == "\\" || previous == "_" || previous == "^" || previous.isNumber {
+            return nil
+        }
+        return String(word.reversed())
+    }
+
+    func offer(for word: String) -> Offer {
+        let correction = correction(for: word)
+        let range = NSRange(location: 0, length: (word as NSString).length)
+        var others: [String] = []
+        if correction != nil {
+            others += checker.guesses(forWordRange: range, in: word, language: language) ?? []
+        }
+        others += checker.completions(forPartialWordRange: range, in: word, language: language) ?? []
+
+        var seen: Set<String> = [word.lowercased()]
+        if let correction { seen.insert(correction.lowercased()) }
+        let unique = others.filter { seen.insert($0.lowercased()).inserted }
+        return Offer(typed: word, correction: correction,
+                     others: unique.prefix(correction == nil ? 2 : 1).map { Self.matchCase($0, to: word) })
+    }
+
+    /// A correction only when the word is misspelled and the dictionary's
+    /// best guess is close: one slip in a short word, two in a longer one.
+    func correction(for word: String) -> String? {
+        let lower = word.lowercased()
+        if let replacement = replacements[lower] { return replacement }
+        if word == "i" { return "I" }
+        guard word.count >= 2, !rejected.contains(lower), !known.contains(lower),
+              // Capitals inside a word, as in iPhone or LaTeX, are meant.
+              !word.dropFirst().contains(where: \.isUppercase) else { return nil }
+
+        let range = NSRange(location: 0, length: (word as NSString).length)
+        let misspelled = checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0,
+                                                       wrap: false, language: language)
+        guard misspelled.location != NSNotFound,
+              let guess = checker.guesses(forWordRange: range, in: word, language: language)?.first,
+              Self.distance(lower, guess.lowercased()) <= (word.count <= 4 ? 1 : 2) else { return nil }
+        return Self.matchCase(guess, to: word)
+    }
+
+    /// `Teh` becomes `The`, and `TEH` becomes `THE`.
+    static func matchCase(_ guess: String, to word: String) -> String {
+        if word.count > 1, word.allSatisfy({ !$0.isLetter || $0.isUppercase }) { return guess.uppercased() }
+        if word.first?.isUppercase == true { return guess.prefix(1).uppercased() + guess.dropFirst() }
+        return guess
+    }
+
+    /// Edits between two words, where swapping two neighbours counts as one,
+    /// so `teh` is one slip from `the`.
+    static func distance(_ a: String, _ b: String) -> Int {
+        let a = Array(a), b = Array(b)
+        guard !a.isEmpty, !b.isEmpty else { return max(a.count, b.count) }
+        var d = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
+        for i in 0...a.count { d[i][0] = i }
+        for j in 0...b.count { d[0][j] = j }
+        for i in 1...a.count {
+            for j in 1...b.count {
+                let cost = a[i - 1] == b[j - 1] ? 0 : 1
+                d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
+                if i > 1, j > 1, a[i - 1] == b[j - 2], a[i - 2] == b[j - 1] {
+                    d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+                }
+            }
+        }
+        return d[a.count][b.count]
+    }
+}

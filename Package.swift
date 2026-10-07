@@ -3,7 +3,8 @@ import PackageDescription
 
 let package = Package(
     name: "LaTeXSquiggly",
-    platforms: [.macOS(.v13)],
+    // iOS is listed for the keyboard in ios/, which uses the two pure modules.
+    platforms: [.macOS(.v13), .iOS(.v16)],
     products: [
         .library(name: "LaTeXUnicode", targets: ["LaTeXUnicode"]),
         .library(name: "InputTracking", targets: ["InputTracking"]),
