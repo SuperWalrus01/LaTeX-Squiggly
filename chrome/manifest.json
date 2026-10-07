@@ -3,7 +3,7 @@
   "name": "LaTeX Squiggly",
   "short_name": "Squiggly",
   "version": "0.3.0",
-  "description": "Write maths anywhere: type \\alpha or $x^2$ in any text box to get α or x², or render LaTeX to an image to paste.",
+  "description": "Type LaTeX in any text box and get real symbols (\\alpha becomes α). Select LaTeX and right-click to copy it as an image.",
   "minimum_chrome_version": "102",
   "icons": {
     "16": "icons/icon-16.png",

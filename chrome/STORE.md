@@ -56,24 +56,53 @@ access. Updates that do not add permissions are usually faster.
 
 ## Store listing
 
-**Description**
+**Summary**
 
-Short on purpose: the first two lines are what most people read, so they say
-what it does and lead with the renderer's right-click item.
+The line under the name, in search results and at the top of the listing. It
+is `description` in `chrome/manifest.json`, at most 132 characters, so the
+dashboard cannot edit it: it changes when a package with the new text is
+uploaded.
 
 ```
-Type LaTeX in any text box and get real characters: \alpha becomes α and $x^2$ becomes x² the moment you press space.
+Type LaTeX in any text box and get real symbols (\alpha becomes α). Select LaTeX and right-click to copy it as an image.
+```
 
-Select LaTeX on any page, right-click, and choose Render selection as image. It opens already drawn: copy it as a PNG and paste it into a chat, an email, a slide or a doc.
+**Description**
 
+The first two lines are what most people read, so they say what it does, one
+line for typing and one for the renderer's right-click item. The sections
+under them explain the rest, for whoever scrolls, and end with the links. The
+store shows the description as plain text, so the links are written out in
+full.
+
+```
+Type LaTeX in any text box and get real symbols the moment you press space: \alpha becomes α, $x^2$ becomes x².
+
+Select LaTeX on any page, right-click and choose Render selection as image. Copy it as a PNG and paste it into a chat, an email, a slide or a doc.
+
+TYPING
+• \alpha → α   $x^2$ → x²   \mathbb{R} → ℝ   \sum_{i=1}^{n} → ∑ᵢ₌₁ⁿ
 • 202 symbols, plus superscripts, subscripts, fractions and roots
-• The renderer: live preview, command suggestions, colours, braces, a transparent background and a history. Alt+Shift+E opens it, Ctrl+Enter copies
+• The result is ordinary text, so anyone can read, copy and search it
 • If something can't be written exactly in plain text, a short note says what it did
-• Quiet on Overleaf, other LaTeX sites and code editors. Alt+Shift+L pauses it anywhere
-• Works in text boxes, comment fields and Google Docs (not Sheets, Slides or the address bar)
-• Private: nothing you type is stored or sent, and it makes no network requests
 
-Also a free menu bar app for Mac and tray app for Windows, which work in every app.
+RENDERER
+• For maths plain text can't hold, like stacked fractions and matrices
+• Live preview, command suggestions, colours, braces, a transparent background and a history
+• Alt+Shift+E opens it. Ctrl+Enter (Cmd+Enter on a Mac) copies the PNG
+
+WHERE IT WORKS
+• Text boxes, comment fields, web chats and Google Docs (not Sheets, Slides or the address bar)
+• Stays quiet on Overleaf, other LaTeX sites and code editors. Alt+Shift+L pauses it anywhere
+
+PRIVATE
+• Nothing you type is stored or sent, and it makes no network requests
+
+FREE AND OPEN SOURCE
+• Mac menu bar app that works in every app, not just Chrome (Windows coming soon): https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest
+• Guide: https://superwalrus01.github.io/LaTeX-Squiggly/guide.html
+• Source code: https://github.com/SuperWalrus01/LaTeX-Squiggly
+• Report a problem: https://github.com/SuperWalrus01/LaTeX-Squiggly/issues
 ```
 
 **Category:** Productivity (or Tools, whichever the dashboard offers).
@@ -98,6 +127,10 @@ link is what the listing keeps.
 The renderer's two show its actual popup, and the PNG it copied pasted into a
 message.
 Every image is a 24-bit PNG with no alpha channel, which the store requires.
+
+For holidays, `chrome/store/holidays/` has a set of these images per holiday,
+from back to uni to Pi Day, with a themed store icon. Its README says when to
+swap each set in and how.
 
 **Homepage URL:** `https://superwalrus01.github.io/LaTeX-Squiggly/`
 
