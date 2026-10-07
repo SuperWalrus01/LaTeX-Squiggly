@@ -1,0 +1,938 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>iPhone demo</title>
+<link rel="stylesheet" href="fonts-local.css">
+<style>
+:root {
+  --paper: #FAF7EE; --card: #FFFDF8; --ink: #221A12; --ink-soft: #5C5147; --rule: #E4DCCB;
+  --squiggle: #E2660F;
+  --display: "Bricolage Grotesque", sans-serif;
+  --body: "Instrument Sans", sans-serif;
+  --mono: "IBM Plex Mono", monospace;
+  --ios: "Inter", system-ui, sans-serif;
+  --blue: #0A84FF;
+  --kb: #D9DBE0;
+  --key: #FFFFFF;
+  --keyPressed: #BDC2C9;
+  --stripText: #36383C;
+  --stripDivider: #D0D2D7;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--paper); overflow: hidden; }
+#stage {
+  position: relative; overflow: hidden; background: var(--paper);
+  background-image: radial-gradient(rgba(34,26,18,.09) 1.2px, transparent 1.3px);
+  background-size: 26px 26px; font-family: var(--body); color: var(--ink);
+}
+.portrait #stage { width: 1080px; height: 1920px; }
+.landscape #stage { width: 1920px; height: 1080px; }
+
+#brand { position: absolute; display: flex; align-items: center; gap: 12px; z-index: 30;
+  font-family: var(--display); font-weight: 800; color: var(--ink); }
+#brand .mark { width: 1.05em; height: 1.25em; background: var(--squiggle); -webkit-mask: url(mark.png) center/contain no-repeat; }
+.portrait #brand { left: 56px; top: 52px; font-size: 30px; }
+.landscape #brand { left: 64px; top: 52px; font-size: 26px; }
+
+#headwrap { position: absolute; z-index: 20; }
+.portrait #headwrap { left: 0; right: 0; top: 0; height: 330px;
+  background: linear-gradient(var(--paper) 78%, rgba(250,247,238,0)); }
+.landscape #headwrap { left: 110px; width: 900px; top: 0; bottom: 0; }
+.head { position: absolute; font-family: var(--display); font-weight: 800; letter-spacing: -0.025em;
+  line-height: 1.04; color: var(--ink); }
+.head em { font-style: normal; color: var(--squiggle); }
+.portrait .head { left: 70px; right: 70px; top: 128px; font-size: 82px; text-align: center; }
+.landscape .head { left: 0; right: 0; top: 340px; font-size: 92px; }
+
+#pillwrap { position: absolute; z-index: 25; }
+.portrait #pillwrap { left: 0; right: 0; bottom: 70px; height: 90px; }
+.landscape #pillwrap { left: 110px; width: 900px; top: 700px; height: 90px; }
+.pill { position: absolute; display: inline-flex; align-items: center; gap: 18px; white-space: nowrap;
+  background: var(--ink); color: #FBF7EF; border-radius: 999px; font-weight: 600;
+  box-shadow: 0 10px 30px -12px rgba(34,26,18,.5); }
+.pill b { display: inline-grid; place-items: center; background: var(--squiggle); color: #fff; border-radius: 50%;
+  font-family: var(--display); font-weight: 800; }
+.portrait .pill { left: 50%; top: 0; font-size: 40px; padding: 18px 38px 18px 18px; }
+.portrait .pill b { width: 54px; height: 54px; font-size: 30px; }
+.landscape .pill { left: 0; top: 0; font-size: 36px; padding: 16px 34px 16px 16px; }
+.landscape .pill b { width: 48px; height: 48px; font-size: 27px; }
+
+#device { position: absolute; left: 0; top: 0; transform-origin: 0 0; z-index: 10;
+  width: 414px; height: 868px; padding: 12px; border-radius: 68px; background: #1B1A1D;
+  box-shadow: 0 0 0 2px #3A383D inset, 0 40px 90px -30px rgba(34,26,18,.55), 0 12px 30px -10px rgba(34,26,18,.25); }
+#screen { position: relative; width: 390px; height: 844px; border-radius: 56px; overflow: hidden;
+  background: #fff; font-family: var(--ios); color: #000; -webkit-font-smoothing: antialiased; }
+.island { position: absolute; left: 50%; top: 11px; width: 124px; height: 36px; margin-left: -62px;
+  background: #000; border-radius: 20px; z-index: 90; }
+.status { position: absolute; left: 0; right: 0; top: 0; height: 54px; z-index: 80; display: flex;
+  align-items: center; justify-content: space-between; padding: 6px 34px 0 50px; font-weight: 600; font-size: 17px; }
+.status .icons { display: flex; gap: 6px; align-items: center; }
+.homebar { position: absolute; left: 50%; bottom: 8px; width: 140px; height: 5px; margin-left: -70px;
+  border-radius: 3px; background: #000; z-index: 95; }
+
+.app { position: absolute; inset: 0; }
+
+/* Messages */
+.mhead { position: absolute; left: 0; right: 0; top: 0; height: 128px; padding-top: 56px; text-align: center;
+  background: rgba(249,249,249,.94); border-bottom: 0.5px solid #D6D6D8; z-index: 5; }
+.mhead .back { position: absolute; left: 14px; top: 70px; color: var(--blue); font-size: 30px; font-weight: 300; }
+.avatar { width: 46px; height: 46px; border-radius: 50%; margin: 0 auto; display: grid; place-items: center;
+  color: #fff; font-weight: 600; font-size: 20px; background: linear-gradient(#A5ABB8, #858B98); }
+.mhead .name { font-size: 12px; margin-top: 3px; color: #111; }
+.thread { position: absolute; left: 0; right: 0; top: 128px; display: flex; flex-direction: column;
+  justify-content: flex-end; padding: 0 14px 10px; gap: 6px; overflow: hidden; }
+.bubble { max-width: 270px; padding: 8px 13px; border-radius: 19px; font-size: 17px; line-height: 1.28;
+  transform-origin: bottom left; }
+.bubble.in { align-self: flex-start; background: #E9E9EB; color: #000; }
+.bubble.out { align-self: flex-end; background: var(--blue); color: #fff; transform-origin: bottom right; }
+.bubble.img { padding: 0; background: none; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,.15); }
+.when { align-self: center; font-size: 11px; color: #8A8A8E; margin: 4px 0; }
+.inputbar { position: absolute; left: 0; right: 0; display: flex; align-items: flex-end; gap: 8px;
+  padding: 7px 10px 8px; background: #fff; }
+.plus { width: 34px; height: 34px; border-radius: 50%; background: #EDEDF0; display: grid; place-items: center;
+  flex: none; color: #6F6F75; font-size: 26px; font-weight: 300; line-height: 1; }
+.field { flex: 1; min-height: 36px; border: 1px solid #D6D6D8; border-radius: 19px; padding: 7px 40px 7px 13px;
+  font-size: 17px; line-height: 21px; position: relative; color: #000; white-space: pre-wrap; word-break: break-all; }
+.field .ph { color: #B4B4B8; }
+.send { position: absolute; right: 4px; bottom: 4px; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--blue); display: grid; place-items: center; }
+.caret { display: inline-block; width: 2px; height: 21px; background: var(--blue); vertical-align: -4px;
+  margin: 0 -1px; border-radius: 1px; }
+.attach { display: block; border-radius: 12px; overflow: hidden; margin: 2px 0 4px -6px; width: fit-content;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,.15); }
+
+/* Keyboard */
+.kb { position: absolute; left: 0; right: 0; bottom: 0; height: 330px; background: var(--kb);
+  border-radius: 0; font-family: var(--ios); }
+.strip { position: absolute; left: 3.67px; right: 3.67px; top: 0; height: 46px; padding-top: 6px; display: flex;
+  align-items: stretch; color: var(--stripText); }
+.slot { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0;
+  border-radius: 8px; margin: 4px 0; position: relative; white-space: nowrap; }
+.slot.pressed { background: var(--keyPressed); }
+.div { width: 1px; height: 24px; align-self: center; background: var(--stripDivider); flex: none; }
+.slot .g { font-size: 19px; color: #000; }
+.slot .c { font-size: 15px; color: #6E7076; }
+.slot .w { font-size: 17px; }
+.slot.copy { flex: none; width: 96px; font-size: 15px; gap: 5px; }
+.slot.notice { font-size: 14px; white-space: normal; text-align: center; padding: 0 12px; }
+.slot.mathslot svg { max-height: 30px; }
+.rows { position: absolute; left: 0; right: 0; top: 46px; height: 216px; }
+.page { position: absolute; inset: 0; display: none; }
+.page.on { display: block; }
+.k { position: absolute; height: 43px; border-radius: 7px; background: var(--key); box-shadow: 0 1px 0 rgba(0,0,0,.12);
+  display: grid; place-items: center; font-size: 25px; color: #000; }
+.k.fn { font-size: 17px; }
+.k.sum { font-size: 21px; }
+.k.pressedfn { background: var(--keyPressed); }
+.callout { position: absolute; width: 52px; height: 54px; border-radius: 10px; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25); display: grid; place-items: center; font-size: 34px; z-index: 5; }
+.kbfoot { position: absolute; left: 0; right: 0; bottom: 0; height: 68px; }
+.kbfoot .globe { position: absolute; left: 28px; top: 10px; }
+.kbfoot .mic { position: absolute; right: 30px; top: 10px; }
+.panel { position: absolute; left: 6.67px; right: 6.67px; top: 46px; height: 216px; display: none;
+  flex-direction: column; gap: 10px; padding: 8px 0; }
+.panel.on { display: flex; }
+.panel .imgarea { flex: 1; display: grid; place-items: center; min-height: 0; }
+.seg { display: flex; flex: 1; height: 32px; background: #C9CBD1; border-radius: 9px; padding: 2px; gap: 2px; }
+.seg span { flex: 1; display: grid; place-items: center; font-size: 14px; font-weight: 600; border-radius: 7px; }
+.seg span.sel { background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.pbtn { flex: 1; height: 43px; border-radius: 7px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 17px; font-weight: 500; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.12); }
+.pbtn.acc { background: var(--blue); color: #fff; }
+.rcard { background: #fff; border-radius: 8px; padding: 10px 16px; box-shadow: 0 1px 0 rgba(0,0,0,.12);
+  display: grid; place-items: center; color: #000; }
+
+/* Tap indicator */
+.tap { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
+  background: rgba(30,30,30,.22); border: 2px solid rgba(255,255,255,.75); z-index: 99; pointer-events: none; }
+
+/* Edit menu */
+.editmenu { position: absolute; display: flex; background: rgba(255,255,255,.97); border-radius: 22px; z-index: 60;
+  box-shadow: 0 8px 30px rgba(0,0,0,.18), 0 0 0 0.5px rgba(0,0,0,.08); overflow: hidden; font-size: 15px; }
+.editmenu span { padding: 11px 15px; border-right: 0.5px solid #E2E2E6; white-space: nowrap; }
+.editmenu span:last-child { border-right: 0; }
+.editmenu span.hi { background: #E5E5EA; }
+
+/* Notes */
+.notes { background: #fff; }
+.notes .nav { position: absolute; top: 56px; left: 0; right: 0; height: 44px; display: flex; align-items: center;
+  padding: 0 14px; color: #D9A200; font-size: 17px; justify-content: space-between; }
+.notes .body { position: absolute; top: 108px; left: 20px; right: 20px; font-size: 17px; line-height: 1.45; }
+.notes h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+.notes .muted { color: #8A8A8E; font-size: 13px; margin-bottom: 14px; }
+.notes p { margin-bottom: 12px; }
+.sel { background: rgba(10,132,255,.22); position: relative; }
+.handle { position: absolute; width: 2px; background: var(--blue); top: -2px; bottom: -2px; }
+.handle::after { content: ""; position: absolute; left: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+.handle.l { left: -1px; } .handle.l::after { top: -9px; }
+.handle.r { right: -1px; } .handle.r::after { bottom: -9px; }
+
+/* Sheets */
+.dim { position: absolute; inset: 0; background: rgba(0,0,0,.25); z-index: 70; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #F2F2F7; border-radius: 38px 38px 0 0; z-index: 75;
+  box-shadow: 0 -10px 40px rgba(0,0,0,.15); }
+.ss-head { display: flex; gap: 12px; align-items: center; padding: 22px 22px 14px; }
+.ss-doc { width: 46px; height: 54px; border-radius: 8px; background: #fff; box-shadow: 0 0 0 0.5px #D1D1D6;
+  display: grid; place-items: center; color: #8A8A8E; font-size: 20px; }
+.ss-title { font-family: var(--mono); font-size: 13px; color: #111; max-width: 250px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ss-sub { font-size: 13px; color: #8A8A8E; margin-top: 2px; }
+.ss-x { margin-left: auto; width: 32px; height: 32px; border-radius: 50%; background: #E3E3E8; display: grid; place-items: center; color: #6E6E73; font-size: 15px; }
+.ss-apps { display: flex; gap: 20px; padding: 14px 22px 18px; border-top: 0.5px solid #D9D9DE; border-bottom: 0.5px solid #D9D9DE; background: #F2F2F7; }
+.ss-app { width: 62px; text-align: center; font-size: 11px; color: #222; }
+.ss-app .ic { width: 62px; height: 62px; border-radius: 15px; margin-bottom: 6px; display: grid; place-items: center; overflow: hidden; }
+.ss-app .ic img { width: 100%; height: 100%; }
+.ss-list { margin: 16px; background: #fff; border-radius: 12px; }
+.ss-list div { padding: 13px 16px; font-size: 17px; border-bottom: 0.5px solid #E5E5EA; display: flex; justify-content: space-between; }
+.ss-list div:last-child { border-bottom: 0; }
+
+.ext { position: absolute; left: 0; right: 0; bottom: 0; top: 66px; background: #fff; border-radius: 14px 14px 0 0; z-index: 80;
+  box-shadow: 0 -6px 30px rgba(0,0,0,.18); }
+.ext .bar { height: 54px; display: flex; align-items: center; justify-content: center; position: relative; font-weight: 600; font-size: 17px; }
+.ext .bar .done { position: absolute; right: 18px; color: var(--blue); font-weight: 600; }
+.ext .content { padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+.imgframe { display: grid; place-items: center; }
+.imgframe .rcard { box-shadow: 0 0 0 1px rgba(0,0,0,.12); border-radius: 10px; }
+.btnrow { display: flex; gap: 12px; }
+.content > .bigbtn { flex: none; }
+.bigbtn { flex: 1; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 17px; font-weight: 600; }
+.bigbtn.pro { background: var(--blue); color: #fff; }
+.bigbtn.bord { background: rgba(10,132,255,.13); color: var(--blue); }
+.optrow { display: flex; gap: 12px; }
+.optrow .seg { background: #E8E8ED; }
+.lbl { font-size: 15px; font-weight: 600; color: #8A8A8E; margin-bottom: 6px; }
+.monofield { font-family: var(--mono); font-size: 15px; background: #F2F2F7; border-radius: 10px; padding: 10px; color: #000;
+  white-space: pre-wrap; word-break: break-all; line-height: 1.4; min-height: 44px; }
+.monofield .ph { color: #B4B4B8; }
+
+/* Messages app pieces */
+.appmenu { position: absolute; left: 10px; width: 236px; background: rgba(255,255,255,.98); border-radius: 22px; z-index: 60;
+  box-shadow: 0 10px 40px rgba(0,0,0,.2); padding: 8px 0; }
+.appmenu div { display: flex; align-items: center; gap: 14px; padding: 10px 18px; font-size: 17px; }
+.appmenu .mi { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; overflow: hidden; }
+.appmenu .mi img { width: 100%; height: 100%; }
+.appmenu div.hi { background: #E5E5EA; }
+.drawer { position: absolute; left: 0; right: 0; bottom: 0; height: 330px; background: #fff; border-top: 0.5px solid #D6D6D8; }
+.drawer .hdr { height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 600; color: #333; border-bottom: 0.5px solid #E5E5EA; }
+.drawer .hdr img { width: 22px; height: 22px; border-radius: 5px; }
+.tile { width: 84px; height: 84px; border-radius: 14px; background: rgba(10,132,255,.12); color: var(--blue);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; flex: none; }
+.drawer .strip2 { display: flex; gap: 10px; align-items: center; padding: 16px; }
+.drawer .hint { font-size: 13px; color: #8A8A8E; line-height: 1.35; }
+.err { color: #FF3B30; font-size: 15px; }
+
+#end { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; text-align: center; background: var(--paper);
+  background-image: radial-gradient(rgba(34,26,18,.09) 1.2px, transparent 1.3px); background-size: 26px 26px; }
+#end .wm { display: block; margin: 0 auto; background: var(--squiggle); -webkit-mask: url(wordmark.png) center/contain no-repeat; aspect-ratio: 520/331; }
+#end .tag { font-family: var(--display); font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+#end .tag em { font-style: normal; color: var(--squiggle); }
+#end .sub { font-family: var(--body); font-weight: 600; color: var(--ink-soft); }
+.portrait #end .wm { width: 560px; } .portrait #end .tag { font-size: 66px; margin: 40px 80px 0; } .portrait #end .sub { font-size: 36px; margin-top: 26px; }
+.landscape #end .wm { width: 520px; } .landscape #end .tag { font-size: 64px; margin-top: 34px; } .landscape #end .sub { font-size: 32px; margin-top: 22px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="brand"><i class="mark"></i>LaTeX Squiggly</div>
+  <div id="headwrap"></div>
+  <div id="device"><div id="screen"></div></div>
+  <div id="pillwrap"></div>
+  <div id="end" style="display:none">
+    <div>
+      <i class="wm"></i>
+      <div class="tag">Type LaTeX anywhere.<br><em>On iPhone too.</em></div>
+      <div class="sub">Keyboard · Share sheet · Messages</div>
+    </div>
+  </div>
+</div>
+
+<script src="tables.js"></script>
+<script src="engine.js"></script>
+<script>
+document.body.className = new URLSearchParams(location.search).get("o") === "landscape" ? "landscape" : "portrait";
+const LANDSCAPE = document.body.className === "landscape";
+const ENGINE = globalThis.LaTeXSquiggly.engine;
+const TABLES = globalThis.LaTeXSquiggly.tables;
+
+// ---------- MathJax ----------
+window.MathJax = {
+  loader: { load: ["input/tex-full", "output/svg"], paths: { mathjax: "./mathjax" } },
+  tex: { packages: { "[-]": ["noundefined", "noerrors", "require", "autoload"] }, formatError: (_, err) => { throw err; } },
+  svg: { fontCache: "none" },
+  startup: { typeset: false },
+};
+const mjCache = new Map();
+function tex(latex) {
+  if (mjCache.has(latex)) return mjCache.get(latex);
+  let out = null;
+  try {
+    const node = MathJax.tex2svg(latex, { display: false });
+    const svg = node.querySelector("svg");
+    if (!svg || node.querySelector("[data-mjx-error], merror")) throw new Error("bad");
+    out = svg.outerHTML;
+  } catch (e) { out = null; }
+  mjCache.set(latex, out);
+  return out;
+}
+function rendered(latex, px, color = "#000") {
+  const svg = tex(latex);
+  if (!svg) return "";
+  return `<span style="font-size:${px}px;color:${color};display:inline-block;line-height:0">${svg}</span>`;
+}
+function card(latex, px, extra = "") {
+  return `<div class="rcard" style="${extra}">${rendered(latex, px)}</div>`;
+}
+
+// ---------- Ports of the iOS keyboard's rules ----------
+const SYMBOLS = new Map(TABLES.entries.map((e) => [e.command, e.glyph]));
+const TEMPLATES = { frac: ["\\frac{}{}", 3], sqrt: ["\\sqrt{}", 1], text: ["\\text{}", 1],
+  mathbb: ["\\mathbb{}", 1], mathrm: ["\\mathrm{}", 1], binom: ["\\binom{}{}", 3] };
+const COMMON = ["alpha","beta","gamma","delta","epsilon","theta","lambda","mu","pi","sigma","phi","omega","infty",
+  "sum","int","frac","sqrt","partial","nabla","pm","times","cdot","leq","geq","neq","approx","to","rightarrow","in",
+  "subset","cup","cap","forall","exists","Delta","Sigma","Omega","text","mathbb"];
+const RANK = new Map(COMMON.map((c, i) => [c, i]));
+function partialCommand(before) {
+  const m = before.match(/\\([A-Za-z]*)$/);
+  return m ? m[1] : null;
+}
+function suggestions(prefix, limit = 3) {
+  if (!prefix) return [];
+  const names = new Set([...SYMBOLS.keys(), ...Object.keys(TEMPLATES)]);
+  const matches = [...names].filter((n) => n.startsWith(prefix)).sort((a, b) => {
+    if ((a === prefix) !== (b === prefix)) return a === prefix ? -1 : 1;
+    const ra = RANK.has(a) ? RANK.get(a) : 1e9, rb = RANK.has(b) ? RANK.get(b) : 1e9;
+    if (ra !== rb) return ra - rb;
+    if (a.length !== b.length) return a.length - b.length;
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+  return matches.slice(0, limit).map((n) => ({ command: n, glyph: TEMPLATES[n] ? null : SYMBOLS.get(n) }));
+}
+function trailing(before) {
+  const text = before.trim();
+  if (!text) return null;
+  for (const d of ["$$", "$"]) {
+    if (text.endsWith(d)) {
+      const body = text.slice(0, -d.length);
+      const open = body.lastIndexOf(d);
+      if (open >= 0) return text.slice(open);
+    }
+  }
+  let depth = 0, start = text.length;
+  while (start > 0) {
+    const ch = text[start - 1];
+    if (/\s/.test(ch) && depth <= 0) break;
+    if (ch === "}") depth++;
+    if (ch === "{") depth--;
+    start--;
+  }
+  const run = text.slice(start);
+  return run || null;
+}
+function openBraces(before) { let d = 0; for (const c of before) { if (c === "{") d++; if (c === "}") d = Math.max(0, d - 1); } return d; }
+function looksLikeMath(s) {
+  if (s.length > 2 && s.startsWith("$") && s.endsWith("$")) return true;
+  if (/[\^_]/.test(s)) return true;
+  const i = s.indexOf("\\");
+  return i >= 0 && i + 1 < s.length && /[A-Za-z]/.test(s[i + 1]);
+}
+function stripDelimiters(s) { return s.replace(/^\$\$?/, "").replace(/\$\$?$/, ""); }
+function inMath(before) { return ((before.match(/\$/g) || []).length % 2 === 1) || openBraces(before) > 0; }
+function currentWord(before) { const m = before.match(/[A-Za-z']+$/); return m ? m[0] : null; }
+function stripFor(before, words, notice) {
+  if (notice) return { kind: "notice", text: notice };
+  const p = partialCommand(before);
+  if (p !== null) {
+    const found = suggestions(p);
+    if (!(found.length === 0 || (found.length === 1 && found[0].command === p))) return { kind: "sug", list: found };
+  }
+  const src = trailing(before);
+  if (src && looksLikeMath(src)) {
+    const latex = stripDelimiters(src);
+    if (latex && tex(latex)) return { kind: "math", latex: latex.replace(/\{\}/g, "{\\square}") };
+  }
+  if (words && !inMath(before)) { const w = currentWord(before); if (w) return { kind: "words", typed: w }; }
+  return { kind: "quick" };
+}
+
+// ---------- Keyboard layout (ios/KeyboardUI/Layouts.swift) ----------
+const UNIT = (390 - 2 * 6.67 - 9 * 6) / 10, GAP = 6, INSET = 6.67 - 3;
+const K = (label, kind, width, ch) => ({ label, kind, width, ch });
+const plain = (s) => [...s].map((c) => K(c, "text", 1, c));
+const wide = (s) => [...s].map((c) => K(c, "text", null, c));
+const SP = { spacer: true };
+const BACK = K("delete", "back", 1.35);
+const bottom = (left, extra, trail) => [left, extra, K("space", "space", null, " "), trail, K("return", "return", 2.3)];
+const BS = K("\\", "text", 1.29, "\\");
+const PAGES = {
+  letters: [plain("qwertyuiop"), [SP, ...plain("asdfghjkl"), SP], [K("shift", "shift", 1.35), SP, ...plain("zxcvbnm"), SP, BACK],
+    bottom(K("123", "page", 1.29, "@numbers"), K("∑", "page", 1.29, "@math"), BS)],
+  numbers: [plain("1234567890"), plain("-/:;()$&@\""), [K("#+=", "page", 1.35, "@symbols"), ...wide(".,?!'"), BACK],
+    bottom(K("ABC", "page", 1.29, "@letters"), K("∑", "page", 1.29, "@math"), BS)],
+  symbols: [plain("[]{}#%^*+="), plain("_\\|~<>€£¥•"), [K("123", "page", 1.35, "@numbers"), ...wide(".,?!'"), BACK],
+    bottom(K("ABC", "page", 1.29, "@letters"), K("∑", "page", 1.29, "@math"), BS)],
+  math: [
+    "α β γ δ ε θ λ μ π σ".split(" ").map((g) => K(g, "text", 1, g)),
+    "φ ω Δ Σ Ω ∞ ∂ ∇ ± ×".split(" ").map((g) => K(g, "text", 1, g)),
+    [K("·", "text", 1.35, "·"), SP, ..."≤ ≥ ≠ ≈ → ∈ ∫".split(" ").map((g) => K(g, "text", 1, g)), SP, BACK],
+    bottom(K("ABC", "page", 1.29, "@letters"), K("α", "fn", 1.29), K("123", "page", 1.29, "@numbers"))],
+};
+const ICON = {
+  shift: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 3.5 12.5H8v8h8v-8h4.5z"/></svg>`,
+  shiftOn: `<svg width="22" height="22" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 3.5 12.5H8v8h8v-8h4.5z"/></svg>`,
+  back: `<svg width="26" height="20" viewBox="0 0 28 20" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="round"><path d="M9 2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9L1.5 10z"/><path d="m13 6.5 7 7m0-7-7 7" stroke-linecap="round"/></svg>`,
+  ret: `<svg width="24" height="20" viewBox="0 0 24 20" fill="none" stroke="#000" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 3v7a3 3 0 0 1-3 3H4"/><path d="m8 9-4 4 4 4"/></svg>`,
+  globe: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3C3C43" stroke-width="1.5"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c3 3 3 16 0 19M12 2.5c-3 3-3 16 0 19"/></svg>`,
+  mic: `<svg width="22" height="26" viewBox="0 0 20 26" fill="none" stroke="#3C3C43" stroke-width="1.6" stroke-linecap="round"><rect x="6" y="1.5" width="8" height="14" rx="4"/><path d="M2.5 12a7.5 7.5 0 0 0 15 0M10 19.5v4"/></svg>`,
+  copy: `<svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6.5" y="6.5" width="11" height="11" rx="2"/><path d="M13.5 6.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v8A1.5 1.5 0 0 0 4 13.5h2.5"/></svg>`,
+  check: `<svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 10.5 4.5 4.5 8.5-10"/></svg>`,
+  kbd: `<svg width="22" height="16" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="20" height="14" rx="2.5"/><path d="M5 5h1M9 5h1M13 5h1M17 5h1M5 8.5h1M9 8.5h1M13 8.5h1M17 8.5h1M7 12h8" stroke-linecap="round"/></svg>`,
+  share: `<svg width="18" height="20" viewBox="0 0 18 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14V1.5M4.5 6 9 1.5 13.5 6"/><path d="M6 9H3.5a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 3.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 9H12"/></svg>`,
+  sun: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6 16 16M4 16l1.4-1.4M14.6 5.4 16 4"/></svg>`,
+  moon: `<svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="round"><path d="M16.5 12.5A7 7 0 0 1 7.5 3.5a7 7 0 1 0 9 9z"/></svg>`,
+  up: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5V2.5M3.5 7 8 2.5 12.5 7"/></svg>`,
+  pencil: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>`,
+};
+const STATUS = `<div class="status"><span>9:41</span><span class="icons">
+  <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"><path d="M1.5 4.5a9.5 9.5 0 0 1 13 0M4 7.3a6 6 0 0 1 8 0"/><circle cx="8" cy="10" r="1.2" fill="#000"/></svg>
+  <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="#000" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.2"/><rect x="24.5" y="4.5" width="1.6" height="4" rx=".8" opacity=".4"/></svg>
+</span></div>`;
+
+function buildKeyboard(prefix) {
+  let html = `<div class="kb" id="${prefix}kb"><div class="strip" id="${prefix}strip"></div><div class="rows">`;
+  for (const [name, rows] of Object.entries(PAGES)) {
+    html += `<div class="page" data-page="${name}">`;
+    rows.forEach((row, r) => {
+      const avail = 390 - 2 * INSET;
+      let fixed = 0, flex = 0;
+      for (const it of row) { if (it.spacer || it.width == null) flex++; else fixed += it.width * UNIT + GAP * (it.width - 1) + GAP; }
+      const share = flex ? (avail - fixed) / flex : 0;
+      let x = INSET;
+      row.forEach((it, i) => {
+        const slot = it.spacer || it.width == null ? share : it.width * UNIT + GAP * (it.width - 1) + GAP;
+        if (!it.spacer) {
+          const id = `${prefix}${name}-${r}-${i}`;
+          let label = it.label, cls = "k";
+          if (it.kind === "shift") label = `<span data-shift>${ICON.shift}</span>`;
+          else if (it.kind === "back") label = ICON.back;
+          else if (it.kind === "return") label = ICON.ret;
+          else if (it.kind === "space") label = "";
+          else if (it.kind === "page" || it.kind === "fn") cls += it.label === "∑" ? " fn sum" : " fn";
+          else if (it.ch && /[a-z]/.test(it.ch)) label = `<span data-letter>${it.label}</span>`;
+          html += `<div class="${cls}" id="${id}" style="left:${x + GAP / 2}px;width:${slot - GAP}px;top:${r * 54 + 5.5}px">${label}</div>`;
+          it.ids = it.ids || {}; it.ids[prefix] = id;
+        }
+        x += slot;
+      });
+    });
+    html += `</div>`;
+  }
+  html += `</div><div class="panel" id="${prefix}panel"></div>
+    <div class="kbfoot"><span class="globe">${ICON.globe}</span><span class="mic">${ICON.mic}</span></div></div>`;
+  return html;
+}
+function findKey(page, pred) {
+  for (const row of PAGES[page]) for (const it of row) if (!it.spacer && pred(it)) return it;
+  return null;
+}
+</script>
+<script>
+// ---------- Screens ----------
+const screen = document.getElementById("screen");
+screen.innerHTML = `
+  <div class="island"></div>${STATUS}<div class="homebar"></div>
+  <div class="app" id="chat">
+    <div class="mhead"><span class="back">‹</span><div class="avatar">S</div><div class="name">Sam ›</div></div>
+    <div class="thread" id="thread"></div>
+    <div class="inputbar" id="inputbar"><div class="plus" id="plus">+</div><div class="field" id="field"></div></div>
+    ${buildKeyboard("c-")}
+    <div class="drawer" id="drawer" style="display:none"></div>
+  </div>
+  <div class="app notes" id="notes" style="display:none">
+    <div class="nav"><span>‹ Notes</span><span>⋯</span></div>
+    <div class="body">
+      <h1>Lecture 4: Gauss</h1>
+      <div class="muted">7 October 2026 at 09:12</div>
+      <p>Gauss's law, differential form:</p>
+      <p><span id="seltext" style="font-family:var(--mono);font-size:13px;white-space:nowrap">\\nabla \\cdot E = \\frac{\\rho}{\\varepsilon_0}</span></p>
+      <p>so the divergence of the field is set by the charge density ρ. Check this against the integral form before Friday.</p>
+    </div>
+  </div>
+  <div class="dim" id="dim" style="display:none"></div>
+  <div class="sheet" id="sharesheet" style="display:none"></div>
+  <div class="ext" id="ext" style="display:none"></div>
+  <div id="menu"></div>
+  <div class="tap" id="tap" style="display:none"></div>
+`;
+</script>
+<script>
+// ---------- Timeline ----------
+// The script below plays the demo into a list of snapshots, each a full copy
+// of the state at a moment. render(t) shows the latest snapshot at or before t
+// and animates from the times stored in it, so any frame can be drawn alone.
+const S = {
+  scene: "chat", head: 0, pill: null, cam: null,
+  thread: [], field: "", fieldImg: null, fieldFocus: true, typingAt: -9,
+  page: "letters", shift: true, press: null, strip: { kind: "quick" }, notice: null,
+  panel: null, copied: false, words: true,
+  menu: null, tap: null, drawer: null, notesSel: false, share: null, ext: null,
+  kbVisible: true, end: false,
+};
+const SNAPS = [];
+const EVENTS = [];
+let NOW = 0;
+const clone = (o) => JSON.parse(JSON.stringify(o));
+function snap() { SNAPS.push({ t: NOW, s: clone(S) }); }
+function wait(dt) { NOW += dt; }
+function sound(kind, at = NOW) { EVENTS.push({ t: +at.toFixed(3), kind }); }
+function refreshStrip() { S.strip = stripFor(S.field, S.words, S.notice); }
+
+function pressKey(it, dt) {
+  S.press = { id: it.ids["c-"], t: NOW, callout: it.kind === "text" ? (it.ch && /[a-z]/.test(it.ch) && S.shift ? it.label.toUpperCase() : it.label) : null };
+  sound(it.kind === "space" ? "space" : it.kind === "back" ? "delete" : it.kind === "text" ? "key" : "mod");
+}
+function typeChar(ch, dt) {
+  // Switch pages first, as a thumb would.
+  const has = (p) => findKey(p, (k) => k.ch === ch || (ch === " " && k.kind === "space"));
+  if (!has(S.page)) {
+    const target = ["letters", "numbers", "symbols"].find(has);
+    const route = { letters: { numbers: ["@numbers"], symbols: ["@numbers", "@symbols"] },
+      numbers: { letters: ["@letters"], symbols: ["@symbols"] }, symbols: { letters: ["@letters"], numbers: ["@numbers"] },
+      math: { letters: ["@letters"], numbers: ["@numbers"], symbols: ["@numbers", "@symbols"] } }[S.page][target];
+    for (const hop of route) {
+      const k = findKey(S.page, (x) => x.ch === hop);
+      pressKey(k); S.page = hop.slice(1); S.typingAt = NOW; snap(); wait(dt * 0.9);
+    }
+  }
+  const key = has(S.page);
+  pressKey(key);
+  S.notice = null;
+  if (ch === " ") {
+    const o = ENGINE.outcome(S.field, " ");
+    if (o.kind === "replace") {
+      S.field = S.field.slice(0, S.field.length - o.deleteCount) + o.insert;
+      S.notice = o.notice;
+      if (o.source) S.lastConversion = { from: o.source, to: o.insert.trim(), t: NOW };
+    } else {
+      if (o.kind === "refuse") S.notice = o.reason;
+      S.field += " ";
+    }
+  } else {
+    let c = ch;
+    if (/[a-z]/.test(c) && S.shift) c = c.toUpperCase();
+    S.shift = false;
+    S.field += c;
+  }
+  S.typingAt = NOW;
+  refreshStrip();
+  snap(); wait(dt);
+}
+function type(text, dt) { for (const ch of text) typeChar(ch, dt); }
+function tapAt(sel, dt = 0.35, sfx = "tap") { S.tap = { sel, t: NOW }; sound(sfx); snap(); wait(dt); }
+function holdDelete(dt) {
+  const k = findKey(S.page, (x) => x.kind === "back");
+  while (S.field.length) {
+    // Holding delete removes a character, then speeds up to words.
+    S.press = { id: k.ids["c-"], t: NOW, callout: null };
+    sound("delete");
+    S.field = S.field.length > 12 ? S.field.slice(0, -4) : S.field.slice(0, -1);
+    S.typingAt = NOW; refreshStrip(); snap(); wait(dt);
+  }
+  S.shift = true; refreshStrip(); snap();
+}
+function setHead(i) { S.head = i; sound("whoosh"); }
+function setPill(n, text) { S.pill = { n, text, t: NOW }; }
+function cam(zoom, fy, dur = 0.8) { S.cam = { zoom, fy, t: NOW, dur }; }
+
+const ZOOM = LANDSCAPE ? 1.12 : 1.24;
+const HEADS = [
+  `Type LaTeX on <em>your iPhone.</em>`,
+  `Send the equation <em>as a picture.</em>`,
+  `Render LaTeX from <em>the share sheet.</em>`,
+  `Or send it <em>straight from Messages.</em>`,
+];
+const LATEX_B = "\\sum_{n=1}^{\\infty}\\frac{1}{n^2}=\\frac{\\pi^2}{6}";
+const LATEX_C = "\\nabla \\cdot E = \\frac{\\rho}{\\varepsilon_0}";
+const LATEX_D = "\\int_0^{\\infty}e^{-x^2}dx=\\frac{\\sqrt{\\pi}}{2}";
+
+function script() {
+  // ---- A: the keyboard converts on space ----
+  S.thread = [{ side: "in", text: "does the bound still hold as α grows?", t: -1 }];
+  S.head = 0; cam(ZOOM, 610, 0.01); refreshStrip(); snap();
+  wait(0.5);
+  setPill(1, "Type a command, press space"); snap();
+  type("yes, as ", 0.085);
+  type("\\al", 0.1);
+  wait(0.35);
+  setPill(2, "…or tap the suggestion");
+  S.tap = { sel: "#c-strip .slot:nth-child(1)", t: NOW }; sound("tap");
+  snap(); wait(0.12);
+  S.field = S.field.slice(0, -3) + "α"; S.tap = { sel: "#c-strip .slot:nth-child(1)", t: NOW - 0.12 };
+  refreshStrip(); snap(); wait(0.45);
+  setPill(1, "Type a command, press space"); snap();
+  type(" \\to ", 0.095);
+  wait(0.2);
+  type("\\infty ", 0.095);
+  wait(0.7);
+  tapAt("#send", 0.1, "send");
+  S.thread.push({ side: "out", text: S.field.trim(), t: NOW }); S.field = ""; S.shift = true; refreshStrip(); snap();
+  wait(1.0);
+
+  // ---- B: render above the keys, copy, paste ----
+  setHead(1); setPill(1, "It renders above the keys");
+  S.thread.push({ side: "in", text: "and what does the series converge to?", t: NOW + 0.1 }); snap();
+  wait(0.7);
+  S.words = false;
+  type(LATEX_B, 0.055);
+  wait(0.6);
+  setPill(2, "Tap it for a preview, then Copy");
+  tapAt("#c-strip .slot:nth-child(1)", 0.12);
+  S.panel = { latex: LATEX_B, t: NOW }; snap(); wait(0.9);
+  tapAt("#c-panel .pbtn.acc", 0.1, "copy");
+  S.copied = true; snap(); wait(0.8);
+  tapAt("#c-panel .pbtn:not(.acc)", 0.15);
+  S.panel = null; S.copied = false; refreshStrip(); snap(); wait(0.25);
+  holdDelete(0.05);
+  wait(0.2);
+  setPill(3, "Paste it as a picture");
+  tapAt("#field", 0.3, "tap");
+  S.menu = { kind: "paste", t: NOW }; snap(); wait(0.5);
+  tapAt("#menu .editmenu span:nth-child(1)", 0.08);
+  S.menu = null; S.fieldImg = { latex: LATEX_B, t: NOW }; sound("pop"); snap(); wait(0.75);
+  tapAt("#send", 0.1, "send");
+  S.thread.push({ side: "out", img: LATEX_B, t: NOW }); S.fieldImg = null; snap();
+  wait(0.5);
+  S.thread.push({ side: "in", text: "oh nice, π²/6 🙌", t: NOW }); sound("pop"); snap();
+  wait(1.1);
+
+  // ---- C: the share sheet ----
+  setHead(2); setPill(1, "Select LaTeX in any app, tap Share");
+  S.scene = "notes"; S.kbVisible = false; cam(1.0, 422, 0.6); snap();
+  wait(0.7);
+  S.notesSel = true; S.menu = { kind: "notes", t: NOW }; sound("tap"); snap(); wait(0.8);
+  tapAt("#menu .editmenu span:nth-child(3)", 0.15);
+  S.menu = null; S.share = { t: NOW }; sound("whoosh-soft"); snap(); wait(0.9);
+  tapAt("#ssapp", 0.12);
+  setPill(2, "It renders straight away");
+  S.ext = { kind: "share", t: NOW, copied: false }; sound("whoosh-soft"); snap(); wait(1.4);
+  tapAt("#ext .bigbtn.pro", 0.1, "copy");
+  S.ext.copied = true; snap(); wait(1.2);
+
+  // ---- D: the Messages app ----
+  setHead(3); setPill(1, "Open LaTeX Squiggly in Messages");
+  S.scene = "chat"; S.notesSel = false; S.share = null; S.ext = null; S.kbVisible = true; S.words = true;
+  S.thread = [{ side: "in", text: "ok last one, the gaussian integral?", t: NOW + 0.2 }]; S.field = ""; S.shift = true; S.page = "letters";
+  cam(ZOOM, 610, 0.6); refreshStrip(); snap(); wait(0.9);
+  tapAt("#plus", 0.12);
+  S.menu = { kind: "apps", t: NOW }; snap(); wait(0.7);
+  tapAt("#menu .appmenu div:nth-child(5)", 0.12);
+  S.menu = null; S.kbVisible = false; S.drawer = { t: NOW }; snap(); wait(0.8);
+  tapAt("#drawer .tile", 0.12);
+  setPill(2, "Write it, see it");
+  S.drawer = null; S.ext = { kind: "msg", t: NOW, src: "" }; S.kbVisible = true; S.words = false; S.page = "letters"; S.shift = false;
+  sound("whoosh-soft"); refreshStrip(); snap(); wait(0.6);
+  for (const ch of LATEX_D) {
+    typeChar(ch, 0.05);
+    S.ext.src = S.field; SNAPS[SNAPS.length - 1].s.ext.src = S.field;
+  }
+  wait(0.5);
+  setPill(3, "Add it to your message");
+  tapAt("#ext .bigbtn.pro", 0.12);
+  S.ext = null; S.fieldImg = { latex: LATEX_D, t: NOW }; S.field = ""; S.words = true; S.shift = true; refreshStrip(); sound("pop"); snap(); wait(0.7);
+  tapAt("#send", 0.1, "send");
+  S.thread.push({ side: "out", img: LATEX_D, t: NOW }); S.fieldImg = null; snap();
+  wait(1.4);
+
+  // ---- End card ----
+  S.end = true; S.endT = NOW; sound("end"); snap();
+  wait(3.2);
+  snap();
+}
+</script>
+<script>
+// ---------- Rendering ----------
+const $ = (s) => document.querySelector(s);
+const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const out = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3));
+const memo = {};
+function setHTML(el, key, html) { if (memo[key] !== html) { memo[key] = html; el.innerHTML = html; } }
+
+const LAYOUT = LANDSCAPE
+  ? { s0: 1.06, cx: 1440, top: 75 }
+  : { s0: 1.56, cx: 540, top: 330 };
+
+let prevCam = { zoom: 1, fy: 600 };
+function camAt(t) {
+  // Interpolate between camera keyframes found in the snapshots.
+  let from = { zoom: 1, fy: 600 }, to = null;
+  for (const sn of SNAPS) {
+    const c = sn.s.cam;
+    if (!c || sn.t > t) break;
+    if (!to || c.t !== to.t) { if (to) from = valueAt(to, Infinity); to = c; }
+  }
+  return to ? valueAt(to, t, from) : from;
+  function valueAt(c, tt, f = from) {
+    const k = ease((tt - c.t) / c.dur);
+    return { zoom: f.zoom + (c.zoom - f.zoom) * k, fy: f.fy + (c.fy - f.fy) * k };
+  }
+}
+
+function render(t) {
+  let lo = 0, hi = SNAPS.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (SNAPS[mid].t <= t) lo = mid; else hi = mid - 1; }
+  const s = SNAPS[lo].s;
+
+  // Camera and device
+  const c = camAt(t);
+  const sc = LAYOUT.s0 * c.zoom;
+  const baseY = LAYOUT.top + (12 + c.fy) * LAYOUT.s0;
+  const x = LAYOUT.cx - 207 * sc, y = baseY - (12 + c.fy) * sc;
+  let endK = s.end ? out((t - s.endT) / 0.6) : 0;
+  $("#device").style.transform = `translate(${x}px,${y + endK * 120}px) scale(${sc * (1 - 0.08 * endK)})`;
+  $("#device").style.opacity = 1 - endK;
+
+  // Headline: cross-fade from the previous one
+  const heads = SNAPS.filter((sn) => sn.t <= t).map((sn) => sn.s.head);
+  const cur = s.head;
+  let changedAt = 0;
+  for (const sn of SNAPS) { if (sn.t > t) break; if (sn.s.head !== cur) changedAt = -1; else if (changedAt === -1) changedAt = sn.t; }
+  if (changedAt === -1) changedAt = 0;
+  const hk = out((t - changedAt) / 0.5);
+  setHTML($("#headwrap"), "head", `<div class="head" id="h">${HEADS[cur]}</div>`);
+  $("#h").style.opacity = cur === 0 && changedAt === 0 ? out(t / 0.4) : hk;
+  $("#h").style.transform = `translateY(${(1 - hk) * 24}px)`;
+  $("#headwrap").style.opacity = 1 - endK;
+  $("#brand").style.opacity = 1 - endK;
+
+  // Pill
+  if (s.pill) {
+    setHTML($("#pillwrap"), "pill", `<div class="pill" id="pl"><b>${s.pill.n}</b>${s.pill.text}</div>`);
+    const pk = out((t - s.pill.t) / 0.35);
+    $("#pl").style.opacity = pk * (1 - endK);
+    $("#pl").style.transform = `${LANDSCAPE ? "" : "translateX(-50%) "}translateY(${(1 - pk) * 16}px) scale(${0.96 + 0.04 * pk})`;
+  } else setHTML($("#pillwrap"), "pill", "");
+
+  // End card
+  $("#end").style.display = s.end ? "grid" : "none";
+  if (s.end) {
+    const ek = out((t - s.endT - 0.25) / 0.6);
+    $("#end").style.opacity = out((t - s.endT) / 0.5);
+    $("#end > div").style.transform = `scale(${0.94 + 0.06 * ek})`;
+  }
+
+  // Screens
+  $("#chat").style.display = s.scene === "chat" ? "block" : "none";
+  $("#notes").style.display = s.scene === "notes" ? "block" : "none";
+  renderChat(s, t);
+  renderNotes(s, t);
+  renderMenu(s, t);
+  renderTap(s, t);
+}
+
+function renderChat(s, t) {
+  // Thread
+  const html = s.thread.map((b, i) => {
+    const content = b.img ? card(b.img, 22, "box-shadow:none;border-radius:0;padding:14px 18px") : esc(b.text);
+    return `<div class="bubble ${b.side}${b.img ? " img" : ""}" data-i="${i}">${content}</div>`;
+  }).join("");
+  setHTML($("#thread"), "thread", `<div class="when">iMessage · Today 9:41</div>` + html);
+  for (const el of $("#thread").querySelectorAll(".bubble")) {
+    const b = s.thread[+el.dataset.i];
+    const k = out((t - b.t) / 0.28);
+    el.style.opacity = k; el.style.transform = `scale(${0.85 + 0.15 * k}) translateY(${(1 - k) * 10}px)`;
+  }
+  // Field
+  const caretOn = t - s.typingAt < 0.5 || Math.floor(t * 2) % 2 === 0;
+  let f = "";
+  if (s.fieldImg) f += `<span class="attach">${card(s.fieldImg.latex, 15, "box-shadow:none;border-radius:0;padding:8px 10px")}</span>`;
+  if (s.field) f += esc(s.field);
+  else if (!s.fieldImg) f += "";
+  f += s.fieldFocus && !s.ext && s.scene === "chat" && !s.drawer && s.kbVisible ? `<span class="caret" style="opacity:${caretOn ? 1 : 0}"></span>` : "";
+  if (!s.field && !s.fieldImg) f += `<span class="ph">iMessage</span>`;
+  const canSend = s.field.trim() || s.fieldImg;
+  f += canSend ? `<span class="send" id="send">${ICON.up}</span>` : "";
+  setHTML($("#field"), "field", f);
+  if (s.fieldImg) { const k = out((t - s.fieldImg.t) / 0.25); $("#field .attach").style.transform = `scale(${0.8 + 0.2 * k})`; $("#field .attach").style.opacity = k; }
+
+  // Keyboard or drawer
+  const kbH = 330;
+  const kb = $("#c-kb");
+  kb.style.display = s.kbVisible ? "block" : "none";
+  $("#inputbar").style.bottom = (s.kbVisible || s.drawer ? kbH : 34) + "px";
+  const ib = $("#inputbar").getBoundingClientRect(), sc = screen.getBoundingClientRect();
+  $("#thread").style.bottom = ((s.kbVisible || s.drawer ? kbH : 34) + ib.height / (sc.width / 390)) + "px";
+  for (const p of kb.querySelectorAll(".page")) p.classList.toggle("on", p.dataset.page === s.page && !s.panel);
+  for (const el of kb.querySelectorAll("[data-letter]")) el.textContent = s.shift ? el.textContent.toUpperCase() : el.textContent.toLowerCase();
+  for (const el of kb.querySelectorAll("[data-shift]")) setHTML(el, "shift" + el.parentNode.id, s.shift ? ICON.shiftOn : ICON.shift);
+  // Pressed key
+  for (const el of kb.querySelectorAll(".k.pressedfn")) el.classList.remove("pressedfn");
+  const old = kb.querySelector(".callout"); if (old) old.remove();
+  if (s.press && t - s.press.t < 0.11 && !s.panel) {
+    const el = document.getElementById(s.press.id);
+    if (el) {
+      if (s.press.callout) {
+        const co = document.createElement("div");
+        co.className = "callout"; co.textContent = s.press.callout;
+        const l = parseFloat(el.style.left), w = parseFloat(el.style.width), top = parseFloat(el.style.top);
+        let cx = l + w / 2 - 26;
+        cx = Math.max(2, Math.min(390 - 54, cx));
+        co.style.left = cx + "px"; co.style.top = (top - 43 + 2 + 46 - 11) + "px";
+        el.parentNode.parentNode.parentNode.appendChild(co);
+        co.style.top = (46 + top - 43 - 9) + "px";
+      } else el.classList.add("pressedfn");
+    }
+  }
+  renderStrip($("#c-strip"), s.strip, s, t);
+  // Preview panel
+  const panel = $("#c-panel");
+  panel.classList.toggle("on", !!s.panel);
+  if (s.panel) {
+    setHTML(panel, "panel" + s.copied, `
+      <div class="imgarea">${card(s.panel.latex, 28)}</div>
+      <div style="display:flex;gap:8px"><div class="seg"><span>S</span><span class="sel">M</span><span>L</span></div>
+        <div class="seg"><span class="sel">${ICON.sun}</span><span>${ICON.moon}</span></div></div>
+      <div style="display:flex;gap:8px"><div class="pbtn acc">${s.copied ? ICON.check : ICON.copy}${s.copied ? "Copied" : "Copy"}</div>
+        <div class="pbtn">${ICON.kbd}Keys</div></div>`);
+  }
+  // Drawer
+  const dr = $("#drawer");
+  dr.style.display = s.drawer ? "block" : "none";
+  if (s.drawer) {
+    setHTML(dr, "drawer", `<div class="hdr"><img src="appicon.png">LaTeX Squiggly</div>
+      <div class="strip2"><div class="tile">${ICON.pencil}New</div>
+      <div class="hint">Write LaTeX, see it rendered,<br>and send it as an image.</div></div>`);
+    const k = out((t - s.drawer.t) / 0.3); dr.style.transform = `translateY(${(1 - k) * 330}px)`;
+  }
+  // The Messages app, expanded
+  const ext = $("#ext");
+  if (s.ext && s.ext.kind === "msg") {
+    ext.style.display = "block";
+    const r = s.ext.src ? lastGood(s.ext.src) : null;
+    setHTML(ext, "ext-msg" + s.ext.src, `<div class="bar">LaTeX Squiggly<span class="done" style="color:#8A8A8E;left:18px;right:auto;font-weight:400">✕</span></div>
+      <div class="content" style="gap:14px">
+        <div class="monofield">${s.ext.src ? esc(s.ext.src) : `<span class="ph">LaTeX, like \\frac{a}{b} or $x^2$</span>`}<span class="caret"></span></div>
+        <div class="imgframe" style="min-height:76px">${r ? card(r, 20) : `<span style="color:#8A8A8E;font-size:15px">Type some LaTeX, like x^2 or $\\alpha$.</span>`}</div>
+        <div class="bigbtn pro" style="${r ? "" : "opacity:.4"}">${ICON.up.replace('stroke="#fff"', 'stroke="#fff"')}Add to message</div>
+      </div>`);
+    const k = out((t - s.ext.t) / 0.35); ext.style.transform = `translateY(${(1 - k) * 700}px)`;
+    ext.style.bottom = "330px"; ext.style.borderRadius = "14px 14px 0 0"; ext.style.zIndex = 40;
+  } else if (!(s.ext && s.ext.kind === "share")) ext.style.display = "none";
+}
+const goodCache = new Map();
+function lastGood(src) {
+  // While a brace is open the preview keeps the last rendering that parsed.
+  if (goodCache.has(src)) return goodCache.get(src);
+  let r = null;
+  for (let n = src.length; n > 0 && !r; n--) { const sub = src.slice(0, n); if (openBraces(sub) === 0 && tex(sub)) r = sub; }
+  goodCache.set(src, r);
+  return r;
+}
+
+function renderStrip(el, st, s, t) {
+  let h = "";
+  const div = `<span class="div"></span>`;
+  if (st.kind === "quick") {
+    h = ["$…$", "{ }", "x²", "x₂", "a⁄b"].map((l) => `<span class="slot"><span style="font-size:18px">${l}</span></span>`).join(div);
+  } else if (st.kind === "sug") {
+    h = st.list.map((g) => `<span class="slot">${g.glyph ? `<span class="g">${g.glyph}</span>` : ""}<span class="c">\\${g.command}</span></span>`).join(div);
+  } else if (st.kind === "words") {
+    h = `<span class="slot"><span class="w">“${esc(st.typed)}”</span></span>${div}<span class="slot"></span>${div}<span class="slot"></span>`;
+  } else if (st.kind === "math") {
+    h = `<span class="slot mathslot" style="padding:0 10px">${rendered(st.latex, 18)}</span>${div}<span class="slot copy">${ICON.copy}Copy</span>`;
+  } else if (st.kind === "notice") {
+    h = `<span class="slot notice">${esc(st.text)}</span>`;
+  }
+  setHTML(el, "strip" + el.id, h);
+}
+
+function renderNotes(s, t) {
+  const sel = $("#seltext");
+  sel.className = s.notesSel ? "sel" : "";
+  setHTML(sel, "selh" + s.notesSel, esc("\\nabla \\cdot E = \\frac{\\rho}{\\varepsilon_0}") + (s.notesSel ? `<span class="handle l"></span><span class="handle r"></span>` : ""));
+  const show = s.scene === "notes" && (s.share || s.ext);
+  $("#dim").style.display = show ? "block" : "none";
+  const sh = $("#sharesheet");
+  sh.style.display = s.scene === "notes" && s.share ? "block" : "none";
+  if (s.share) {
+    setHTML(sh, "share", `<div class="ss-head"><div class="ss-doc">Aa</div><div><div class="ss-title">${esc(LATEX_C)}</div><div class="ss-sub">Plain Text</div></div><div class="ss-x">✕</div></div>
+      <div class="ss-apps">
+        <div class="ss-app" id="ssapp"><div class="ic"><img src="appicon.png"></div>LaTeX Squiggly</div>
+        <div class="ss-app"><div class="ic" style="background:#34C759;color:#fff;font-size:30px">💬</div>Messages</div>
+        <div class="ss-app"><div class="ic" style="background:#1E8CFF;color:#fff;font-size:28px">✉︎</div>Mail</div>
+        <div class="ss-app"><div class="ic" style="background:#FFD60A;color:#fff;font-size:28px">✎</div>Notes</div>
+      </div>
+      <div class="ss-list"><div>Copy <span>⧉</span></div><div>Save to Files <span>🗀</span></div><div>Find in Note <span>⌕</span></div></div>`);
+    const k = out((t - s.share.t) / 0.35);
+    sh.style.transform = `translateY(${(1 - k) * 500}px)`; sh.style.height = "470px";
+    $("#dim").style.opacity = k;
+  }
+  const ext = $("#ext");
+  if (s.scene === "notes" && s.ext && s.ext.kind === "share") {
+    ext.style.display = "block"; ext.style.bottom = "0"; ext.style.zIndex = 80;
+    setHTML(ext, "ext-share" + s.ext.copied, `<div class="bar">LaTeX Squiggly<span class="done">Done</span></div>
+      <div class="content">
+        <div class="imgframe">${card(LATEX_C, 28)}</div>
+        <div class="btnrow"><div class="bigbtn pro">${s.ext.copied ? ICON.check : ICON.copy}${s.ext.copied ? "Copied" : "Copy"}</div><div class="bigbtn bord">${ICON.share}Share</div></div>
+        <div class="optrow"><div class="seg"><span>S</span><span class="sel">M</span><span>L</span></div><div class="seg"><span class="sel">${ICON.sun}</span><span>${ICON.moon}</span></div></div>
+        <div><div class="lbl">LaTeX</div><div class="monofield">${esc(LATEX_C)}</div></div>
+      </div>`);
+    const k = out((t - s.ext.t) / 0.4); ext.style.transform = `translateY(${(1 - k) * 800}px)`;
+  }
+}
+
+function renderMenu(s, t) {
+  const m = $("#menu");
+  if (!s.menu) { setHTML(m, "menu", ""); return; }
+  const k = out((t - s.menu.t) / 0.2);
+  if (s.menu.kind === "paste") {
+    setHTML(m, "menu", `<div class="editmenu" style="left:52px;bottom:${330 + 58}px"><span>Paste</span><span>AutoFill ›</span></div>`);
+  } else if (s.menu.kind === "notes") {
+    setHTML(m, "menu", `<div class="editmenu" style="left:22px;top:170px"><span>Cut</span><span>Copy</span><span>Share…</span><span>Look Up</span><span>›</span></div>`);
+  } else if (s.menu.kind === "apps") {
+    setHTML(m, "menu", `<div class="appmenu" style="bottom:${330 + 60}px">
+      <div><span class="mi" style="background:#8E8E93;color:#fff">◉</span>Camera</div>
+      <div><span class="mi" style="background:linear-gradient(135deg,#FF9F0A,#FF375F,#BF5AF2,#0A84FF);color:#fff">✿</span>Photos</div>
+      <div><span class="mi" style="background:#FFD60A">☺</span>Stickers</div>
+      <div><span class="mi" style="background:#FF375F;color:#fff">♪</span>Audio</div>
+      <div><span class="mi"><img src="appicon.png"></span>LaTeX Squiggly</div></div>`);
+  }
+  const el = m.firstElementChild;
+  el.style.opacity = k; el.style.transform = `scale(${0.9 + 0.1 * k})`;
+}
+
+function renderTap(s, t) {
+  const tap = $("#tap");
+  if (!s.tap || t - s.tap.t > 0.45) { tap.style.display = "none"; return; }
+  const target = document.querySelector(s.tap.sel);
+  if (!target) { tap.style.display = "none"; return; }
+  const r = target.getBoundingClientRect(), sc = screen.getBoundingClientRect(), f = sc.width / 390;
+  tap.style.display = "block";
+  tap.style.left = (r.left + r.width / 2 - sc.left) / f + "px";
+  tap.style.top = (r.top + r.height / 2 - sc.top) / f + "px";
+  const k = (t - s.tap.t) / 0.45;
+  tap.style.opacity = k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4;
+  tap.style.transform = `scale(${1 - 0.25 * Math.min(1, k * 3)})`;
+}
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+// ---------- Boot ----------
+window.MathJax.startup.ready = () => {
+  MathJax.startup.defaultReady();
+  MathJax.startup.promise.then(async () => {
+    await document.fonts.ready;
+    await Promise.all([...document.images].map((i) => i.decode().catch(() => {})));
+    script();
+    window.DURATION = NOW;
+    window.EVENTS = EVENTS;
+    render(0);
+    window.READY = true;
+  });
+};
+const mj = document.createElement("script");
+mj.src = "./mathjax/startup.js";
+document.head.appendChild(mj);
+</script>
+</body>
+</html>
