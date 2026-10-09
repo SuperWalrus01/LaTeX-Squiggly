@@ -1,6 +1,7 @@
 #!/bin/sh
 # Makes the App Store screenshots: screens from the app's debug screens on a
-# 6.9-inch iPhone, then store/make-store.py puts a headline over each.
+# 6.9-inch iPhone, then store/make-store.py puts each in an iPhone under an
+# orange banner with its headline.
 #
 #   scripts/make-store-shots.sh
 #
@@ -15,7 +16,12 @@ rm -rf ../build/store && mkdir -p "$RAW"
 
 xcrun simctl delete "$SIM" 2>/dev/null || true
 xcrun simctl create "$SIM" "iPhone 17 Pro Max" >/dev/null
-xcrun simctl boot "$SIM"
+xcrun simctl bootstatus "$SIM" -b >/dev/null
+# A 12-hour clock, so the status bar says 9:41 as Apple's own images do,
+# not 09:41. It takes a restart to show.
+xcrun simctl spawn "$SIM" defaults write -g AppleLocale -string en_US
+xcrun simctl shutdown "$SIM"
+xcrun simctl bootstatus "$SIM" -b >/dev/null
 xcrun simctl ui "$SIM" appearance light
 xcrun simctl status_bar "$SIM" override --time 9:41 --batteryState discharging --batteryLevel 100 \
   --wifiBars 3 --cellularMode active --cellularBars 4

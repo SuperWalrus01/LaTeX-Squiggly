@@ -70,6 +70,9 @@ private struct DebugTextView: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
         view.font = .systemFont(ofSize: 20)
+        // Side margins like Notes'. The top and bottom stay as they were, so
+        // the user guide's crops still fall between lines.
+        view.textContainerInset = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
         view.text = ProcessInfo.processInfo.environment["PREVIEW_TEXT"] ?? ""
         if useOurKeyboard {
             let host = PreviewHost(textView: view)

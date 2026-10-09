@@ -178,11 +178,20 @@ smaller iPhones, so this one set is all it needs.
 **iMessage App** (the tab beside iPhone, there because of the Messages
 extension): `ios/store/imessage-1-write.png`.
 
+The App Store has no banner image of its own, unlike Google Play or the
+Chrome Web Store: a product page opens on the icon, name and subtitle, then
+the screenshots, and search results show the first three. So the banner is in
+the screenshots: each has the orange banner with its headline across the top,
+and the first is the hero, with the wordmark and the mascot. A large header
+image only appears if Apple features the app; to ask, use **Featuring
+Nominations** in App Store Connect after release.
+
 Every image is 1320×2868, RGB with no transparency, as App Store Connect
 requires. They are real screens from the app, made by
 `ios/scripts/make-store-shots.sh`, which builds the app, opens each screen in
-a 6.9-inch simulator and puts the headlines on with `ios/store/make-store.py`.
-Run it again after the keyboard or the app's screens change.
+a 6.9-inch simulator and puts it in an iPhone under the banner with
+`ios/store/make-store.py`. Run it again after the keyboard or the app's
+screens change.
 
 An **App Preview** video is optional. The demo in `ios/guide/` is 2 minutes
 24 seconds and previews must be 15 to 30 seconds, so it would need cutting
