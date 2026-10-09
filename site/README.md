@@ -6,7 +6,7 @@ A plain static site: no build step, no framework, no dependencies. Open
 ```
 site/
   index.html            the page
-  privacy.html          the privacy policy, for all three platforms
+  privacy.html          the privacy policy, for every platform
   guide.html            how to use it, on each platform
   assets/styles.css     one stylesheet, tokens for light and dark
   assets/app.js         the live demo and the symbol browser

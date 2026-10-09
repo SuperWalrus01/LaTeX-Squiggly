@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LaTeX Squiggly Privacy</title>
-<meta name="description" content="What LaTeX Squiggly does with what you type: it reads it on your own computer to recognise LaTeX, and never stores or sends it.">
+<meta name="description" content="What LaTeX Squiggly does with what you type: it reads it on your own computer or phone to recognise LaTeX, and never stores or sends it.">
 <meta name="theme-color" content="#FAF7EE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#17130F" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -26,7 +26,7 @@
     <section style="border-top:0">
       <p class="eyebrow">Privacy</p>
       <h2>What happens to what you type</h2>
-      <p class="lede">LaTeX Squiggly has to see your typing to turn <code>\alpha</code> into α. It does that entirely on your own computer. Nothing you type in a web page or another app is stored, logged or sent anywhere, and the apps and the extension make no network requests at all.</p>
+      <p class="lede">LaTeX Squiggly has to see your typing to turn <code>\alpha</code> into α. It does that entirely on your own computer or phone. Nothing you type in a web page or another app is stored, logged or sent anywhere, and the apps and the extension make no network requests at all.</p>
     </section>
 
     <section>
@@ -45,9 +45,18 @@
     </section>
 
     <section>
+      <h2>The iPhone app</h2>
+      <p class="lede"><b>The keyboard.</b> While you type with it, the keyboard reads the text around the cursor in the field you are typing in, as every iPhone keyboard does, to convert a command, suggest a spelling or show your equation rendered. That text is used in memory and never stored or sent. For spelling, iOS also hands keyboards your text replacements and the names in your contacts, which are used the same way.</p>
+      <p class="lede"><b>Full Access.</b> The keyboard works without it. If you turn on Allow Full Access, iOS warns that a keyboard could then send what you type over the network. LaTeX Squiggly uses Full Access only to put a rendered equation on the clipboard, and makes no network requests with it or without it.</p>
+      <p class="lede"><b>What it keeps.</b> Your settings: whether the keyboard types symbols or LaTeX, and the size and colour of rendered images. The Messages app also keeps the LaTeX of the last 12 equations you sent, so you can send them again; the images themselves are not kept. These stay on your iPhone, in the app's own storage.</p>
+      <p class="lede"><b>Rendering.</b> The app, the share sheet and Messages make each image on your iPhone. It goes only where you copy, share, save or send it. Saving to Photos asks for permission to add images, and the app never reads your photos.</p>
+      <p class="lede"><b>What it never does.</b> It does not collect, transmit, sell or share any data, and has no analytics, advertising or tracking. Nothing reaches the developer, so there is nothing for them to delete: deleting the app removes everything it kept on your iPhone.</p>
+    </section>
+
+    <section>
       <h2>Questions</h2>
       <p class="lede">The source code is public, so every claim here can be checked. Questions and reports are welcome as <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">GitHub issues</a>.</p>
-      <p class="lede">Last updated 24 September 2026.</p>
+      <p class="lede">Last updated 9 October 2026.</p>
     </section>
   </main>
 </div>
