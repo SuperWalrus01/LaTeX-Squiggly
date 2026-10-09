@@ -390,18 +390,15 @@ private struct StripView: View {
         }
     }
 
-    /// As in iOS: the word as typed in quotes, then what space will correct
-    /// it to, in bold, or the likeliest completions.
+    /// As in iOS: the word as typed in quotes, to keep it, then other words
+    /// to put in its place. None is bold, because none is applied unless
+    /// tapped.
     private func words(_ offer: WordCorrector.Offer) -> some View {
-        var choices: [(label: String, word: String, bold: Bool, keep: Bool)] = [
-            ("\u{201C}\(offer.typed)\u{201D}", offer.typed, false, true),
-        ]
-        if let correction = offer.correction { choices.append((correction, correction, true, false)) }
-        choices += offer.others.map { ($0, $0, false, false) }
-        return slots(choices.map { choice in
-            AnyView(StripButton { model.accept(word: choice.word, keepingTyped: choice.keep) } label: {
-                Text(choice.label)
-                    .font(.system(size: 17, weight: choice.bold ? .semibold : .regular))
+        let choices = [("\u{201C}\(offer.typed)\u{201D}", offer.typed)] + offer.suggestions.map { ($0, $0) }
+        return slots(choices.map { label, word in
+            AnyView(StripButton { model.accept(word: word) } label: {
+                Text(label)
+                    .font(.system(size: 17))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .padding(.horizontal, 4)

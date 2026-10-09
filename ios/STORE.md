@@ -212,7 +212,7 @@ TYPING
 • Over 200 symbols: Greek letters, operators, relations, arrows and sets
 • Suggestions as you type a command: \al offers α
 • The ∑ key has Greek letters and maths symbols. Hold a key for more
-• Spelling, capitals and double space for a full stop, like the iPhone keyboard. Hold space to move the cursor
+• Spelling suggestions that never change a word unless you tap one, capitals, and double space for a full stop. Hold space to move the cursor
 • LaTeX mode keeps everything as LaTeX, for writing LaTeX documents
 
 RENDERING

@@ -3,7 +3,7 @@ import XCTest
 /// Types on our keyboard in the app's debug preview and checks the text,
 /// for what makes typing feel like the system keyboard: capitals at the
 /// start of a sentence, space that is never lost, punctuation after a
-/// suggested word, and LaTeX converting on space.
+/// suggested word, words left as typed, and LaTeX converting on space.
 final class TypingTests: XCTestCase {
 
     private var app: XCUIApplication!
@@ -66,6 +66,13 @@ final class TypingTests: XCTestCase {
     func testCommandConvertsOnSpace() {
         type("\\alpha ")
         XCTAssertEqual(text, "α ")
+    }
+
+    func testNothingIsCorrectedWithoutATap() {
+        type("teh")
+        XCTAssertTrue(app.buttons["The"].firstMatch.waitForExistence(timeout: 3), "the bar offers the spelling")
+        tap("space")
+        XCTAssertEqual(text, "Teh ")
     }
 
     func testPunctuationTakesBackSuggestionSpace() {

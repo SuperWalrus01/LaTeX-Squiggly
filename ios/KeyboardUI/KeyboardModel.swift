@@ -77,13 +77,11 @@ final class KeyboardModel: ObservableObject {
     private var lastShiftTap = Date.distantPast
     private var lastPlainSpace = Date.distantPast
     private let words = WordCorrector()
-    /// The last change space made, a spelling correction or LaTeX converted,
-    /// so delete straight after undoes it.
+    /// The LaTeX space last converted, so delete straight after undoes it.
     private struct Change {
         let original: String
         let replacement: String
         let terminator: String
-        let isSpelling: Bool
     }
     private var lastChange: Change?
     /// LaTeX the user put back after it converted, which space then leaves.
@@ -158,8 +156,6 @@ final class KeyboardModel: ObservableObject {
                     lastTyped = text.last
                     break
                 }
-                // Punctuation ends a word, so it corrects it first, as space does.
-                if autocorrect(adding: text) { break }
             }
             proxy?.insertText(text)
             lastTyped = text.last
@@ -178,16 +174,16 @@ final class KeyboardModel: ObservableObject {
             if page == .numbers || page == .symbols, !Self.inMath(before) { page = .letters }
         case .backspace:
             if let change, before.hasSuffix(change.replacement + change.terminator) {
-                // Delete straight after a correction or a conversion puts
-                // back what was typed, and space then leaves it alone.
+                // Delete straight after a conversion puts back the LaTeX,
+                // and space then leaves it alone.
                 for _ in 0..<(change.replacement + change.terminator).count { proxy?.deleteBackward() }
                 proxy?.insertText(change.original)
-                if change.isSpelling { words.reject(change.original) } else { keptLaTeX = change.original }
+                keptLaTeX = change.original
             } else {
                 proxy?.deleteBackward()
             }
         case .newline:
-            if !autocorrect(adding: "\n") { proxy?.insertText("\n") }
+            proxy?.insertText("\n")
         case .shift:
             tapShift()
             refresh()
@@ -225,11 +221,11 @@ final class KeyboardModel: ObservableObject {
         refresh(releasingShift: true)
     }
 
-    /// Puts a word from the bar in place of the one being typed. Choosing
-    /// the word as typed keeps it, and space stops correcting it.
-    func accept(word: String, keepingTyped: Bool) {
+    /// Puts a word from the bar in place of the one being typed. Words are
+    /// only ever changed this way, when the user taps one: nothing is
+    /// corrected on its own.
+    func accept(word: String) {
         guard let proxy, let typed = WordCorrector.currentWord(in: before) else { return }
-        if keepingTyped { words.reject(typed) }
         for _ in 0..<typed.count { proxy.deleteBackward() }
         proxy.insertText(word + " ")
         lastTyped = " "
@@ -378,27 +374,14 @@ final class KeyboardModel: ObservableObject {
         return .quick
     }
 
-    /// Spelling help, unless the text field turns it off, as code editors,
-    /// address bars and email fields do.
+    /// Spelling suggestions, unless the text field turns them off, as code
+    /// editors, address bars and email fields do.
     private var wordsWanted: Bool {
         guard let proxy, proxy.autocorrectionType != .no else { return false }
         switch proxy.keyboardType ?? .default {
         case .URL, .emailAddress, .webSearch, .twitter: return false
         default: return true
         }
-    }
-
-    /// Replaces a misspelled word before the cursor with its correction, then
-    /// types `terminator`. False, and nothing typed, if there was nothing to do.
-    private func autocorrect(adding terminator: String) -> Bool {
-        let before = self.before
-        guard wordsWanted, let proxy, !Self.inMath(before),
-              let word = WordCorrector.currentWord(in: before),
-              let fixed = words.correction(for: word), fixed != word else { return false }
-        for _ in 0..<word.count { proxy.deleteBackward() }
-        proxy.insertText(fixed + terminator)
-        lastChange = Change(original: word, replacement: fixed, terminator: terminator, isSpelling: true)
-        return true
     }
 
     /// A different text field: what was typed in the last one no longer
@@ -471,11 +454,6 @@ final class KeyboardModel: ObservableObject {
             lastPlainSpace = .distantPast
             return
         }
-        if autocorrect(adding: " ") {
-            // Double space still types a full stop after a corrected word.
-            lastPlainSpace = Date()
-            return
-        }
         // Only symbols mode converts, and never math between `$` signs, which
         // is for copying as an image.
         let converting = converts && !before.hasSuffix("$")
@@ -484,8 +462,7 @@ final class KeyboardModel: ObservableObject {
             let source = String(before.suffix(r.deleteCount))
             for _ in 0..<r.deleteCount { proxy.deleteBackward() }
             proxy.insertText(r.insert)
-            lastChange = Change(original: source, replacement: String(r.insert.dropLast()),
-                                terminator: " ", isSpelling: false)
+            lastChange = Change(original: source, replacement: String(r.insert.dropLast()), terminator: " ")
             notice = r.notice
             lastPlainSpace = .distantPast
             return

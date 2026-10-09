@@ -35,9 +35,10 @@ ios/
   English wins (`LetterOdds.swift`), as the system keyboard quietly grows
   the key you probably meant. A touch on a key types that key, and inside
   maths or a command there is no guessing.
-- Spelling from the system dictionary (`WordCorrector.swift`): suggestions
-  in the bar, corrections on space, delete straight after a correction puts
-  the word back. Never inside maths, and off where the text field turns it off.
+- Spelling suggestions from the system dictionary (`WordCorrector.swift`),
+  in the bar. A word changes only when the user taps one: nothing is
+  corrected on its own. Never inside maths, and off where the text field
+  turns it off.
 - Hold a key for accents or related symbols (`Alternates.swift`).
 - Capitals at the start of a sentence, as the text field asks, but never
   inside maths. Punctuation after an accepted word takes back its space, and

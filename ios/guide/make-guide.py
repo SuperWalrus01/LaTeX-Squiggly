@@ -266,7 +266,7 @@ pages.append(page(f"""
 <div class="grid">
   {shot(bottom_shot('kb-quick', 548), '<b>Shortcuts.</b> LaTeX mode, then $…$, braces, x², x₂ and a fraction. Templates leave the cursor inside; press space to jump to the next box.')}
   {shot(bottom_shot('kb-suggest', 548), '<b>Command suggestions.</b> Start a command and tap the one you mean.')}
-  {shot(bottom_shot('kb-words', 548), '<b>Spelling.</b> Your word, the correction space will make (bold), and another guess. Never inside maths.')}
+  {shot(bottom_shot('kb-words', 548), '<b>Spelling.</b> Your word, then suggestions. Tap one to use it; nothing is changed on its own. Never inside maths.')}
   {shot(keyboard_shot('kb-selection', 3), '<b>Select and copy.</b> Select any text with maths in it and tap Copy for a picture of exactly that, words included.')}
 </div>
 """, n))

@@ -1,28 +1,25 @@
 import UIKit
 
-/// Spelling for plain words, with the system's dictionary: what the bar
-/// suggests, and what space corrects a misspelling to. LaTeX is never
-/// touched; the model only asks about words outside math.
+/// Suggestions for plain words, with the system's dictionary, for the bar
+/// above the keys. Nothing is ever corrected on its own: a word changes only
+/// when the user taps a suggestion. LaTeX is never touched; the model only
+/// asks about words outside maths.
 @MainActor
 final class WordCorrector {
 
     struct Offer: Equatable {
         /// The word as typed.
         let typed: String
-        /// What space will change it to, if anything.
-        let correction: String?
-        /// More words to offer: completions, or other spellings.
-        let others: [String]
+        /// Up to two words to offer in its place, best first.
+        let suggestions: [String]
     }
 
     private let checker = UITextChecker()
     private let language: String
     /// The user's text replacements from Settings, by shortcut.
     private var replacements: [String: String] = [:]
-    /// Names from Contacts, and the like, never corrected.
+    /// Names from Contacts, and the like, never respelled.
     private var known: Set<String> = []
-    /// Words the user undid a correction of this session.
-    private var rejected: Set<String> = []
     /// The last offer made. The bar asks again for the same word after each
     /// key and each time the host reports its text, and the dictionary's
     /// guesses take long enough to make typing lag.
@@ -45,13 +42,6 @@ final class WordCorrector {
         }
     }
 
-    /// Stops correcting a word the user put back.
-    func reject(_ word: String) {
-        lastOffer = nil
-        rejected.insert(word.lowercased())
-        UITextChecker.learnWord(word)
-    }
-
     /// The word being typed at the end of `before`. Nil for the end of a
     /// LaTeX command, `\alpha`, or of something like `x_ab` or `2nd`.
     static func currentWord(in before: String) -> String? {
@@ -64,34 +54,35 @@ final class WordCorrector {
         return String(word.reversed())
     }
 
+    /// The user's text replacement or a close spelling first, then the words
+    /// it may be on its way to, then other spellings. Completions come before
+    /// other spellings: a word part-typed, like `hel`, is not in the
+    /// dictionary yet, and the word it is heading for is likelier.
     func offer(for word: String) -> Offer {
         if let lastOffer, lastOffer.typed == word { return lastOffer }
-        let correction = correction(for: word)
         let range = NSRange(location: 0, length: (word as NSString).length)
-        // Completions first: a word part-typed, like `hel`, is not in the
-        // dictionary yet, and the word it is on its way to is likelier than
-        // another spelling of it.
-        var others = checker.completions(forPartialWordRange: range, in: word, language: language) ?? []
-        if correction != nil {
-            others += checker.guesses(forWordRange: range, in: word, language: language) ?? []
+        let spelling = spelling(for: word)
+        var candidates = spelling.map { [$0] } ?? []
+        candidates += (checker.completions(forPartialWordRange: range, in: word, language: language) ?? [])
+            .map { Self.matchCase($0, to: word) }
+        if spelling != nil {
+            candidates += (checker.guesses(forWordRange: range, in: word, language: language) ?? [])
+                .map { Self.matchCase($0, to: word) }
         }
-
-        var seen: Set<String> = [word.lowercased()]
-        if let correction { seen.insert(correction.lowercased()) }
-        let unique = others.filter { seen.insert($0.lowercased()).inserted }
-        let offer = Offer(typed: word, correction: correction,
-                          others: unique.prefix(correction == nil ? 2 : 1).map { Self.matchCase($0, to: word) })
+        var seen: Set<String> = [word]
+        let offer = Offer(typed: word, suggestions: Array(candidates.filter { seen.insert($0).inserted }.prefix(2)))
         lastOffer = offer
         return offer
     }
 
-    /// A correction only when the word is misspelled and the dictionary's
-    /// best guess is close: one slip in a short word, two in a longer one.
-    func correction(for word: String) -> String? {
+    /// The likeliest intended spelling, when the word is misspelled and the
+    /// dictionary's best guess is close: one slip in a short word, two in a
+    /// longer one. Offered, never applied.
+    private func spelling(for word: String) -> String? {
         let lower = word.lowercased()
         if let replacement = replacements[lower] { return replacement }
         if word == "i" { return "I" }
-        guard word.count >= 2, !rejected.contains(lower), !known.contains(lower),
+        guard word.count >= 2, !known.contains(lower),
               // Capitals inside a word, as in iPhone or LaTeX, are meant.
               !word.dropFirst().contains(where: \.isUppercase) else { return nil }
 
