@@ -325,9 +325,8 @@ pages.append(page(f"""
       Settings (page 2).</li>
       <li><b>The keyboard is missing in a password box?</b> iPhone always uses its own
       keyboard there, for safety.</li>
-      <li><b>Capitals</b> come on at the start of a sentence, as on the iPhone keyboard,
-      but never inside maths, where x and X differ. Tap shift to turn one off.
-      Double-tap for caps lock.</li>
+      <li><b>No automatic capitals.</b> LaTeX cares about capitals, so shift only comes on
+      when you tap it. Double-tap for caps lock.</li>
       <li><b>Double space</b> after a word types a full stop.</li>
     </ul>
   </div>

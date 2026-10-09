@@ -51,8 +51,7 @@ the app broken. The review notes below walk them through it.
    worth fixing before a reviewer finds it.
    - [ ] Notes: `\alpha` then space gives α; delete straight after puts
      `\alpha` back.
-   - [ ] Messages: type a sentence at speed. Capitals start each sentence,
-     nothing is dropped, and a thumb sliding on space still types a space.
+   - [ ] Messages: type a sentence at speed. Nothing is dropped, and a thumb sliding on space still types a space.
    - [ ] `$x^2$` shows typeset in the bar. Tap it for the large preview.
    - [ ] Copy with Full Access off says to turn it on. With it on, the image
      pastes into Messages.
@@ -212,7 +211,7 @@ TYPING
 • Over 200 symbols: Greek letters, operators, relations, arrows and sets
 • Suggestions as you type a command: \al offers α
 • The ∑ key has Greek letters and maths symbols. Hold a key for more
-• Spelling suggestions that never change a word unless you tap one, capitals, and double space for a full stop. Hold space to move the cursor
+• Spelling suggestions that never change a word unless you tap one, and double space for a full stop. Hold space to move the cursor
 • LaTeX mode keeps everything as LaTeX, for writing LaTeX documents
 
 RENDERING

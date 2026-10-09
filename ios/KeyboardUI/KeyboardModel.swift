@@ -86,9 +86,6 @@ final class KeyboardModel: ObservableObject {
     private var lastChange: Change?
     /// LaTeX the user put back after it converted, which space then leaves.
     private var keptLaTeX: String?
-    /// Shift turned on by the keyboard at the start of a sentence, rather
-    /// than by the user, so it can turn itself off again.
-    private var autoShifted = false
     /// Accepting a word types a space after it, which punctuation takes
     /// back, as in iOS: `word` then `,` gives `word,` rather than `word ,`.
     private var autoSpaced = false
@@ -243,7 +240,6 @@ final class KeyboardModel: ObservableObject {
     func textChanged() {
         lastTyped = nil
         refresh()
-        updateAutoShift()
     }
 
     func openPreview() {
@@ -335,10 +331,7 @@ final class KeyboardModel: ObservableObject {
         if returnLabel != label { returnLabel = label }
         let kind = FieldKind(proxy?.keyboardType ?? .default)
         if field != kind { field = kind }
-        if releasingShift {
-            releaseShift()
-            updateAutoShift()
-        }
+        if releasingShift { releaseShift() }
         let strip = currentStrip()
         if self.strip != strip { self.strip = strip }
     }
@@ -410,8 +403,6 @@ final class KeyboardModel: ObservableObject {
             page = .letters
         }
         if shift != .off { shift = .off }
-        autoShifted = false
-        updateAutoShift()
     }
 
     private func show(_ message: String) {
@@ -499,7 +490,6 @@ final class KeyboardModel: ObservableObject {
     /// Tap for one capital, double-tap for caps lock, tap again to release.
     private func tapShift() {
         let now = Date()
-        autoShifted = false
         switch shift {
         case .locked:
             shift = .off
@@ -513,55 +503,11 @@ final class KeyboardModel: ObservableObject {
         lastShiftTap = now
     }
 
-    /// Shift lasts for one character unless locked.
+    /// Shift lasts for one character unless locked. Nothing is capitalised
+    /// automatically, since x and X differ in maths: shift is on only when the
+    /// user turns it on.
     private func releaseShift() {
         if shift == .on { shift = .off }
-        autoShifted = false
-    }
-
-    /// Capitals where the field asks for them, as the system keyboard does:
-    /// at the start of a sentence for most fields, of every word for names,
-    /// or throughout. Shift the keyboard turned on turns off again when the
-    /// cursor leaves the start of a sentence; shift the user set is theirs.
-    private func updateAutoShift() {
-        guard shift != .locked else { return }
-        let wanted = wantsCapital()
-        if wanted, shift == .off {
-            shift = .on
-            autoShifted = true
-        } else if !wanted, shift == .on, autoShifted {
-            shift = .off
-            autoShifted = false
-        }
-    }
-
-    private func wantsCapital() -> Bool {
-        guard let proxy else { return false }
-        let style = proxy.autocapitalizationType ?? .sentences
-        if style == .allCharacters { return true }
-        // Straight after a letter, never, whatever the context still says:
-        // the host app reports the text a moment after it changes.
-        if let typed = lastTyped, !typed.isWhitespace { return false }
-        var before = self.before
-        if let typed = lastTyped, before.last?.isWhitespace != true { before.append(typed) }
-        guard !Self.inMath(before) else { return false }
-        switch style {
-        case .words: return before.last.map(\.isWhitespace) ?? true
-        case .sentences: return Self.startsSentence(before)
-        default: return false
-        }
-    }
-
-    /// The start of the text, of a line, or of a sentence after `.`, `!` or
-    /// `?` and a space, with any closing quote or bracket between.
-    static func startsSentence(_ before: String) -> Bool {
-        guard let last = before.last else { return true }
-        if last.isNewline { return true }
-        guard last.isWhitespace else { return false }
-        let text = before.reversed().drop(while: { $0.isWhitespace && !$0.isNewline })
-            .drop(while: { "\"')]”’".contains($0) })
-        guard let end = text.first else { return true }
-        return ".!?".contains(end) || end.isNewline
     }
 
     // MARK: - Helpers

@@ -40,8 +40,8 @@ ios/
   corrected on its own. Never inside maths, and off where the text field
   turns it off.
 - Hold a key for accents or related symbols (`Alternates.swift`).
-- Capitals at the start of a sentence, as the text field asks, but never
-  inside maths. Punctuation after an accepted word takes back its space, and
+- No automatic capitals, since x and X differ in maths: shift comes on only
+  when tapped. Punctuation after an accepted word takes back its space, and
   space after numbers goes back to the letters.
 - Space becomes a trackpad only when held, so a thumb sliding as it taps
   space still types one. A letter rolled onto space or delete still types.

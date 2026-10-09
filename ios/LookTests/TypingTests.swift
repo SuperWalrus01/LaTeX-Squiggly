@@ -1,9 +1,9 @@
 import XCTest
 
 /// Types on our keyboard in the app's debug preview and checks the text,
-/// for what makes typing feel like the system keyboard: capitals at the
-/// start of a sentence, space that is never lost, punctuation after a
-/// suggested word, words left as typed, and LaTeX converting on space.
+/// for what makes typing feel right: no capitals unless shift is tapped,
+/// space that is never lost, punctuation after a suggested word, words left
+/// as typed, and LaTeX converting on space.
 final class TypingTests: XCTestCase {
 
     private var app: XCUIApplication!
@@ -43,11 +43,11 @@ final class TypingTests: XCTestCase {
         }
     }
 
-    func testCapitalAtStartOfSentence() {
+    func testNoCapitalUnlessShiftIsTapped() {
         type("hi there")
         tap("123"); tap("."); tap("space")
         type("how")
-        XCTAssertEqual(text, "Hi there. How")
+        XCTAssertEqual(text, "hi there. how")
     }
 
     func testSpaceAfterNumbersReturnsToLetters() {
@@ -60,7 +60,7 @@ final class TypingTests: XCTestCase {
         let space = key("space").coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         space.press(forDuration: 0.05, thenDragTo: space.withOffset(CGVector(dx: 40, dy: 0)))
         type("it")
-        XCTAssertEqual(text, "So it")
+        XCTAssertEqual(text, "so it")
     }
 
     func testCommandConvertsOnSpace() {
@@ -70,19 +70,19 @@ final class TypingTests: XCTestCase {
 
     func testNothingIsCorrectedWithoutATap() {
         type("teh")
-        XCTAssertTrue(app.buttons["The"].firstMatch.waitForExistence(timeout: 3), "the bar offers the spelling")
+        XCTAssertTrue(app.buttons["the"].firstMatch.waitForExistence(timeout: 3), "the bar offers the spelling")
         tap("space")
-        XCTAssertEqual(text, "Teh ")
+        XCTAssertEqual(text, "teh ")
     }
 
     func testPunctuationTakesBackSuggestionSpace() {
         type("hel")
-        let suggestion = app.buttons["Hello"].firstMatch
+        let suggestion = app.buttons["hello"].firstMatch
         XCTAssertTrue(suggestion.waitForExistence(timeout: 3),
                       "The bar offers: \(app.buttons.allElementsBoundByIndex.map(\.label))")
         suggestion.tap()
-        XCTAssertEqual(text, "Hello ")
+        XCTAssertEqual(text, "hello ")
         tap("123"); tap(",")
-        XCTAssertEqual(text, "Hello,")
+        XCTAssertEqual(text, "hello,")
     }
 }
