@@ -4,6 +4,33 @@ Everything App Store Connect asks for, in the order it asks. Work down the
 page: each step says where to click, and the text in the boxes is ready to
 paste. The version is **1.0 (build 1)**, set in `project.yml`.
 
+## Open before you submit
+
+Found in a pre-launch check on 9 October 2026. Strike each off when done.
+
+- [ ] **The privacy policy is not live yet.** The iPhone section of
+  `site/privacy.html` is only on `github-marketing`; `main`, which deploys the
+  site, does not have it (nor any of `ios/`). App Store Connect, the reviewer
+  and the app's own About link all open that URL, so merge to `main` first
+  and check the page shows **The iPhone app**.
+- [ ] **Signing team.** `DEVELOPMENT_TEAM` in `project.yml` is still the free
+  Personal Team (`DL65G3N2U3`), which cannot upload to App Store Connect.
+- [ ] **Xcode version.** Apple requires uploads to be built with a recent
+  SDK (Xcode 26 and the iOS 26 SDK since April 2026). Check
+  <https://developer.apple.com/news/upcoming-requirements/> and archive with
+  the current Xcode.
+- [ ] **The device checklist below is not done.** Landscape has never been
+  seen on a real phone, keyboard memory at size L is unmeasured, and a crash
+  on opening was fixed only days ago (`ef39fb1`). Use TestFlight for a few
+  days before submitting.
+- [ ] **Regenerate the screenshots.** `store/make-store.py` now sets the α in
+  "Type \alpha, get α" in a maths italic; in the current
+  `iphone-1-type.png` it falls back to a face where it reads as "a". Run
+  `scripts/make-store-shots.sh` on the Mac.
+- [ ] **Support URL.** GitHub Issues needs a GitHub account to reach you.
+  Guideline 1.5 asks for an easy way to contact you; a support page on the
+  site with an email address is safer.
+
 ## Why this should pass review
 
 App Review checks keyboards against guideline 4.4.1, and this one is built to

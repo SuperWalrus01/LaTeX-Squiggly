@@ -48,7 +48,7 @@ SHOTS = [
 
 PAGE = """<!doctype html>
 <meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Mono:wght@500&family=Instrument+Sans:wght@500;600&display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Mono:wght@500&family=Instrument+Sans:wght@500;600&family=STIX+Two+Text:ital,wght@1,700&display=block">
 <style>
   html, body {{ margin: 0; width: {w}px; height: {h}px; overflow: hidden; }}
   body {{
@@ -92,6 +92,9 @@ PAGE = """<!doctype html>
     letter-spacing: -4px; background: rgba(255, 248, 238, 0.18);
     border-radius: 22px; padding: 0 18px;
   }}
+  /* Greek in maths italic: the display face has no Greek, and the fallback's
+     α looks like an a, so the hero read "get a". */
+  h1 .greek {{ font-family: 'STIX Two Text', serif; font-style: italic; font-weight: 700; font-size: 1.12em; }}
   p {{
     margin: 40px 0 0; color: rgba(255, 248, 238, 0.92);
     font-size: 50px; line-height: 1.3; font-weight: 500; text-wrap: balance;
@@ -150,9 +153,11 @@ def wave():
 
 
 def headline(text):
-    """`*word*` in ink and `\\command` in monospace, everything escaped."""
+    """`*word*` in ink, `\\command` in monospace and α in maths italic,
+    everything escaped."""
     parts = html.escape(text).split("*")
     out = "".join(f"<em>{part}</em>" if i % 2 else part for i, part in enumerate(parts))
+    out = out.replace("α", '<span class="greek">α</span>')
     return out.replace("\\alpha", "<code>\\alpha</code>")
 
 
