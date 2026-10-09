@@ -19,6 +19,10 @@ struct LaTeXSquigglyApp: App {
         }
     }
 
+    init() {
+        SquigglyAppearance.apply()
+    }
+
     private var tabs: some View {
         TabView {
             SetupView()
@@ -28,5 +32,6 @@ struct LaTeXSquigglyApp: App {
             RenderView()
                 .tabItem { Label("Render", systemImage: "function") }
         }
+        .tint(.squiggle)
     }
 }

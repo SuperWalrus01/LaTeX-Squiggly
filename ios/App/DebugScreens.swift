@@ -8,12 +8,15 @@ import UIKit
 ///   -systemKeyboard   Apple's keyboard, to compare against
 ///   -keyboardPreview  ours, as the input view of a real text view
 ///   -renderTab        the Render tab on its own
+///   -shareSheet       the share sheet's screen, with PREVIEW_TEXT shared
+///   -messagesDrawer   the Messages app in the drawer, with -recent '("x^2")'
+///   -messagesEditor   the Messages app opened up to write an equation
 ///
 /// PREVIEW_TEXT in the environment pre-fills the text, PREVIEW_PAGE=math
 /// opens our keyboard on the math page, and PREVIEW_PANEL=1 opens its large
-/// preview of the rendering.
+/// preview of the rendering, and PREVIEW_SELECT=1 selects all the text.
 enum DebugScreen: String {
-    case systemKeyboard, keyboardPreview, renderTab
+    case systemKeyboard, keyboardPreview, renderTab, shareSheet, messagesDrawer, messagesEditor
 
     static var requested: DebugScreen? {
         ProcessInfo.processInfo.arguments.lazy
@@ -26,11 +29,37 @@ struct DebugScreenView: View {
     let screen: DebugScreen
 
     var body: some View {
-        if screen == .renderTab {
-            RenderView(latex: ProcessInfo.processInfo.environment["PREVIEW_TEXT"] ?? RenderView.example)
-        } else {
+        let text = ProcessInfo.processInfo.environment["PREVIEW_TEXT"]
+        switch screen {
+        case .renderTab:
+            RenderView(latex: text ?? RenderView.example)
+        case .shareSheet:
+            ShareSheet(source: text ?? RenderView.example) {}
+        case .messagesDrawer, .messagesEditor:
+            MessagesPreview(expanded: screen == .messagesEditor, source: text ?? "")
+        case .systemKeyboard, .keyboardPreview:
             DebugTextView(useOurKeyboard: screen == .keyboardPreview)
                 .ignoresSafeArea(.keyboard)
+        }
+    }
+}
+
+/// The Messages app's view at the height Messages gives it, compact in the
+/// drawer or opened up.
+private struct MessagesPreview: View {
+    @StateObject private var state = MessagesState()
+    let expanded: Bool
+    let source: String
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            MessagesRoot(state: state, expand: {}, insert: { _, _ in })
+                .frame(height: expanded ? nil : 260)
+        }
+        .onAppear {
+            state.expanded = expanded
+            state.source = source
         }
     }
 }
@@ -56,7 +85,13 @@ private struct DebugTextView: UIViewRepresentable {
             }
             view.inputView = KeyboardInputView(model: host.model)
         }
-        DispatchQueue.main.async { view.becomeFirstResponder() }
+        DispatchQueue.main.async {
+            view.becomeFirstResponder()
+            if ProcessInfo.processInfo.environment["PREVIEW_SELECT"] == "1" {
+                view.selectAll(nil)
+                (view.inputView as? KeyboardInputView)?.hosting.rootView.model.refresh()
+            }
+        }
         return view
     }
 
@@ -90,6 +125,8 @@ private final class PreviewHost: KeyboardHost {
 /// A `UITextDocumentProxy` over a text view, so the preview edits real text.
 private final class TextViewProxy: NSObject, UITextDocumentProxy {
     private weak var textView: UITextView?
+    /// One field, so the keyboard does not take every key for a new one.
+    let documentIdentifier = UUID()
 
     init(textView: UITextView) {
         self.textView = textView
@@ -104,9 +141,11 @@ private final class TextViewProxy: NSObject, UITextDocumentProxy {
 
     var documentContextBeforeInput: String? { split.before }
     var documentContextAfterInput: String? { split.after }
-    var selectedText: String? { nil }
+    var selectedText: String? {
+        guard let view = textView, let range = view.selectedTextRange, !range.isEmpty else { return nil }
+        return view.text(in: range)
+    }
     var documentInputMode: UITextInputMode? { nil }
-    var documentIdentifier: UUID { UUID() }
     var hasText: Bool { textView?.hasText ?? false }
 
     func insertText(_ text: String) { textView?.insertText(text) }

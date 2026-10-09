@@ -1,39 +1,65 @@
 import SwiftMath
 import SwiftUI
 
-/// Sizes measured from the iOS 26 keyboard on a 390-point iPhone.
-enum Metrics {
-    static let stripHeight: CGFloat = 46
-    static let keyHeight: CGFloat = 43
-    static let rowGap: CGFloat = 11
+/// Sizes measured from the iOS 26 keyboard on a 390-point iPhone, and the
+/// shorter keys it has in landscape, where the screen has little height.
+struct Metrics: Equatable {
     static let keyGap: CGFloat = 6
     static let sideMargin: CGFloat = 6.67
     static let cornerRadius: CGFloat = 7
     static let rows = 4
-    static let rowPitch = keyHeight + rowGap
+
+    let stripHeight: CGFloat
+    let keyHeight: CGFloat
+    let rowGap: CGFloat
+    /// Pop-ups over pressed keys. Landscape has no room above the top row
+    /// for them, so pressed keys darken instead, as on iPad.
+    let callouts: Bool
+
+    var rowPitch: CGFloat { keyHeight + rowGap }
+    var height: CGFloat { stripHeight + rowPitch * CGFloat(Self.rows) }
+
+    static let portrait = Metrics(stripHeight: 46, keyHeight: 43, rowGap: 11, callouts: true)
+    static let landscape = Metrics(stripHeight: 38, keyHeight: 32, rowGap: 7, callouts: false)
+
+    /// Landscape on an iPhone is a compact height.
+    static func `for`(verticalSizeClass: UserInterfaceSizeClass?) -> Metrics {
+        verticalSizeClass == .compact ? .landscape : .portrait
+    }
+}
+
+private struct MetricsKey: EnvironmentKey {
+    static let defaultValue = Metrics.portrait
+}
+
+extension EnvironmentValues {
+    var keyboardMetrics: Metrics {
+        get { self[MetricsKey.self] }
+        set { self[MetricsKey.self] = newValue }
+    }
 }
 
 struct KeyboardView: View {
-    static let height = Metrics.stripHeight + Metrics.rowPitch * CGFloat(Metrics.rows)
-
     @ObservedObject var model: KeyboardModel
     @State private var frames: [KeyFrame] = []
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
+        let metrics = Metrics.for(verticalSizeClass: verticalSizeClass)
         GeometryReader { geo in
             let unit = (geo.size.width - 2 * Metrics.sideMargin - 9 * Metrics.keyGap) / 10
             let inset = Metrics.sideMargin - Metrics.keyGap / 2
             VStack(spacing: 0) {
                 StripView(model: model)
-                    .frame(height: Metrics.stripHeight)
+                    .frame(height: metrics.stripHeight)
                     .padding(.horizontal, inset)
                 if model.previewOpen {
                     PreviewPanel(model: model)
-                        .frame(height: Metrics.rowPitch * CGFloat(Metrics.rows))
+                        .frame(height: metrics.rowPitch * CGFloat(Metrics.rows))
                         .padding(.horizontal, inset + Metrics.keyGap / 2)
                 } else {
                     VStack(spacing: 0) {
-                        ForEach(Array(Layouts.rows(for: model.page, globe: model.needsGlobe).enumerated()),
+                        ForEach(Array(Layouts.rows(for: model.page, globe: model.needsGlobe, field: model.field).enumerated()),
                                 id: \.offset) { index, row in
                             RowView(items: row, row: index, unit: unit, model: model, presses: model.presses)
                         }
@@ -44,11 +70,12 @@ struct KeyboardView: View {
                     .coordinateSpace(name: KeyTouchLayer.space)
                     .onPreferenceChange(KeyFramesKey.self) { frames = $0 }
                     .overlay(AlternatesView(model: model, presses: model.presses))
-                    .overlay(KeyTouchLayer(model: model, frames: frames))
+                    .overlay(KeyTouchLayer(model: model, frames: frames, metrics: metrics))
                 }
             }
         }
-        .frame(height: Self.height)
+        .frame(height: metrics.height)
+        .environment(\.keyboardMetrics, metrics)
         .onAppear { model.refresh() }
     }
 }
@@ -61,6 +88,7 @@ private struct RowView: View {
     let unit: CGFloat
     @ObservedObject var model: KeyboardModel
     let presses: KeyPresses
+    @Environment(\.keyboardMetrics) private var metrics
 
     var body: some View {
         HStack(spacing: 0) {
@@ -74,7 +102,7 @@ private struct RowView: View {
                 }
             }
         }
-        .frame(height: Metrics.rowPitch)
+        .frame(height: metrics.rowPitch)
     }
 
     private func edge(of index: Int) -> HorizontalEdge? {
@@ -91,13 +119,16 @@ private struct KeyView: View {
     let edge: HorizontalEdge?
     @ObservedObject var model: KeyboardModel
     @ObservedObject var presses: KeyPresses
+    @Environment(\.keyboardMetrics) private var metrics
 
     /// Touches are handled by `KeyTouchLayer`, over all the keys.
     private var pressed: Bool { presses.keys.contains(id) }
 
+    private var callout: Bool { key.showsCallout && metrics.callouts }
+
     var body: some View {
         face
-            .frame(height: Metrics.keyHeight)
+            .frame(height: metrics.keyHeight)
             .frame(maxWidth: key.width == nil ? .infinity : nil)
             .frame(width: key.width.map { unit * $0 + Metrics.keyGap * ($0 - 1) })
             .background(GeometryReader { geo in
@@ -105,13 +136,15 @@ private struct KeyView: View {
                     key: KeyFramesKey.self,
                     value: [KeyFrame(id: id, key: key, frame: geo.frame(in: .named(KeyTouchLayer.space)))])
             })
-            .overlay(alignment: .bottom) {
-                if pressed && key.showsCallout {
-                    Callout(text: label, edge: edge)
+            .overlay {
+                if pressed && callout {
+                    GeometryReader { geo in
+                        Callout(text: label, key: geo.size, edge: edge)
+                    }
                 }
             }
             .padding(.horizontal, Metrics.keyGap / 2)
-            .padding(.vertical, Metrics.rowGap / 2)
+            .padding(.vertical, metrics.rowGap / 2)
             .zIndex(pressed ? 1 : 0)
             .accessibilityElement()
             .accessibilityLabel(accessibilityName)
@@ -150,7 +183,12 @@ private struct KeyView: View {
         case .nextKeyboard:
             Image(systemName: "globe").font(.system(size: 20))
         case .space:
-            Color.clear
+            // Empty, as in iOS, except to say LaTeX mode is on.
+            if model.output == .latex {
+                Text("LaTeX").font(.system(size: 14, weight: .medium)).foregroundStyle(Color.secondary)
+            } else {
+                Color.clear
+            }
         case .toggleOutput:
             Text(model.output == .unicode ? "α" : "\\α").font(.system(size: 18))
         case .page:
@@ -175,7 +213,7 @@ private struct KeyView: View {
     private var background: Color {
         if isAccented { return pressed ? .accentPressed : .accentColor }
         // Text keys show the pop-up instead of darkening.
-        return pressed && !key.showsCallout ? .keyPressed : .key
+        return pressed && !callout ? .keyPressed : .key
     }
 
     private var accessibilityName: String {
@@ -191,25 +229,79 @@ private struct KeyView: View {
     }
 }
 
-/// The enlarged letter that appears above a pressed key.
+/// The balloon a pressed key grows into, as in iOS: the key itself, a short
+/// curved neck, and a wider head above with the letter in it, all one shape.
+/// Sizes measured from the iOS 26 keyboard. Keys at the ends of a row keep
+/// the head flush with their outer side, so it stays on screen.
 private struct Callout: View {
     let text: String
+    /// The key's face, which the balloon's foot covers exactly.
+    let key: CGSize
     let edge: HorizontalEdge?
 
+    private let headHeight: CGFloat = 46
+    private let neck: CGFloat = 12
+    private var headWidth: CGFloat { key.width + 22 }
+    private var height: CGFloat { headHeight + neck + key.height }
+
+    /// The head's left side, relative to the key's.
+    private var headX: CGFloat {
+        switch edge {
+        case .leading: return 0
+        case .trailing: return key.width - headWidth
+        default: return (key.width - headWidth) / 2
+        }
+    }
+
     var body: some View {
-        Text(text)
-            .font(.system(size: 34, weight: .regular))
-            .foregroundStyle(Color.primary)
-            .frame(width: 52, height: 54)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.key)
-                    .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
-            )
-            // Keys at the ends push their pop-up inward, so it stays on screen.
-            .offset(x: edge == .leading ? 8 : edge == .trailing ? -8 : 0,
-                    y: -Metrics.keyHeight + 2)
-            .allowsHitTesting(false)
+        ZStack(alignment: .top) {
+            BalloonShape(keyX: -headX, keyWidth: key.width, headHeight: headHeight, neck: neck)
+                .fill(Color.key)
+                .shadow(color: .keyShadow, radius: 1, y: 0.5)
+            Text(text)
+                .font(.system(size: 36, weight: .regular))
+                .foregroundStyle(Color.primary)
+                .frame(width: headWidth, height: headHeight)
+        }
+        .frame(width: headWidth, height: height)
+        .offset(x: headX, y: key.height - height)
+        .allowsHitTesting(false)
+    }
+}
+
+/// The outline of `Callout`, in its own coordinates: the head across the
+/// top, the key's face at the bottom, joined by curves.
+private struct BalloonShape: Shape {
+    let keyX: CGFloat
+    let keyWidth: CGFloat
+    let headHeight: CGFloat
+    let neck: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let headRadius: CGFloat = 10
+        let keyRadius = Metrics.cornerRadius
+        let left = keyX, right = keyX + keyWidth
+        let headBottom = headHeight, keyTop = headHeight + neck
+        let bottom = rect.maxY
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: headRadius))
+        path.addQuadCurve(to: CGPoint(x: headRadius, y: 0), control: .zero)
+        path.addLine(to: CGPoint(x: rect.maxX - headRadius, y: 0))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX, y: headRadius), control: CGPoint(x: rect.maxX, y: 0))
+        path.addLine(to: CGPoint(x: rect.maxX, y: headBottom))
+        path.addCurve(to: CGPoint(x: right, y: keyTop),
+                      control1: CGPoint(x: rect.maxX, y: headBottom + neck * 0.6),
+                      control2: CGPoint(x: right, y: keyTop - neck * 0.6))
+        path.addLine(to: CGPoint(x: right, y: bottom - keyRadius))
+        path.addQuadCurve(to: CGPoint(x: right - keyRadius, y: bottom), control: CGPoint(x: right, y: bottom))
+        path.addLine(to: CGPoint(x: left + keyRadius, y: bottom))
+        path.addQuadCurve(to: CGPoint(x: left, y: bottom - keyRadius), control: CGPoint(x: left, y: bottom))
+        path.addLine(to: CGPoint(x: left, y: keyTop))
+        path.addCurve(to: CGPoint(x: 0, y: headBottom),
+                      control1: CGPoint(x: left, y: keyTop - neck * 0.6),
+                      control2: CGPoint(x: 0, y: headBottom + neck * 0.6))
+        path.closeSubpath()
+        return path
     }
 }
 
@@ -217,12 +309,13 @@ private struct Callout: View {
 
 private struct StripView: View {
     @ObservedObject var model: KeyboardModel
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
             switch model.strip {
             case .quick:
-                slots(Self.quickKeys.map { item in
+                slots([modeSwitch] + Self.quickKeys.map { item in
                     AnyView(StripButton { model.perform(item.action) } label: {
                         Text(item.label).font(.system(size: 18))
                     })
@@ -246,6 +339,8 @@ private struct StripView: View {
                 words(offer)
             case .math(let latex):
                 mathPreview(latex: latex)
+            case .selection(let text):
+                selectionPreview(text)
             case .notice(let message):
                 Text(message)
                     .font(.system(size: 14))
@@ -258,6 +353,41 @@ private struct StripView: View {
             }
         }
         .padding(.top, 6)
+    }
+
+    /// LaTeX mode on or off: orange while on, when nothing converts.
+    private var modeSwitch: AnyView {
+        let on = model.output == .latex
+        return AnyView(StripButton { model.perform(.toggleOutput) } label: {
+            Text("LaTeX")
+                .font(.system(size: 15, weight: on ? .bold : .medium))
+                .foregroundStyle(on ? Color.white : Color.stripText)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Capsule().fill(on ? Color.squiggleAccent : Color.clear))
+        })
+    }
+
+    /// A selection, typeset small with its words. Tap it for the large
+    /// preview, or Copy for the image.
+    private func selectionPreview(_ text: String) -> some View {
+        HStack(spacing: 0) {
+            StripButton { model.openPreview() } label: {
+                if case .success(let image) = MathRenderer.passage(text, fontSize: 14,
+                                                                   dark: colorScheme == .dark) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 10)
+                } else {
+                    Text("Can't render the selection").font(.system(size: 14))
+                }
+            }
+            divider
+            copyButton
+        }
     }
 
     /// As in iOS: the word as typed in quotes, then what space will correct
@@ -284,20 +414,25 @@ private struct StripView: View {
         HStack(spacing: 0) {
             StripButton { model.openPreview() } label: {
                 // Empty braces show as boxes, as in an equation editor.
-                MathLabel(latex: MathRenderer.stripDelimiters(latex)
+                MathLabel(latex: MathRenderer.restoringLaTeX(MathRenderer.stripDelimiters(latex))
                     .replacingOccurrences(of: "{}", with: "{\\square}"))
                     .padding(.horizontal, 10)
             }
             divider
-            StripButton { model.copyRendering() } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: model.copied ? "checkmark" : "doc.on.doc")
-                    Text(model.copied ? "Copied" : "Copy")
-                }
-                .font(.system(size: 15))
-            }
-            .frame(width: 96)
+            copyButton
         }
+    }
+
+    private var copyButton: some View {
+        StripButton { model.copyRendering() } label: {
+            HStack(spacing: 5) {
+                Image(systemName: model.copied ? "checkmark" : "doc.on.doc")
+                Text(model.copied ? "Copied" : "Copy")
+            }
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(Color.squiggleAccent)
+        }
+        .frame(width: 96)
     }
 
     private func slots(_ views: [AnyView]) -> some View {
@@ -418,19 +553,12 @@ private struct AlternatesView: View {
 /// its size and light or dark card. Tapping the bar's equation opens it.
 private struct PreviewPanel: View {
     @ObservedObject var model: KeyboardModel
-
-    private var latex: String? {
-        if case .math(let latex) = model.strip { return latex }
-        return nil
-    }
+    @Environment(\.keyboardMetrics) private var metrics
 
     var body: some View {
         VStack(spacing: 10) {
             Group {
-                if let latex,
-                   case .success(let image) = MathRenderer.image(latex: latex,
-                                                                fontSize: model.renderStyle.size.fontSize,
-                                                                dark: model.renderStyle.dark) {
+                if case .success(let image) = model.rendering() {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
@@ -486,10 +614,10 @@ private struct PreviewPanel: View {
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(accented ? Color.white : Color.primary)
                 .frame(maxWidth: .infinity)
-                .frame(height: Metrics.keyHeight)
+                .frame(height: metrics.keyHeight)
                 .background(
                     RoundedRectangle(cornerRadius: Metrics.cornerRadius, style: .continuous)
-                        .fill(accented ? Color.accentColor : Color.key)
+                        .fill(accented ? Color.squiggleAccent : Color.key)
                         .shadow(color: .keyShadow, radius: 0, y: 1)
                 )
         }
@@ -506,6 +634,10 @@ extension Color {
                                     dark: UIColor(white: 0.40, alpha: 1))
     static let keyShadow = dynamic(light: UIColor(white: 0, alpha: 0.12), dark: UIColor(white: 0, alpha: 0.3))
     static let accentPressed = Color.accentColor.opacity(0.7)
+    /// LaTeX Squiggly's orange, for its own controls above the keys. The keys
+    /// themselves keep the system's blue, as in Apple's keyboard.
+    static let squiggleAccent = dynamic(light: UIColor(red: 0xE2 / 255, green: 0x66 / 255, blue: 0x0F / 255, alpha: 1),
+                                        dark: UIColor(red: 1, green: 0x8A / 255, blue: 0x3D / 255, alpha: 1))
     static let stripText = dynamic(light: UIColor(red: 54 / 255, green: 56 / 255, blue: 60 / 255, alpha: 1),
                                    dark: UIColor(white: 172 / 255, alpha: 1))
     static let stripDivider = dynamic(light: UIColor(red: 208 / 255, green: 210 / 255, blue: 215 / 255, alpha: 1),

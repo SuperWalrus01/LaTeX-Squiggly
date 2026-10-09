@@ -23,6 +23,10 @@ final class WordCorrector {
     private var known: Set<String> = []
     /// Words the user undid a correction of this session.
     private var rejected: Set<String> = []
+    /// The last offer made. The bar asks again for the same word after each
+    /// key and each time the host reports its text, and the dictionary's
+    /// guesses take long enough to make typing lag.
+    private var lastOffer: Offer?
 
     init() {
         let languages = UITextChecker.availableLanguages
@@ -31,6 +35,7 @@ final class WordCorrector {
     }
 
     func use(_ lexicon: UILexicon) {
+        lastOffer = nil
         for entry in lexicon.entries {
             if entry.userInput == entry.documentText {
                 known.insert(entry.userInput.lowercased())
@@ -42,6 +47,7 @@ final class WordCorrector {
 
     /// Stops correcting a word the user put back.
     func reject(_ word: String) {
+        lastOffer = nil
         rejected.insert(word.lowercased())
         UITextChecker.learnWord(word)
     }
@@ -59,19 +65,24 @@ final class WordCorrector {
     }
 
     func offer(for word: String) -> Offer {
+        if let lastOffer, lastOffer.typed == word { return lastOffer }
         let correction = correction(for: word)
         let range = NSRange(location: 0, length: (word as NSString).length)
-        var others: [String] = []
+        // Completions first: a word part-typed, like `hel`, is not in the
+        // dictionary yet, and the word it is on its way to is likelier than
+        // another spelling of it.
+        var others = checker.completions(forPartialWordRange: range, in: word, language: language) ?? []
         if correction != nil {
             others += checker.guesses(forWordRange: range, in: word, language: language) ?? []
         }
-        others += checker.completions(forPartialWordRange: range, in: word, language: language) ?? []
 
         var seen: Set<String> = [word.lowercased()]
         if let correction { seen.insert(correction.lowercased()) }
         let unique = others.filter { seen.insert($0.lowercased()).inserted }
-        return Offer(typed: word, correction: correction,
-                     others: unique.prefix(correction == nil ? 2 : 1).map { Self.matchCase($0, to: word) })
+        let offer = Offer(typed: word, correction: correction,
+                          others: unique.prefix(correction == nil ? 2 : 1).map { Self.matchCase($0, to: word) })
+        lastOffer = offer
+        return offer
     }
 
     /// A correction only when the word is misspelled and the dictionary's

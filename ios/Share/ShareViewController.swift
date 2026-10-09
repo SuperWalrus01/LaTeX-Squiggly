@@ -38,7 +38,8 @@ final class ShareViewController: UIViewController {
     }
 }
 
-private struct ShareSheet: View {
+/// Internal, not private, so the app's debug screens can show it too.
+struct ShareSheet: View {
     @State var source: String
     let done: () -> Void
     @State private var options = RenderOptions.saved
@@ -52,24 +53,28 @@ private struct ShareSheet: View {
                     RenderActions(image: result.image)
                     RenderOptionsPicker(options: $options)
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("LaTeX").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                        Text("LaTeX").font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundStyle(Color.inkSoft)
                         TextField("LaTeX", text: $source, axis: .vertical)
                             .font(.system(.body, design: .monospaced))
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                             .lineLimit(3...12)
                             .padding(10)
-                            .background(Color(.secondarySystemBackground),
-                                        in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .background(Color.card, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(Color.rule))
                     }
                 }
                 .padding()
             }
-            .navigationTitle("LaTeX Squiggly")
+            .background(Color.paper)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) { Wordmark().frame(height: 30) }
                 ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) }
             }
+            .tint(.squiggle)
         }
     }
 }

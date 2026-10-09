@@ -16,7 +16,7 @@ final class KeyboardViewController: UIInputViewController, KeyboardHost {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        model.refresh(autoShift: true)
+        model.refresh()
     }
 
     override func viewDidAppear(_ animated: Bool) {

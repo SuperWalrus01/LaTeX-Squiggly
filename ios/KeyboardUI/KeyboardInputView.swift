@@ -19,12 +19,13 @@ protocol KeyboardHost: AnyObject {
 final class KeyboardInputView: UIInputView, UIInputViewAudioFeedback {
 
     let hosting: UIHostingController<KeyboardView>
+    private var height: NSLayoutConstraint!
 
     var enableInputClicksWhenVisible: Bool { true }
 
     init(model: KeyboardModel) {
         hosting = UIHostingController(rootView: KeyboardView(model: model))
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: KeyboardView.height),
+        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: Metrics.portrait.height),
                    inputViewStyle: .keyboard)
         allowsSelfSizing = true
 
@@ -35,7 +36,7 @@ final class KeyboardInputView: UIInputView, UIInputViewAudioFeedback {
 
         // Just below required: iOS adds its own height constraint while the
         // keyboard animates in, and a tie logs a conflict.
-        let height = content.heightAnchor.constraint(equalToConstant: KeyboardView.height)
+        height = content.heightAnchor.constraint(equalToConstant: Metrics.portrait.height)
         height.priority = UILayoutPriority(999)
         NSLayoutConstraint.activate([
             content.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -44,6 +45,13 @@ final class KeyboardInputView: UIInputView, UIInputViewAudioFeedback {
             content.bottomAnchor.constraint(equalTo: bottomAnchor),
             height,
         ])
+    }
+
+    /// Shorter in landscape, where the keys follow suit.
+    override func layoutSubviews() {
+        let wanted = Metrics.for(verticalSizeClass: UserInterfaceSizeClass(traitCollection.verticalSizeClass)).height
+        if height.constant != wanted { height.constant = wanted }
+        super.layoutSubviews()
     }
 
     @available(*, unavailable)

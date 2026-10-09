@@ -24,7 +24,9 @@ packages:
 
 settings:
   base:
-    MARKETING_VERSION: 0.1.0
+    # Every target's Info.plist reads these, and App Store Connect rejects
+    # an extension whose version differs from the app's.
+    MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: 1
     DEVELOPMENT_TEAM: DL65G3N2U3
     CODE_SIGN_STYLE: Automatic
@@ -36,7 +38,16 @@ targets:
     type: application
     platform: iOS
     # KeyboardUI too, for the debug-only keyboard preview.
-    sources: [App, Shared, KeyboardUI, Render]
+    # The share sheet's and Messages' views too, for the debug screens.
+    sources:
+      - App
+      - Shared
+      - KeyboardUI
+      - Render
+      - Share/ShareViewController.swift
+      - Messages/MessagesViewController.swift
+    scheme:
+      testTargets: [LookTests]
     dependencies:
       - target: Keyboard
       - target: Share
@@ -50,7 +61,13 @@ targets:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: LaTeX Squiggly
-        UILaunchScreen: {}
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # The share sheet's Save Image needs this, or saving crashes the app.
+        NSPhotoLibraryAddUsageDescription: Saves rendered equations to your photo library when you choose Save Image.
+        # Paper, as the first screen is, rather than a white flash.
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
@@ -73,12 +90,16 @@ targets:
       path: Keyboard/Info.plist
       properties:
         CFBundleDisplayName: LaTeX Squiggly
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.keyboard-service
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
           NSExtensionAttributes:
             PrimaryLanguage: en-US
-            IsASCIICapable: false
+            # It types plain ASCII too, so iOS offers it in fields that
+            # only take ASCII; it does not convert to symbols there.
+            IsASCIICapable: true
             PrefersRightToLeft: false
             # Full Access is only for copying rendered images. Everything
             # else works without it, which App Review requires.
@@ -93,11 +114,16 @@ targets:
     platform: iOS
     sources: [Share, Shared, Render]
     dependencies:
+      - package: LaTeXSquiggly
+        product: LaTeXUnicode
       - package: SwiftMath
     info:
       path: Share/Info.plist
       properties:
         CFBundleDisplayName: LaTeX Squiggly
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSPhotoLibraryAddUsageDescription: Saves rendered equations to your photo library when you choose Save Image.
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
@@ -115,11 +141,16 @@ targets:
     platform: iOS
     sources: [Messages, Shared, Render]
     dependencies:
+      - package: LaTeXSquiggly
+        product: LaTeXUnicode
       - package: SwiftMath
     info:
       path: Messages/Info.plist
       properties:
         CFBundleDisplayName: LaTeX Squiggly
+        CFBundlePackageType: XPC!
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.message-payload-provider
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).MessagesViewController
@@ -127,3 +158,15 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios.messages
         ASSETCATALOG_COMPILER_APPICON_NAME: iMessage App Icon
+
+  # Holds keys on Apple's keyboard and ours, for scripts/compare-keys.sh.
+  LookTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [LookTests]
+    dependencies:
+      - target: LaTeXSquiggly
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios.looktests
+        GENERATE_INFOPLIST_FILE: YES

@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Size and card colour for rendered images, shared by the app's Render tab,
 /// the share sheet and Messages. Each keeps its own copy, since they cannot
@@ -94,9 +95,9 @@ struct RenderActions: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            // Shared as a JPEG file, so apps receive a photo, not a sticker.
-            if let image, let file = MathRenderer.jpegFile(image) {
-                ShareLink(item: file) {
+            if let image {
+                ShareLink(item: EquationJPEG(image: image),
+                          preview: SharePreview("Equation", image: Image(uiImage: image))) {
                     Label("Share", systemImage: "square.and.arrow.up")
                         .frame(maxWidth: .infinity)
                 }
@@ -106,6 +107,20 @@ struct RenderActions: View {
         .controlSize(.large)
         .disabled(image == nil)
         .onChange(of: image) { _ in copied = false }
+    }
+}
+
+/// A rendered image shared as a JPEG file, so apps receive a photo, not a
+/// sticker. The file is written only when the user shares, not each time
+/// the view draws, which was every key typed.
+struct EquationJPEG: Transferable {
+    let image: UIImage
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .jpeg) { item in
+            guard let file = MathRenderer.jpegFile(item.image) else { throw CocoaError(.fileWriteUnknown) }
+            return SentTransferredFile(file)
+        }
     }
 }
 

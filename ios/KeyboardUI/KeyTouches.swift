@@ -62,6 +62,7 @@ struct KeyTouchLayer: UIViewRepresentable {
 
     let model: KeyboardModel
     let frames: [KeyFrame]
+    let metrics: Metrics
 
     func makeUIView(context: Context) -> KeyTouchView {
         KeyTouchView(model: model)
@@ -69,6 +70,9 @@ struct KeyTouchLayer: UIViewRepresentable {
 
     func updateUIView(_ view: KeyTouchView, context: Context) {
         view.frames = frames
+        // The bar is above the keys, and a pop-up can reach up over it but
+        // no further: nothing a keyboard draws shows above its own top.
+        view.popupCeiling = -metrics.stripHeight + 2
     }
 }
 
@@ -110,6 +114,7 @@ final class KeyTouchView: UIView {
     private var presses: KeyPresses { model.presses }
     private var fingers: [ObjectIdentifier: Finger] = [:]
     var frames: [KeyFrame] = []
+    var popupCeiling: CGFloat = -44
 
     init(model: KeyboardModel) {
         self.model = model
@@ -139,19 +144,24 @@ final class KeyTouchView: UIView {
         }
     }
 
-    /// Where a finger lands near the edge of a letter, the letter more likely
-    /// to come next in English wins, the way the system keyboard quietly grows
-    /// the key you probably meant. A touch well inside a key always types it.
+    /// Where a finger lands between two letters, or right on the edge of one,
+    /// the letter more likely to come next in English wins, the way the
+    /// system keyboard quietly grows the key you probably meant. A touch on a
+    /// key types that key, and English odds are no guide inside maths or a
+    /// command, where `\nabla` or `xy` are meant.
     private func likelyKey(at point: CGPoint) -> KeyFrame? {
         guard let nearest = key(at: point) else { return nil }
-        guard model.page == .letters, Self.letter(of: nearest) != nil else { return nearest }
+        guard model.page == .letters, Self.letter(of: nearest) != nil,
+              !nearest.frame.insetBy(dx: 3, dy: 3).contains(point),
+              model.typingWords else { return nearest }
         let previous = model.previousCharacter
         // How far a touch strays, in points, and how much the odds count.
+        // Very unlikely letters are floored, so no letter is ever ruled out.
         let spread: Float = 5
         let weight: Float = 0.3
         func score(_ key: KeyFrame) -> Float? {
             guard let letter = Self.letter(of: key),
-                  let odds = LetterOdds.log(letter, after: previous) else { return nil }
+                  let odds = LetterOdds.log(letter, after: previous).map({ max($0, -6) }) else { return nil }
             let d = Float(Self.distance(from: point, to: key.frame))
             guard d < 12 || key.id == nearest.id else { return nil }
             return -d * d / (2 * spread * spread) + weight * odds
@@ -225,6 +235,8 @@ final class KeyTouchView: UIView {
 
     /// A finger rolls a few points as it presses and lifts, and that must not
     /// change the key. Only a deliberate slide, well into another key, does.
+    /// A letter slides only onto other characters: a thumb rolling off `b`
+    /// onto space still types `b`, rather than nothing.
     private func follow(_ finger: Finger, to point: CGPoint) {
         if !finger.sliding {
             guard hypot(point.x - finger.start.x, point.y - finger.start.y) > 12 else { return }
@@ -232,7 +244,8 @@ final class KeyTouchView: UIView {
             finger.timer?.invalidate()
         }
         guard let key = key(at: point), key.id != finger.current.id,
-              key.frame.insetBy(dx: 2, dy: 2).contains(point) else { return }
+              key.frame.insetBy(dx: 2, dy: 2).contains(point),
+              key.key.action.typesText || !finger.origin.key.action.typesText else { return }
         finger.current = key
     }
 
@@ -250,7 +263,9 @@ final class KeyTouchView: UIView {
             model.perform(.backspace)
             repeatBackspace(finger, after: 0.45)
         case .space:
-            finger.timer = after(0.4) { [weak self] in self?.startCursorMode(finger) }
+            // Held, space becomes a trackpad, as in iOS. Not before: a slow
+            // press is still a space.
+            finger.timer = after(0.5) { [weak self] in self?.startCursorMode(finger) }
         case .insert, .math:
             guard !Alternates.options(for: finger.origin.key).isEmpty else { break }
             finger.timer = after(0.45) { [weak self] in self?.showAlternates(finger) }
@@ -322,7 +337,7 @@ final class KeyTouchView: UIView {
         if leftward { options.reverse() }
         var x = leftward ? key.maxX + 2 - width : key.minX - 2
         x = min(max(x, 2), bounds.width - 2 - width)
-        let frame = CGRect(x: x, y: key.minY - 58, width: width, height: 54)
+        let frame = CGRect(x: x, y: max(key.minY - 58, popupCeiling), width: width, height: 54)
         finger.choosing = true
         presses.popup = AlternatesPopup(options: options, selected: leftward ? options.count - 1 : 0,
                                         frame: frame)
@@ -358,12 +373,10 @@ final class KeyTouchView: UIView {
         }
     }
 
-    /// Sliding along space moves the cursor a character per few points.
+    /// Once space is held, sliding moves the cursor a character per few
+    /// points. Before that, a thumb sliding as it taps space still types a
+    /// space, as in iOS.
     private func trackCursor(_ finger: Finger, x: CGFloat) {
-        if finger.cursorAnchor == nil {
-            guard abs(x - finger.start.x) > 12 else { return }
-            startCursorMode(finger)
-        }
         guard let anchor = finger.cursorAnchor else { return }
         let steps = Int((x - anchor) / 8)
         if steps != finger.cursorSteps {

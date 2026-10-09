@@ -6,6 +6,12 @@ enum KeyboardPage: Hashable {
     case letters, numbers, symbols, math
 }
 
+/// What the text field is for, which changes a few keys, as in iOS: email
+/// fields put `@` and `.` beside space, and web fields `/` and `.`.
+enum FieldKind: Hashable {
+    case text, email, web
+}
+
 enum KeyAction: Hashable {
     /// Plain text, shifted when shift is on.
     case insert(String)
@@ -49,9 +55,9 @@ enum Layouts {
     static let bottomKeyWidth = 1.29
     static let returnWidth = 2.3
 
-    static func rows(for page: KeyboardPage, globe: Bool) -> [KeyRow] {
+    static func rows(for page: KeyboardPage, globe: Bool, field: FieldKind = .text) -> [KeyRow] {
         switch page {
-        case .letters: return letters(globe: globe)
+        case .letters: return letters(globe: globe, field: field)
         case .numbers: return numbers(globe: globe)
         case .symbols: return symbols(globe: globe)
         case .math:    return math(globe: globe)
@@ -60,7 +66,7 @@ enum Layouts {
 
     // MARK: - Pages
 
-    private static func letters(globe: Bool) -> [KeyRow] {
+    private static func letters(globe: Bool, field: FieldKind) -> [KeyRow] {
         [
             plain("qwertyuiop"),
             [.spacer] + plain("asdfghjkl") + [.spacer],
@@ -70,8 +76,20 @@ enum Layouts {
             bottom(left: Key(label: "123", action: .page(.numbers), width: bottomKeyWidth),
                    globe: globe,
                    extras: [Key(label: "∑", action: .page(.math), width: bottomKeyWidth)],
-                   trailing: [Key(label: "\\", action: .insert("\\"), width: bottomKeyWidth)]),
+                   trailing: fieldKeys(field)),
         ]
+    }
+
+    /// Beside space on the letters: a backslash for LaTeX, or what an
+    /// address needs.
+    private static func fieldKeys(_ field: FieldKind) -> [Key] {
+        let characters: [String]
+        switch field {
+        case .text: characters = ["\\"]
+        case .email: characters = ["@", "."]
+        case .web: characters = ["/", "."]
+        }
+        return characters.map { Key(label: $0, action: .insert($0), width: bottomKeyWidth) }
     }
 
     private static func numbers(globe: Bool) -> [KeyRow] {

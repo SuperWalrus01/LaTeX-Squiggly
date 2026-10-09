@@ -1,3 +1,4 @@
+import LaTeXUnicode
 import SwiftMath
 import UIKit
 import UniformTypeIdentifiers
@@ -20,7 +21,7 @@ enum MathRenderer {
                       fontSize: CGFloat = 28,
                       display: Bool = true,
                       dark: Bool = false) -> Result<UIImage, Failure> {
-        let source = stripDelimiters(latex)
+        let source = restoringLaTeX(stripDelimiters(latex))
         guard !source.isEmpty else { return .failure(.empty) }
         switch math(source, fontSize: fontSize, display: display, dark: dark) {
         case .success(let piece):
@@ -64,7 +65,7 @@ enum MathRenderer {
             case .newline:
                 layout.breakLine()
             case .math(let source, let display):
-                switch math(source, fontSize: fontSize, display: display, dark: dark) {
+                switch math(restoringLaTeX(source), fontSize: fontSize, display: display, dark: dark) {
                 case .success(let piece):
                     if display { layout.breakLine() }
                     layout.add(width: piece.width, ascent: piece.ascent, descent: piece.descent,
@@ -115,6 +116,91 @@ enum MathRenderer {
         return s.trimmingCharacters(in: .whitespaces)
     }
 
+    // MARK: - Symbols
+
+    /// Teaches SwiftMath every symbol the engine knows that it does not, so
+    /// one command like `\iint` no longer stops a whole equation rendering.
+    /// Each gets the spacing TeX gives its kind: relations and arrows spaced
+    /// as relations, integrals and n-ary operators drawn large, operators
+    /// spaced as binary ones. Safe to call often; it runs once.
+    static func teachSymbols() { _ = taught }
+
+    private static let taught: Void = {
+        for entry in SymbolTable.entries
+        where entry.command.allSatisfy(\.isLetter) && entry.glyph.count == 1
+            && MTMathAtomFactory.atom(forLatexSymbol: entry.command) == nil {
+            let name = entry.unicodeName
+            let atom: MTMathAtom?
+            if name.contains("INTEGRAL") {
+                atom = MTMathAtomFactory.operatorWithName(entry.glyph, limits: false)
+            } else if name.hasPrefix("N-ARY") {
+                atom = MTMathAtomFactory.operatorWithName(entry.glyph, limits: true)
+            } else if ["Relations", "Arrows"].contains(entry.category)
+                        || ["ELEMENT", "SUBSET", "SUPERSET", "CONTAINS"].contains(where: name.contains) {
+                atom = like("leq", entry.glyph)
+            } else if entry.category == "Operators" {
+                atom = like("pm", entry.glyph)
+            } else {
+                atom = like("infty", entry.glyph)
+            }
+            if let atom { MTMathAtomFactory.add(latexSymbol: entry.command, value: atom) }
+        }
+    }()
+
+    /// A copy of a symbol SwiftMath has, of the same kind, showing `glyph`.
+    private static func like(_ known: String, _ glyph: String) -> MTMathAtom? {
+        guard let atom = MTMathAtomFactory.atom(forLatexSymbol: known)?.copy() else { return nil }
+        atom.nucleus = glyph
+        return atom
+    }
+
+    /// Symbols typed as Unicode, like α, ≤ or x², written back as LaTeX:
+    /// `\alpha`, `\le`, `x^{2}`. SwiftMath quietly drops characters it does
+    /// not know, so without this, `α + β` rendered as a lone plus sign.
+    static func restoringLaTeX(_ text: String) -> String {
+        var result = ""
+        var rest = Substring(text)
+        while let character = rest.first {
+            if let (table, mark) = [(superscriptBases, "^"), (subscriptBases, "_")]
+                .first(where: { $0.0[character] != nil }) {
+                // A run of scripts goes in one pair of braces: x²³ is x^{23}.
+                let run = rest.prefix { table[$0] != nil }
+                result += mark + "{" + String(run.compactMap { table[$0] }) + "}"
+                rest = rest.dropFirst(run.count)
+            } else if let command = commands[character] {
+                result += "\\" + command + " "
+                rest = rest.dropFirst()
+            } else {
+                result.append(character)
+                rest = rest.dropFirst()
+            }
+        }
+        return result
+    }
+
+    /// Whether `text` has a symbol in it that `restoringLaTeX` would rewrite.
+    static func hasSymbols(_ text: String) -> Bool {
+        text.contains { commands[$0] != nil || superscriptBases[$0] != nil || subscriptBases[$0] != nil }
+    }
+
+    /// Each symbol's shortest command in the engine's table, so the two never
+    /// disagree. Plain-letter commands only, which SwiftMath knows.
+    private static let commands: [Character: String] = {
+        var map: [Character: String] = [:]
+        for (command, glyph) in SymbolTable.symbols where glyph.count == 1 && command.allSatisfy(\.isLetter) {
+            let symbol = glyph.first!
+            guard !symbol.isASCII else { continue }
+            if let existing = map[symbol], existing.count <= command.count { continue }
+            map[symbol] = command
+        }
+        return map
+    }()
+
+    private static let superscriptBases = Dictionary(
+        ScriptTables.superscripts.map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+    private static let subscriptBases = Dictionary(
+        ScriptTables.subscripts.map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+
     // MARK: - Pieces
 
     private struct Typeset {
@@ -126,6 +212,7 @@ enum MathRenderer {
 
     private static func math(_ source: String, fontSize: CGFloat, display: Bool,
                              dark: Bool) -> Result<Typeset, Failure> {
+        teachSymbols()
         // MathImage, not MTMathUILabel's layer: the label's drawing assumes a
         // flipped context, and rendering its layer into an image turned every
         // equation upside down.

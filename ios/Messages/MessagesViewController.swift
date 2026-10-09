@@ -57,7 +57,8 @@ final class MessagesState: ObservableObject {
     }
 }
 
-private struct MessagesRoot: View {
+/// Internal, not private, so the app's debug screens can show it too.
+struct MessagesRoot: View {
     @ObservedObject var state: MessagesState
     let expand: () -> Void
     let insert: (UIImage, String) -> Void
@@ -65,7 +66,12 @@ private struct MessagesRoot: View {
     @FocusState private var editing: Bool
 
     var body: some View {
-        if state.expanded { editor } else { drawer }
+        Group {
+            if state.expanded { editor } else { drawer }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.paper)
+        .tint(.squiggle)
     }
 
     /// The app drawer's strip: a button to write, and recent equations.
@@ -75,16 +81,22 @@ private struct MessagesRoot: View {
                 Button(action: expand) {
                     VStack(spacing: 6) {
                         Image(systemName: "square.and.pencil").font(.title2)
-                        Text("New").font(.footnote.weight(.semibold))
+                        Text("New").font(.system(.footnote, design: .rounded).weight(.semibold))
                     }
+                    .foregroundStyle(Color.squiggle)
                     .frame(width: 84, height: 84)
-                    .background(Color.accentColor.opacity(0.12),
+                    .background(Color.squiggle.opacity(0.12),
                                 in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 if state.recent.isEmpty {
+                    Image("MascotHello")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 76)
+                        .accessibilityHidden(true)
                     Text("Write LaTeX, see it rendered,\nand send it as an image.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundStyle(Color.inkSoft)
                 }
                 ForEach(state.recent, id: \.self) { source in
                     if let image = options.render(source).image {
@@ -106,6 +118,7 @@ private struct MessagesRoot: View {
         let result = options.render(state.source)
         return ScrollView {
             VStack(spacing: 16) {
+                Wordmark().frame(height: 34)
                 TextField("LaTeX, like \\frac{a}{b} or $x^2$", text: $state.source, axis: .vertical)
                     .font(.system(.body, design: .monospaced))
                     .autocorrectionDisabled()
@@ -113,8 +126,8 @@ private struct MessagesRoot: View {
                     .lineLimit(2...8)
                     .focused($editing)
                     .padding(10)
-                    .background(Color(.secondarySystemBackground),
-                                in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .background(Color.card, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.rule))
                 RenderedImage(result: result)
                 RenderOptionsPicker(options: $options)
                 Button {
