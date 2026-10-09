@@ -257,7 +257,12 @@ math,equation,symbols,greek,unicode,tex,formula,calculus,physics,algebra,student
 **Sign-in required:** No.
 
 **Contact information:** your name, phone number and email, for the reviewer
-only. They are not shown on the store.
+only. They are not shown on the store. Use a phone number you will answer:
+reviewers sometimes call instead of rejecting.
+
+**Attachment:** upload `ios/guide/LaTeX-Squiggly-iPhone-Demo.mp4`, the demo
+video. A reviewer who sees the keyboard working is far less likely to reject
+it as "not functioning" when they cannot find it straight away.
 
 **Notes**
 
@@ -265,12 +270,12 @@ only. They are not shown on the store.
 LaTeX Squiggly is a keyboard that turns LaTeX commands into symbols, with a share sheet extension and a Messages app that render LaTeX as an image. There is no account or sign-in.
 
 To try the keyboard:
-1. Open LaTeX Squiggly and tap Open Settings, then Keyboards, and turn on LaTeX Squiggly.
+1. Open Settings, then General, Keyboard, Keyboards. Tap Add New Keyboard and choose LaTeX Squiggly. (The app's Set up tab lists the same steps.)
 2. Open Notes, start a note, and switch to LaTeX Squiggly with the globe key below the keyboard.
 3. Type \alpha (the backslash key is beside the space bar) and press space. It becomes α.
 4. Type $x^2 + y^2 = z^2$. The bar above the keys shows it typeset, and tapping it shows it large.
 
-Full Access is optional. Everything above works without it. With it on (Settings, LaTeX Squiggly, Keyboards, Allow Full Access), the Copy button in the bar also puts the rendered equation on the clipboard as an image, because keyboards need Full Access to use the clipboard. That is all it is used for. The keyboard makes no network requests and stores nothing typed, with or without Full Access.
+Full Access is optional. Everything above works without it. With it on (Settings, General, Keyboard, Keyboards, LaTeX Squiggly, Allow Full Access), the Copy button in the bar also puts the rendered equation on the clipboard as an image, because keyboards need Full Access to use the clipboard. That is all it is used for. The keyboard makes no network requests and stores nothing typed, with or without Full Access.
 
 Share extension: in Notes, select some LaTeX such as \frac{a}{b}, tap Share, then LaTeX Squiggly.
 

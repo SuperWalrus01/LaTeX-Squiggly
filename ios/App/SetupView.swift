@@ -49,10 +49,6 @@ struct SetupView: View {
                     .foregroundStyle(Color.squiggle)
                 } header: {
                     heading("Turn on the keyboard")
-                } footer: {
-                    // The button opens the app's own page, not General.
-                    Text("Open Settings goes straight to LaTeX Squiggly's page. Tap Keyboards there to turn it on.")
-                        .foregroundStyle(Color.inkSoft)
                 }
                 .listRowBackground(Color.card)
 
