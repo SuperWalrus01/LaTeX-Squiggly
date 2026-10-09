@@ -1,0 +1,271 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Store shots</title>
+<link rel="stylesheet" href="fonts-local.css">
+<link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@1,700&display=block">
+<style>
+html, body { margin: 0; width: 1320px; height: 2868px; overflow: hidden; }
+body { position: relative; background: #FAF7EE radial-gradient(circle, #E4DCCB 2.4px, transparent 2.6px) 0 0 / 44px 44px;
+  font-family: 'Instrument Sans', sans-serif; }
+
+/* The banner, as in ios/store/make-store.py */
+.banner { position: absolute; left: 0; top: 0; width: 1320px; height: 900px;
+  background: radial-gradient(130% 80% at 15% 0%, #F7943F 0%, #E2660F 60%); }
+.banner svg { position: absolute; left: 0; bottom: -59px; width: 1320px; height: 60px; }
+.text { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 150px 80px 0; text-align: center; }
+.hero { display: flex; align-items: center; gap: 40px; margin-bottom: 46px; }
+.wordmark { width: 440px; height: 279px; background: #FFF8EE; -webkit-mask: url("wordmark-t.png") center / contain no-repeat; }
+.mascot { height: 270px; filter: drop-shadow(5px 0 0 #FFF8EE) drop-shadow(-5px 0 0 #FFF8EE) drop-shadow(0 5px 0 #FFF8EE) drop-shadow(0 -5px 0 #FFF8EE) drop-shadow(0 18px 24px rgba(80,30,0,.25)); }
+h1 { margin: 0; color: #FFF8EE; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 116px; line-height: 1.04; letter-spacing: -2px; text-wrap: balance; }
+h1 em { font-style: normal; color: #2B1407; }
+h1 code { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: .82em; letter-spacing: -4px; background: rgba(255,248,238,.18); border-radius: 22px; padding: 0 18px; }
+h1 .greek { font-family: 'STIX Two Text', serif; font-style: italic; font-weight: 700; font-size: 1.12em; }
+.text p { margin: 40px 0 0; color: rgba(255,248,238,.92); font-size: 50px; line-height: 1.3; font-weight: 500; text-wrap: balance; }
+
+/* The iPhone: a 390-point screen, scaled to fit under the text */
+.phone { position: absolute; left: 50%; z-index: 1; transform-origin: 50% 0; padding: 18px; border-radius: 74px; background: #0D0D0F;
+  box-shadow: 0 0 0 3px #73777E, 0 0 0 4.5px #2E3035, 0 34px 70px rgba(34,26,18,.32), 0 12px 24px rgba(34,26,18,.18); }
+.phone #screen { width: 390px; height: 844px; border-radius: 56px; }
+.phone .button { position: absolute; width: 5px; border-radius: 3px; background: #5F636A; }
+
+/* Callouts that point at part of the screen */
+.callout2 { position: absolute; z-index: 5; background: #FFFDF8; border-radius: 44px; padding: 34px 44px;
+  box-shadow: 0 30px 70px rgba(34,26,18,.28), 0 0 0 2px rgba(34,26,18,.06); display: flex; align-items: center; gap: 30px; color: #221A12; }
+.callout2 .src { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 64px; color: #5C5147; }
+.callout2 .arrow { font-size: 64px; color: #E2660F; font-weight: 700; }
+.callout2 .out { font-family: 'STIX Two Text', serif; font-style: italic; font-size: 110px; line-height: 1; }
+.callout2 .lbl { font-size: 30px; font-weight: 600; color: #8C8075; letter-spacing: .02em; text-transform: uppercase; }
+
+/* Brand pieces inside the app */
+:root { --squiggle: #E2660F; --paper: #FAF7EE; --cardb: #FFFDF8; --rule: #E4DCCB; --inksoft: #5C5147; }
+.slot.copy { color: var(--squiggle); }
+.pbtn.acc { background: var(--squiggle); }
+.appwm { background: var(--squiggle); -webkit-mask: url("wordmark-app.png") center / contain no-repeat; }
+.paper { background: var(--paper); }
+.bsheet { position: absolute; left: 0; right: 0; bottom: 0; top: 58px; border-radius: 22px 22px 0 0; background: var(--paper); z-index: 80;
+  box-shadow: 0 -6px 30px rgba(0,0,0,.18); overflow: hidden; }
+.grab { width: 36px; height: 5px; border-radius: 3px; background: #C9C3B6; margin: 6px auto 0; }
+.navb { height: 50px; display: flex; align-items: center; justify-content: center; position: relative; }
+.donepill { position: absolute; right: 14px; top: 8px; height: 34px; padding: 0 14px; border-radius: 17px; background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08); color: var(--squiggle); font-weight: 600; font-size: 16px; display: grid; place-items: center; }
+.rimg { background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px rgba(0,0,0,.1); padding: 12px 14px; display: grid; place-items: center; }
+.btn2 { flex: 1; height: 46px; border-radius: 23px; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 16px; font-weight: 600; }
+.btn2.fill { background: var(--squiggle); color: #fff; }
+.btn2.tint { background: rgba(226,102,15,.15); color: var(--squiggle); }
+.seg2 { flex: 1; height: 32px; background: #ECE7DC; border-radius: 16px; padding: 2px; display: flex; gap: 2px; }
+.seg2 span { flex: 1; display: grid; place-items: center; font-size: 13px; font-weight: 600; border-radius: 14px; }
+.seg2 span.sel { background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.cfield { font-family: ui-monospace, 'DejaVu Sans Mono', monospace; font-size: 14px; line-height: 1.45; background: var(--cardb);
+  border: 1px solid var(--rule); border-radius: 10px; padding: 10px; color: #000; white-space: pre-wrap; word-break: break-all; }
+.tilenew { width: 84px; height: 84px; border-radius: 14px; background: rgba(226,102,15,.12); color: var(--squiggle); flex: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.recent { height: 84px; flex: none; border-radius: 10px; overflow: hidden; background: #fff; display: grid; place-items: center; padding: 0 12px;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,.12); }
+.notesnav { position: absolute; top: 56px; left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px; color: #D9A200; font-size: 17px; }
+.notesbody { position: absolute; top: 104px; left: 20px; right: 20px; font-size: 17px; line-height: 1.38; color: #000; }
+.notesbody h1x { display: block; font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+.notesbody p { margin: 0 0 12px; }
+.altpop { position: absolute; z-index: 6; display: flex; background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.25); padding: 5px; }
+.altpop span { width: 40px; height: 44px; display: grid; place-items: center; font-size: 24px; border-radius: 7px; }
+.altpop span.sel { background: #0A84FF; color: #fff; }
+</style>
+</head>
+<body>
+<div class="banner"><svg viewBox="0 0 1320 60" preserveAspectRatio="none"><path fill="#E2660F" id="wave"/></svg></div>
+<div class="text" id="text"></div>
+<div class="phone" id="phone"><div id="screen"></div>
+  <div class="button" style="left:-9px;top:15%;height:4.5%"></div><div class="button" style="left:-9px;top:22%;height:8%"></div>
+  <div class="button" style="left:-9px;top:32%;height:8%"></div><div class="button" style="right:-9px;top:26%;height:12%"></div></div>
+<div id="callouts"></div>
+
+<script src="tables.js"></script>
+<script src="engine.js"></script>
+<script src="kit.js"></script>
+<script>
+const SHOT = new URLSearchParams(location.search).get("shot");
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// The banner's wavy foot, as make-store.py draws it.
+(() => { let p = "M0,0 L0,24", x = 0; const st = 110; while (x < 1320) { p += ` Q${x + st / 4},50 ${x + st / 2},24 T${x + st},24`; x += st; } $("#wave").setAttribute("d", p + " L1320,0 Z"); })();
+
+function headline(t) {
+  let out = esc(t).split("*").map((p, i) => (i % 2 ? `<em>${p}</em>` : p)).join("");
+  out = out.replace(/α/g, '<span class="greek">α</span>');
+  return out.replace("\\alpha", "<code>\\alpha</code>");
+}
+
+// ---------- Pieces of the phone's screen ----------
+const CHROME = `<div class="island"></div>${STATUS}<div class="homebar"></div>`;
+function keyboard({ page = "letters", shift = false, strip = { kind: "quick" }, panel = null, alt = null }) {
+  return `<div style="position:absolute;inset:0" data-kb='${JSON.stringify({ page, shift, strip, alt })}'>${buildKeyboard("k-")}</div>`;
+}
+function stripHTML(st) {
+  const div = `<span class="div"></span>`;
+  if (st.kind === "quick") return ["$…$", "{ }", "x²", "x₂", "a⁄b"].map((l) => `<span class="slot"><span style="font-size:18px">${l}</span></span>`).join(div);
+  if (st.kind === "sug") return st.list.map((g) => `<span class="slot">${g.glyph ? `<span class="g">${g.glyph}</span>` : ""}<span class="c">\\${g.command}</span></span>`).join(div);
+  if (st.kind === "math") return `<span class="slot mathslot" style="padding:0 10px">${rendered(st.latex, 18)}</span>${div}<span class="slot copy">${ICON.copy}Copy</span>`;
+  return "";
+}
+function finishKeyboard() {
+  const host = document.querySelector("[data-kb]");
+  if (!host) return;
+  const o = JSON.parse(host.dataset.kb);
+  for (const p of host.querySelectorAll(".page")) p.classList.toggle("on", p.dataset.page === o.page);
+  for (const el of host.querySelectorAll("[data-letter]")) el.textContent = o.shift ? el.textContent.toUpperCase() : el.textContent;
+  host.querySelector(".strip").innerHTML = stripHTML(o.strip);
+  if (o.alt) {
+    // A held key's options over the keys, as Alternates.swift shows them.
+    const key = [...host.querySelectorAll(`.page[data-page="${o.page}"] .k`)].find((k) => k.textContent.trim() === o.alt.key);
+    const pop = document.createElement("div");
+    pop.className = "altpop";
+    pop.innerHTML = o.alt.options.map((g, i) => `<span class="${i === o.alt.selected ? "sel" : ""}">${g}</span>`).join("");
+    const l = parseFloat(key.style.left), top = parseFloat(key.style.top);
+    pop.style.left = Math.min(390 - 8 - o.alt.options.length * 40 - 10, l - 6) + "px";
+    pop.style.top = 46 + top - 60 + "px";
+    host.querySelector(".kb").appendChild(pop);
+    key.style.background = "#fff";
+  }
+}
+function messagesTop(name = "Sam") {
+  return `<div class="mhead"><span class="back">‹</span><div class="avatar">${name[0]}</div><div class="name">${name} ›</div></div>`;
+}
+function thread(items, bottom) {
+  return `<div class="thread" style="bottom:${bottom}px"><div class="when">iMessage · Today 9:41</div>${items.map((b) =>
+    `<div class="bubble ${b.side}${b.img ? " img" : ""}">${b.img ? `<div style="background:#fff;padding:14px 18px">${rendered(b.img, b.px || 21)}</div>` : esc(b.text)}</div>`).join("")}</div>`;
+}
+function inputBar(bottom, field, { caret = true } = {}) {
+  const f = field ? esc(field) + (caret ? `<span class="caret"></span>` : "") + `<span class="send">${ICON.up}</span>`
+    : (caret ? `<span class="caret"></span>` : "") + `<span class="ph">iMessage</span>`;
+  return `<div class="inputbar" style="bottom:${bottom}px"><div class="plus">+</div><div class="field">${f}</div></div>`;
+}
+function notes(title, paras, { caretAfter = true, selectLast = false } = {}) {
+  const body = paras.map((p, i) => {
+    const last = i === paras.length - 1;
+    let h = esc(p);
+    if (last && selectLast) h = `<span class="sel" style="font-size:15px">${h}<span class="handle l"></span><span class="handle r"></span></span>`;
+    if (last && caretAfter) h += `<span class="caret" style="background:#D9A200"></span>`;
+    return `<p>${h}</p>`;
+  }).join("");
+  return `<div class="notesnav"><span>‹ Notes</span><span>⋯</span></div><div class="notesbody"><h1x>${esc(title)}</h1x>${body}</div>`;
+}
+const KB = 330; // keyboard height in points, with the system's globe row
+const SEG = `<div style="display:flex;gap:10px"><div class="seg2"><span>S</span><span class="sel">M</span><span>L</span></div>
+  <div class="seg2"><span class="sel">${ICON.sun}</span><span>${ICON.moon}</span></div></div>`;
+
+// ---------- The shots ----------
+const QUAD = "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}";
+const GAUSS = "\\int_0^{\\infty} e^{-x^2}\\,dx = \\frac{\\sqrt{\\pi}}{2}";
+const BASEL = "\\sum_{n=1}^{\\infty}\\frac{1}{n^2}=\\frac{\\pi^2}{6}";
+const SHOTS = {
+  "iphone-1-type": {
+    title: "Type \\alpha, get *α*", sub: "A full keyboard that turns LaTeX into real symbols, in any app.", hero: true,
+    screen: () => messagesTop() + thread([{ side: "in", text: "does the bound still hold as α grows?" }], KB + 52)
+      + inputBar(KB, "Yes, as α → ∞ ") + keyboard({ strip: { kind: "quick" } }),
+    callout: { html: `<span class="src">\\infty</span><span class="arrow">→</span><span class="out" style="font-style:normal;font-family:'Instrument Sans'">∞</span>`, at: [0.03, 0.27] },
+  },
+  "iphone-2-see": {
+    title: "See your maths *as you type*", sub: "Write it between $ signs and the bar above the keys renders it.",
+    screen: () => notes("Quadratics", ["Any ax² + bx + c = 0 with a ≠ 0 can be solved by completing the square.",
+      "The discriminant Δ = b² − 4ac decides it: two real roots if Δ > 0, one if Δ = 0, none if Δ < 0.",
+      "The roots are $" + QUAD + "$"]) + keyboard({ page: "symbols", strip: { kind: "math", latex: QUAD } }),
+    callout: { html: () => `<div style="display:flex;flex-direction:column;gap:10px;align-items:center"><span class="lbl">Above the keys</span>${rendered(QUAD, 64, "#221A12")}</div>`, at: [0.5, 0.47], center: true },
+  },
+  "iphone-3-copy": {
+    title: "Paste it *as an image*", sub: "Copy the equation and paste it into a chat, an email or a document.",
+    screen: () => messagesTop("Priya") + thread([
+      { side: "in", text: "what's the quadratic formula again?" },
+      { side: "out", img: QUAD, px: 24 },
+      { side: "in", text: "lifesaver, thank you 🙏" }], KB + 52) + inputBar(KB, "") + keyboard({}),
+  },
+  "iphone-4-symbols": {
+    title: "Every symbol, *one key away*", sub: "Greek letters and maths symbols on the ∑ key. Hold any key for more.",
+    screen: () => notes("Symbols", ["Sets: ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ, A ∩ B, x ∉ ∅", "Logic: ∀x ∃y (x < y), p ⇒ q", "Calculus: ∫ f dx, ∑ aₙ, ∂f/∂x, ∇ · F",
+      "Relations: x ≤ y"]) + keyboard({ page: "math", strip: { kind: "quick" }, alt: { key: "≤", options: ["≤", "≪", "⊆", "≺"], selected: 0 } }),
+  },
+  "iphone-5-share": {
+    title: "Render LaTeX *from any app*", sub: "Select it, tap Share, then LaTeX Squiggly.", zoom: 1.15,
+    screen: () => `<div style="position:absolute;inset:0;background:#fff">${notes("Lecture 4: Gauss", ["Gauss's law, differential form:", "\\nabla \\cdot E = \\frac{\\rho}{\\varepsilon_0}"], { caretAfter: false, selectLast: true })}</div>
+      <div class="dim" style="z-index:70;background:rgba(0,0,0,.28)"></div>
+      <div class="bsheet"><div class="grab"></div><div class="navb"><div class="appwm" style="width:62px;height:40px"></div><span class="donepill">Done</span></div>
+        <div style="padding:10px 16px;display:flex;flex-direction:column;gap:16px">
+          <div class="rimg">${rendered("\\nabla \\cdot E = \\frac{\\rho}{\\varepsilon_0}", 30)}</div>
+          <div style="display:flex;gap:10px"><div class="btn2 fill">${ICON.copy}Copy</div><div class="btn2 tint">${ICON.share}Share</div></div>
+          ${SEG}
+          <div><div style="font-size:15px;font-weight:600;color:var(--inksoft);margin:0 0 6px 2px">LaTeX</div>
+          <div class="cfield">\\nabla \\cdot E = \\frac{\\rho}{\\varepsilon_0}</div></div>
+        </div></div>`,
+  },
+  "iphone-6-messages": {
+    title: "Send equations *in Messages*", sub: "Write it, see it, and add it to your message.",
+    screen: () => messagesTop() + thread([
+      { side: "in", text: "ok last one, the gaussian integral?" },
+      { side: "out", img: GAUSS, px: 22 },
+      { side: "in", text: "perfect, that's the one" }], 300 + 52) + inputBar(300, "", { caret: false })
+      + `<div class="drawer" style="height:300px;background:#fff"><div class="hdr"><img src="appicon.png">LaTeX Squiggly</div>
+        <div class="strip2" style="overflow:hidden"><div class="tilenew">${ICON.pencil}New</div>
+        <div class="recent">${rendered(GAUSS, 15)}</div><div class="recent">${rendered(BASEL, 15)}</div></div></div>`,
+  },
+  "imessage-1-write": {
+    title: "Write maths, *send an image*", sub: "See it rendered as you type, then add it to the conversation.",
+    screen: () => messagesTop() + `<div class="bsheet" style="top:96px;bottom:${KB}px;border-radius:14px 14px 0 0;z-index:40">
+        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:14px">
+          <div class="appwm" style="width:54px;height:34px;margin:0 auto"></div>
+          <div class="cfield">${esc(GAUSS)}<span class="caret"></span></div>
+          <div class="rimg">${rendered(GAUSS, 24)}</div>
+          ${SEG}
+          <div class="btn2 fill" style="flex:none;height:50px;border-radius:14px;font-size:17px">${ICON.up}Add to message</div>
+        </div></div>` + keyboard({ page: "symbols", strip: { kind: "math", latex: GAUSS } }),
+  },
+};
+
+function build(name) {
+  const s = SHOTS[name];
+  $("#text").innerHTML = (s.hero ? `<div class="hero"><div class="wordmark"></div><img class="mascot" src="mascot-laptop.png"></div>` : "")
+    + `<h1>${headline(s.title)}</h1><p>${esc(s.sub)}</p>`;
+  $("#screen").innerHTML = CHROME + s.screen();
+  finishKeyboard();
+  // As make-store.py does: the phone as far below the text as fits, as big as fits.
+  const top = $("#text").getBoundingClientRect().bottom + 70;
+  const height = 2868 - 80 - top;
+  const scale = height / 880 * (s.zoom || 1);
+  const phone = $("#phone");
+  phone.style.top = top + "px";
+  phone.style.transform = `translateX(-50%) scale(${scale})`;
+  $(".banner").style.height = top + height * 0.22 + "px";
+  if (s.callout) {
+    const c = document.createElement("div");
+    c.className = "callout2"; c.innerHTML = typeof s.callout.html === "function" ? s.callout.html() : s.callout.html;
+    $("#callouts").appendChild(c);
+    const [fx, fy] = s.callout.at;
+    const y = top + height * fy;
+    if (s.callout.center) { c.style.left = "50%"; c.style.transform = "translateX(-50%)"; }
+    else c.style.left = 1320 * fx + "px";
+    c.style.top = y + "px";
+  }
+}
+
+window.MathJax.startup.ready = () => {
+  MathJax.startup.defaultReady();
+  MathJax.startup.promise.then(async () => {
+    await document.fonts.ready;
+    // Some commands make MathJax load a piece first, which the synchronous
+    // call reports as a failure; render each formula once the slow way.
+    for (const l of [QUAD, GAUSS, BASEL, "\\nabla \\cdot E = \\frac{\\rho}{\\varepsilon_0}"]) await MathJax.tex2svgPromise(l, { display: false });
+    mjCache.clear();
+    build(SHOT);
+    await document.fonts.ready;
+    await Promise.all([...document.images].map((i) => i.decode().catch(() => {})));
+    window.READY = true;
+  });
+};
+const mj = document.createElement("script");
+mj.src = "./mathjax/startup.js";
+document.head.appendChild(mj);
+</script>
+</body>
+</html>
