@@ -324,7 +324,7 @@ final class KeyboardModel: ObservableObject {
     /// Called after every key and whenever the host app's text changes.
     /// Only what changed is published, so the keys redraw once per press.
     func refresh(releasingShift: Bool = false) {
-        if let id = proxy?.documentIdentifier, id != document {
+        if let id = documentID, id != document {
             let first = document == nil
             document = id
             newField(first: first)
@@ -382,6 +382,16 @@ final class KeyboardModel: ObservableObject {
         case .URL, .emailAddress, .webSearch, .twitter: return false
         default: return true
         }
+    }
+
+    /// The text field's identity. Swift declares `documentIdentifier` as never
+    /// missing, but the system's proxy has none until a field is attached,
+    /// as when the keyboard first opens, and reading it directly then crashes
+    /// the keyboard. Asked for this way, a missing one is just nil.
+    private var documentID: UUID? {
+        guard let proxy = proxy as? NSObject,
+              proxy.responds(to: #selector(getter: UITextDocumentProxy.documentIdentifier)) else { return nil }
+        return proxy.value(forKey: "documentIdentifier") as? UUID
     }
 
     /// A different text field: what was typed in the last one no longer
