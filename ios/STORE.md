@@ -23,10 +23,9 @@ Found in a pre-launch check on 9 October 2026. Strike each off when done.
   seen on a real phone, keyboard memory at size L is unmeasured, and a crash
   on opening was fixed only days ago (`ef39fb1`). Use TestFlight for a few
   days before submitting.
-- [ ] **Regenerate the screenshots.** `store/make-store.py` now sets the α in
-  "Type \alpha, get α" in a maths italic; in the current
-  `iphone-1-type.png` it falls back to a face where it reads as "a". Run
-  `scripts/make-store-shots.sh` on the Mac.
+- [x] **Regenerate the screenshots.** `store/make-store.py` now sets the α in
+  "Type \alpha, get α" in a maths italic, and `iphone-1-type.png` was made
+  again with it on 9 October.
 - [ ] **Support URL.** GitHub Issues needs a GitHub account to reach you.
   Guideline 1.5 asks for an easy way to contact you; a support page on the
   site with an email address is safer.
