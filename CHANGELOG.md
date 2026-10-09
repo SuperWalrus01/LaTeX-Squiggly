@@ -12,6 +12,10 @@ The Chrome additions go out in the extension's 0.3.0 store upload.
 
 ### Added
 
+- The **iPhone app**, 1.0, for the App Store: a keyboard that types like the
+  system's and converts LaTeX on space, a renderer in the bar above the keys,
+  a share sheet extension and a Messages app. The privacy policy covers it,
+  and `ios/STORE.md` has the listing and the steps to submit it.
 - A **guide** on the website, `guide.html`: first steps on macOS, Windows and
   Chrome, pausing and excluding, turning an equation into an image, and what
   to check when nothing happens. Linked from the home and privacy pages.

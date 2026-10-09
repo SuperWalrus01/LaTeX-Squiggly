@@ -63,6 +63,10 @@ permissions, and type `\alpha` and a space into another app.
    [chrome/STORE.md](../chrome/STORE.md). Adding a permission shows every
    existing user a warning and disables the extension until they accept it,
    so avoid it unless a feature cannot work without it.
+4. If the iPhone app changed, archive and submit it as
+   [ios/STORE.md](../ios/STORE.md) says. It has its own version,
+   `MARKETING_VERSION` in `ios/project.yml`, because the App Store started
+   it at 1.0.
 
 ## 4. After
 
