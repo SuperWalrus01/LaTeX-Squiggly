@@ -71,6 +71,12 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
+    # The App Group is how the keyboard reads the app's settings. The free
+    # Personal Team cannot sign one; a paid team can.
+    entitlements:
+      path: App/LaTeXSquiggly.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.keenanjusak.latex-squiggly.ios]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios
@@ -101,9 +107,14 @@ targets:
             # only take ASCII; it does not convert to symbols there.
             IsASCIICapable: true
             PrefersRightToLeft: false
-            # Full Access is only for copying rendered images. Everything
-            # else works without it, which App Review requires.
+            # Full Access is only for copying rendered images and reading
+            # the app's settings. Everything else works without it, which
+            # App Review requires.
             RequestsOpenAccess: true
+    entitlements:
+      path: Keyboard/Keyboard.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.keenanjusak.latex-squiggly.ios]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.keenanjusak.latex-squiggly.ios.keyboard

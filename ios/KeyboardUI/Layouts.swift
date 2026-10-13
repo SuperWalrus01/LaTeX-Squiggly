@@ -4,6 +4,8 @@
 
 enum KeyboardPage: Hashable {
     case letters, numbers, symbols, math
+    /// Drawn by `EmojiPanel` rather than as rows of keys.
+    case emoji
 }
 
 /// What the text field is for, which changes a few keys, as in iOS: email
@@ -61,6 +63,7 @@ enum Layouts {
         case .numbers: return numbers(globe: globe)
         case .symbols: return symbols(globe: globe)
         case .math:    return math(globe: globe)
+        case .emoji:   return []
         }
     }
 
@@ -75,17 +78,18 @@ enum Layouts {
                 + [.spacer, backspace],
             bottom(left: Key(label: "123", action: .page(.numbers), width: bottomKeyWidth),
                    globe: globe,
-                   extras: [Key(label: "∑", action: .page(.math), width: bottomKeyWidth)],
-                   trailing: fieldKeys(field)),
+                   extras: field == .text ? [backslash] : [],
+                   trailing: addressKeys(field)),
         ]
     }
 
-    /// Beside space on the letters: a backslash for LaTeX, or what an
-    /// address needs.
-    private static func fieldKeys(_ field: FieldKind) -> [Key] {
+    /// Right of space in an address field, as in iOS. Other fields have the
+    /// backslash left of space instead, where the system keyboard has its
+    /// emoji key: right of space is where thumbs aiming for space land.
+    private static func addressKeys(_ field: FieldKind) -> [Key] {
         let characters: [String]
         switch field {
-        case .text: characters = ["\\"]
+        case .text: characters = []
         case .email: characters = ["@", "."]
         case .web: characters = ["/", "."]
         }
@@ -101,8 +105,7 @@ enum Layouts {
                 + [backspace],
             bottom(left: Key(label: "ABC", action: .page(.letters), width: bottomKeyWidth),
                    globe: globe,
-                   extras: [Key(label: "∑", action: .page(.math), width: bottomKeyWidth)],
-                   trailing: [Key(label: "\\", action: .insert("\\"), width: bottomKeyWidth)]),
+                   extras: [backslash]),
         ]
     }
 
@@ -115,8 +118,7 @@ enum Layouts {
                 + [backspace],
             bottom(left: Key(label: "ABC", action: .page(.letters), width: bottomKeyWidth),
                    globe: globe,
-                   extras: [Key(label: "∑", action: .page(.math), width: bottomKeyWidth)],
-                   trailing: [Key(label: "\\", action: .insert("\\"), width: bottomKeyWidth)]),
+                   extras: [backslash]),
         ]
     }
 
@@ -134,12 +136,14 @@ enum Layouts {
                 + [.spacer, backspace],
             bottom(left: Key(label: "ABC", action: .page(.letters), width: bottomKeyWidth),
                    globe: globe,
-                   extras: [Key(label: "output", action: .toggleOutput, width: bottomKeyWidth)],
+                   extras: [backslash],
                    trailing: [Key(label: "123", action: .page(.numbers), width: bottomKeyWidth)]),
         ]
     }
 
     // MARK: - Pieces
+
+    private static let backslash = Key(label: "\\", action: .insert("\\"), width: bottomKeyWidth)
 
     private static let backspace = RowItem.key(Key(label: "delete", action: .backspace, width: shiftWidth))
 
@@ -157,16 +161,22 @@ enum Layouts {
         pairs.map { .key(Key(label: $0.glyph, action: .math("\\" + $0.command), width: 1)) }
     }
 
-    /// 123, an optional globe, extras, space, trailing keys, return. On Face ID
-    /// iPhones iOS draws the globe itself, below the keyboard, so `globe` is
-    /// usually false.
-    private static func bottom(left: Key, globe: Bool, extras: [Key], trailing: [Key]) -> KeyRow {
+    /// 123, an optional globe, the emoji key, extras, space, trailing keys,
+    /// return. The ∑ page is opened from the bar above the keys, not from
+    /// here. On Face ID iPhones iOS draws the globe itself, below the
+    /// keyboard, so `globe` is usually false, and the emoji key stands where
+    /// the system keyboard has its own. A keyboard cannot open Apple's emoji,
+    /// so the key opens our own page of them. With a globe as well, the small
+    /// keys narrow to keep space wide.
+    private static func bottom(left: Key, globe: Bool, extras: [Key], trailing: [Key] = []) -> KeyRow {
+        let small = globe ? 1.0 : bottomKeyWidth
         var row: [Key] = [left]
-        if globe { row.append(Key(label: "globe", action: .nextKeyboard, width: bottomKeyWidth)) }
-        row += extras
+        if globe { row.append(Key(label: "globe", action: .nextKeyboard, width: small)) }
+        row.append(Key(label: "emoji", action: .page(.emoji), width: small))
+        row += extras.map { Key(label: $0.label, action: $0.action, width: globe ? small : $0.width) }
         row.append(Key(label: "space", action: .space, width: nil))
         row += trailing
-        row.append(Key(label: "return", action: .newline, width: returnWidth))
+        row.append(Key(label: "return", action: .newline, width: globe ? 2.0 : returnWidth))
         return row.map(RowItem.key)
     }
 }

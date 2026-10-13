@@ -24,7 +24,7 @@ final class DemoVideo: XCTestCase {
         scene("Suggestions finish commands for you")
         type("\\the")
         sleep(1)
-        tapAt(65, 591)     // the first suggestion, θ
+        tapAt(120, 591)    // the first suggestion, θ
         sleep(1)
         type(" ")
 
@@ -41,9 +41,9 @@ final class DemoVideo: XCTestCase {
         sleep(1)
         sleep(1)
 
-        scene("The \u{2211} key has Greek letters and maths symbols")
+        scene("\u{2211} in the bar has Greek letters and maths symbols")
         type(" ")
-        tapAt(77, 800)     // ∑
+        tapAt(361, 591)    // ∑ in the bar
         page = .math
         sleep(1)
         for x in [23, 61, 99, 137] as [CGFloat] { tapAt(x, 637); usleep(400_000) }
@@ -73,11 +73,11 @@ final class DemoVideo: XCTestCase {
         tapAt(290, 797)    // Keys
         sleep(1)
 
-        scene("LaTeX mode: nothing converts, everything stays LaTeX")
+        scene("LaTeX on: nothing converts, everything stays LaTeX")
         tapAt(200, 400)    // the empty page: the cursor goes to the end
         type("\n")
         sleep(1)
-        tapAt(33, 591)     // LaTeX
+        tapAt(40, 591)     // LaTeX
         sleep(1)
         type("\\int_0^1 x^2 \\, dx = \\frac{1}{3}")
         sleep(3)
@@ -134,8 +134,8 @@ final class DemoVideo: XCTestCase {
         let symbols = Array("[]{}#%^*+="), symbols2 = Array("_\\|~<>€£¥•")
         let punctuation = Array(".,?!'")
         switch character {
-        case " ": tapAt(175, 800)
-        case "\\": tapAt(273, 800)
+        case " ": tapAt(225, 800)
+        case "\\": tapAt(127, 800)
         case "\n": tapAt(341, 800)
         case _ where letters.contains(character):
             go(.letters); tapAt(Self.tenX[letters.firstIndex(of: character)!], Self.rowY[0])

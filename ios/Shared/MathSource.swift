@@ -112,6 +112,16 @@ enum MathSource {
         return open
     }
 
+    /// The run `before` ends with if it holds a braced script, `x^{2}` or
+    /// `a_{n}`, as the x² and x₂ keys type them. Nil for bare `x^2`, which
+    /// prose like `2^3` types too, and while a brace is still open.
+    static func bracedScript(in before: String) -> String? {
+        let run = String(before.reversed().prefix { !$0.isWhitespace }.reversed())
+        guard run.contains("^{") || run.contains("_{"), openBraces(in: run) == 0,
+              !run.contains("$") else { return nil }
+        return run
+    }
+
     /// Braces opened in `before` and not yet closed.
     static func openBraces(in before: String) -> Int {
         var depth = 0
@@ -120,5 +130,20 @@ enum MathSource {
             if character == "}" { depth = max(0, depth - 1) }
         }
         return depth
+    }
+
+    /// The command whose brace the cursor is in, `text` for `\text{hello`,
+    /// or nil outside braces or in a bare `{`.
+    static func openBraceCommand(in before: String) -> String? {
+        var opens: [String.Index] = []
+        for index in before.indices {
+            if before[index] == "{" { opens.append(index) }
+            if before[index] == "}" { _ = opens.popLast() }
+        }
+        guard let open = opens.last else { return nil }
+        let head = before[..<open]
+        let name = head.reversed().prefix { $0.isASCII && $0.isLetter }
+        guard !name.isEmpty, head.dropLast(name.count).last == "\\" else { return nil }
+        return String(name.reversed())
     }
 }

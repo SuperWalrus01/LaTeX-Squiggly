@@ -68,11 +68,11 @@ final class GuideShots: XCTestCase {
         app.terminate()
     }
 
-    /// The app's Try it tab, where the mascot waits for a first conversion.
+    /// The app's Guide tab, with its lessons.
     func test4TryTab() {
         let app = XCUIApplication()
         app.launch()
-        app.tabBars.buttons["Try it"].tap()
+        app.tabBars.buttons["Guide"].tap()
         shot("app-try")
         app.terminate()
     }

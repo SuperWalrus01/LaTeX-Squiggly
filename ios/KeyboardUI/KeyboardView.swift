@@ -57,6 +57,9 @@ struct KeyboardView: View {
                     PreviewPanel(model: model)
                         .frame(height: metrics.rowPitch * CGFloat(Metrics.rows))
                         .padding(.horizontal, inset + Metrics.keyGap / 2)
+                } else if model.page == .emoji {
+                    EmojiPanel(model: model)
+                        .frame(height: metrics.rowPitch * CGFloat(Metrics.rows))
                 } else {
                     VStack(spacing: 0) {
                         ForEach(Array(Layouts.rows(for: model.page, globe: model.needsGlobe, field: model.field).enumerated()),
@@ -182,17 +185,17 @@ private struct KeyView: View {
             }
         case .nextKeyboard:
             Image(systemName: "globe").font(.system(size: 20))
+        case .page(.emoji):
+            Image(systemName: "face.smiling").font(.system(size: 20))
         case .space:
-            // Empty, as in iOS, except to say LaTeX mode is on.
+            // Empty, as in iOS, except to say LaTeX is on.
             if model.output == .latex {
                 Text("LaTeX").font(.system(size: 14, weight: .medium)).foregroundStyle(Color.secondary)
             } else {
                 Color.clear
             }
-        case .toggleOutput:
-            Text(model.output == .unicode ? "α" : "\\α").font(.system(size: 18))
         case .page:
-            Text(key.label).font(.system(size: key.label == "∑" ? 21 : 17))
+            Text(key.label).font(.system(size: 17))
         default:
             Text(label).font(.system(size: 25, weight: .regular))
         }
@@ -222,7 +225,8 @@ private struct KeyView: View {
         case .backspace: return "delete"
         case .newline: return model.returnLabel ?? "return"
         case .space: return "space"
-        case .toggleOutput: return model.output == .unicode ? "Typing symbols" : "Typing LaTeX"
+        case .nextKeyboard: return "next keyboard"
+        case .page(.emoji): return "emoji"
         case .math(let source): return source
         default: return label
         }
@@ -311,11 +315,25 @@ private struct StripView: View {
     @ObservedObject var model: KeyboardModel
     @Environment(\.colorScheme) private var colorScheme
 
+    /// The LaTeX switch and the ∑ key stay at the ends of the bar whatever
+    /// it shows between them, so they are always where the thumb expects.
     var body: some View {
+        HStack(spacing: 0) {
+            modeSwitch.frame(width: 72)
+            divider
+            middle
+            divider
+            mathPage.frame(width: 50)
+        }
+        .padding(.top, 6)
+    }
+
+    @ViewBuilder
+    private var middle: some View {
         Group {
             switch model.strip {
             case .quick:
-                slots([modeSwitch] + Self.quickKeys.map { item in
+                slots(Self.quickKeys.map { item in
                     AnyView(StripButton { model.perform(item.action) } label: {
                         Text(item.label).font(.system(size: 18))
                     })
@@ -352,20 +370,40 @@ private struct StripView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .padding(.top, 6)
+        .frame(maxWidth: .infinity)
     }
 
-    /// LaTeX mode on or off: orange while on, when nothing converts.
-    private var modeSwitch: AnyView {
+    /// LaTeX on or off: filled orange while on, when nothing converts, and
+    /// outlined while off, so it reads as a switch rather than a title.
+    private var modeSwitch: some View {
         let on = model.output == .latex
-        return AnyView(StripButton { model.perform(.toggleOutput) } label: {
+        return StripButton { model.perform(.toggleOutput) } label: {
             Text("LaTeX")
                 .font(.system(size: 15, weight: on ? .bold : .medium))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .foregroundStyle(on ? Color.white : Color.stripText)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
                 .background(Capsule().fill(on ? Color.squiggleAccent : Color.clear))
-        })
+                .overlay(Capsule().strokeBorder(on ? Color.clear : Color.stripDivider, lineWidth: 1.5))
+        }
+        .accessibilityLabel("LaTeX")
+        .accessibilityValue(on ? "on" : "off")
+    }
+
+    /// The page of Greek letters and symbols, and back to the letters from it.
+    private var mathPage: some View {
+        let on = model.page == .math
+        return StripButton { model.perform(.page(on ? .letters : .math)) } label: {
+            Text("∑")
+                .font(.system(size: 20))
+                .foregroundStyle(on ? Color.white : Color.stripText)
+                .frame(width: 36, height: 30)
+                .background(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(on ? Color.squiggleAccent : Color.clear))
+        }
+        .accessibilityLabel(on ? "letters" : "Greek letters and symbols")
     }
 
     /// A selection, typeset small with its words. Tap it for the large
@@ -429,7 +467,7 @@ private struct StripView: View {
             .font(.system(size: 15, weight: .semibold))
             .foregroundStyle(Color.squiggleAccent)
         }
-        .frame(width: 96)
+        .frame(width: 88)
     }
 
     private func slots(_ views: [AnyView]) -> some View {

@@ -84,7 +84,7 @@ final class KeyTouchView: UIView {
         let origin: KeyFrame
         /// The key under it now.
         var current: KeyFrame
-        /// The page it landed on, for 123 or ∑ pressed and slid onto a key.
+        /// The page it landed on, for 123 or ABC pressed and slid onto a key.
         let page: KeyboardPage
         let start: CGPoint
         var lastX: CGFloat
@@ -100,8 +100,11 @@ final class KeyTouchView: UIView {
         var cursorSteps = 0
         var repeats = 0
         var timer: Timer?
+        /// The touch itself, to notice one that ended without telling us.
+        weak var touch: UITouch?
 
-        init(origin: KeyFrame, page: KeyboardPage, at point: CGPoint) {
+        init(origin: KeyFrame, page: KeyboardPage, at point: CGPoint, touch: UITouch) {
+            self.touch = touch
             self.origin = origin
             current = origin
             self.page = page
@@ -179,18 +182,31 @@ final class KeyTouchView: UIView {
     // MARK: - Touches
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        #if DEBUG
+        let start = CACurrentMediaTime()
+        defer { touches.forEach { LatencyProbe.shared?.record("down", sensed: $0.timestamp, start: start) } }
+        #endif
+        dropLostFingers()
         for touch in touches {
             let point = touch.location(in: self)
             guard !model.cursorMode, let key = likelyKey(at: point) else { continue }
             // A new finger types the keys the others are holding, so fast
             // typing comes out in the order the keys were pressed.
             for other in fingers.values { typeEarly(other) }
-            let finger = Finger(origin: key, page: model.page, at: point)
+            let finger = Finger(origin: key, page: model.page, at: point, touch: touch)
             fingers[ObjectIdentifier(touch)] = finger
             UIDevice.current.playInputClick()
             land(finger)
+            forwardKeyboardSwitch(finger, event)
         }
         showPressed()
+    }
+
+    /// The emoji and globe keys hand their touches to iOS, which decides
+    /// between the next keyboard and the list of keyboards.
+    private func forwardKeyboardSwitch(_ finger: Finger, _ event: UIEvent?) {
+        guard finger.origin.key.action == .nextKeyboard, let event else { return }
+        model.handleInputModeList(from: self, with: event)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -198,6 +214,10 @@ final class KeyTouchView: UIView {
             guard let finger = fingers[ObjectIdentifier(touch)], !finger.spent else { continue }
             let point = touch.location(in: self)
             finger.lastX = point.x
+            if finger.origin.key.action == .nextKeyboard {
+                forwardKeyboardSwitch(finger, event)
+                continue
+            }
             if finger.choosing {
                 choose(at: point.x)
                 continue
@@ -215,22 +235,54 @@ final class KeyTouchView: UIView {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        #if DEBUG
+        let start = CACurrentMediaTime()
+        defer { touches.forEach { LatencyProbe.shared?.record("up", sensed: $0.timestamp, start: start) } }
+        #endif
         for touch in touches {
             guard let finger = fingers.removeValue(forKey: ObjectIdentifier(touch)) else { continue }
             finger.timer?.invalidate()
+            if finger.origin.key.action == .nextKeyboard {
+                forwardKeyboardSwitch(finger, event)
+                continue
+            }
             lift(finger)
         }
         showPressed()
     }
 
+    /// iOS cancels a touch when one of its own gestures, or SwiftUI's,
+    /// claims it, which can happen to an ordinary tap in the middle of the
+    /// keys. A finger that stayed where it landed was a tap, so it still
+    /// types its key, as on the system keyboard. One that moved was a swipe.
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             guard let finger = fingers.removeValue(forKey: ObjectIdentifier(touch)) else { continue }
             finger.timer?.invalidate()
-            if finger.cursorAnchor != nil { model.setCursorMode(false) }
-            if finger.choosing { presses.popup = nil }
+            let point = touch.location(in: self)
+            let stayed = hypot(point.x - finger.start.x, point.y - finger.start.y) < 12
+            if finger.cursorAnchor != nil {
+                model.setCursorMode(false)
+            } else if finger.choosing {
+                presses.popup = nil
+            } else if stayed, !finger.sliding, finger.origin.key.action != .nextKeyboard {
+                lift(finger)
+            }
         }
         showPressed()
+    }
+
+    /// Fingers whose touch ended without our hearing of it, as when the view
+    /// was rebuilt mid-press. Left behind, a space held as a trackpad would
+    /// keep every other key from typing.
+    private func dropLostFingers() {
+        for (id, finger) in fingers where finger.touch.map({ $0.phase == .ended || $0.phase == .cancelled }) ?? true {
+            finger.timer?.invalidate()
+            fingers[id] = nil
+        }
+        if model.cursorMode, !fingers.values.contains(where: { $0.cursorAnchor != nil }) {
+            model.setCursorMode(false)
+        }
     }
 
     /// A finger rolls a few points as it presses and lifts, and that must not

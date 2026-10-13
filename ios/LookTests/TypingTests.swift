@@ -68,6 +68,19 @@ final class TypingTests: XCTestCase {
         XCTAssertEqual(text, "α ")
     }
 
+    func testScriptKeyConvertsAfterSpaceStepsOut() {
+        tap("123"); tap("3")
+        let square = app.buttons["x²"].firstMatch
+        XCTAssertTrue(square.waitForExistence(timeout: 3),
+                      "The bar offers: \(app.buttons.allElementsBoundByIndex.map(\.label))")
+        square.tap()
+        tap("2")
+        tap("space")
+        XCTAssertEqual(text, "3^{2}", "space steps out of the braces")
+        tap("space")
+        XCTAssertEqual(text, "3² ")
+    }
+
     func testNothingIsCorrectedWithoutATap() {
         type("teh")
         XCTAssertTrue(app.buttons["the"].firstMatch.waitForExistence(timeout: 3), "the bar offers the spelling")
@@ -84,5 +97,49 @@ final class TypingTests: XCTestCase {
         XCTAssertEqual(text, "hello ")
         tap("123"); tap(",")
         XCTAssertEqual(text, "hello,")
+    }
+
+    func testWordsInTextKeepTheirSpaces() {
+        type("\\tex")
+        let suggestion = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "\\text")).firstMatch
+        XCTAssertTrue(suggestion.waitForExistence(timeout: 3),
+                      "The bar offers: \(app.buttons.allElementsBoundByIndex.map(\.label))")
+        suggestion.tap()
+        type("two words")
+        XCTAssertEqual(text, "\\text{two words}")
+    }
+
+    func testSumInTheBarOpensTheMathPageAndBack() {
+        app.buttons["Greek letters and symbols"].firstMatch.tap()
+        XCTAssertTrue(key("\\alpha").waitForExistence(timeout: 2), "the math page is open")
+        app.buttons["letters"].firstMatch.tap()
+        XCTAssertTrue(key("q").waitForExistence(timeout: 2), "back to the letters")
+    }
+
+    func testBackslashIsLeftOfSpace() {
+        XCTAssertLessThan(key("\\").frame.maxX, key("space").frame.minX)
+    }
+
+    func testAutomaticCapitalsWhenTurnedOn() {
+        app.terminate()
+        app.launchArguments += ["-autoCapitals", "YES"]
+        app.launch()
+        XCTAssertTrue(key("q").waitForExistence(timeout: 10))
+        type("hi")
+        tap("123"); tap("."); tap("space")
+        type("there")
+        XCTAssertEqual(text, "Hi. There")
+    }
+
+    func testEmojiPageTypesAndRemembers() {
+        tap("emoji")
+        let grin = app.descendants(matching: .any)["😀"].firstMatch
+        XCTAssertTrue(grin.waitForExistence(timeout: 3), "the emoji page is open")
+        grin.tap()
+        XCTAssertEqual(text, "😀")
+        tap("letters")
+        XCTAssertTrue(key("q").waitForExistence(timeout: 2), "ABC goes back to the letters")
+        tap("emoji")
+        XCTAssertTrue(app.staticTexts["FREQUENTLY USED"].waitForExistence(timeout: 2), "remembered next time")
     }
 }

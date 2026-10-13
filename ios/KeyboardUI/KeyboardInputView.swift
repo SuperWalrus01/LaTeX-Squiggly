@@ -9,6 +9,8 @@ protocol KeyboardHost: AnyObject {
     var needsInputModeSwitchKey: Bool { get }
     var hasFullAccess: Bool { get }
     func advanceToNextInputMode()
+    /// Tap for the next keyboard, hold for the list of them, as the globe.
+    func handleInputModeList(from view: UIView, with event: UIEvent)
     /// The user's text replacements and contact names, for spelling.
     func requestSupplementaryLexicon(completion: @escaping (UILexicon) -> Void)
 }

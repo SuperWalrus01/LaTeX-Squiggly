@@ -12,8 +12,8 @@ import UIKit
 ///   -messagesDrawer   the Messages app in the drawer, with -recent '("x^2")'
 ///   -messagesEditor   the Messages app opened up to write an equation
 ///
-/// PREVIEW_TEXT in the environment pre-fills the text, PREVIEW_PAGE=math
-/// opens our keyboard on the math page, and PREVIEW_PANEL=1 opens its large
+/// PREVIEW_TEXT in the environment pre-fills the text, PREVIEW_PAGE=math or
+/// emoji opens our keyboard on that page, and PREVIEW_PANEL=1 opens its large
 /// preview of the rendering, and PREVIEW_SELECT=1 selects all the text.
 enum DebugScreen: String {
     case systemKeyboard, keyboardPreview, renderTab, shareSheet, messagesDrawer, messagesEditor
@@ -77,8 +77,10 @@ private struct DebugTextView: UIViewRepresentable {
         if useOurKeyboard {
             let host = PreviewHost(textView: view)
             context.coordinator.host = host
-            if ProcessInfo.processInfo.environment["PREVIEW_PAGE"] == "math" {
-                host.model.page = .math
+            switch ProcessInfo.processInfo.environment["PREVIEW_PAGE"] {
+            case "math": host.model.page = .math
+            case "emoji": host.model.page = .emoji
+            default: break
             }
             if ProcessInfo.processInfo.environment["PREVIEW_PANEL"] == "1" {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -122,6 +124,7 @@ private final class PreviewHost: KeyboardHost {
     var needsInputModeSwitchKey: Bool { false }
     var hasFullAccess: Bool { true }
     func advanceToNextInputMode() {}
+    func handleInputModeList(from view: UIView, with event: UIEvent) {}
     func requestSupplementaryLexicon(completion: @escaping (UILexicon) -> Void) {}
 }
 

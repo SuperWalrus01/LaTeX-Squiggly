@@ -12,13 +12,14 @@ import UIKit
 @MainActor
 final class KeyboardModel: ObservableObject {
 
-    /// The one mode switch, in the bar above the keys.
+    /// The one mode switch, LaTeX in the bar above the keys. Everywhere the
+    /// user sees it, it is LaTeX, on or off.
     enum Output: String {
-        /// LaTeX mode: nothing converts, and math keys type `\alpha`. For
-        /// LaTeX documents, and for long equations to copy as images.
+        /// LaTeX: nothing converts, and math keys type `\alpha`. For LaTeX
+        /// documents, and for long equations to copy as images.
         case latex
-        /// Symbols mode: space turns `\alpha` into `α`, and math keys type
-        /// `α`. For messages.
+        /// Symbols: space turns `\alpha` into `α`, and math keys type `α`.
+        /// For messages.
         case unicode
     }
 
@@ -65,6 +66,8 @@ final class KeyboardModel: ObservableObject {
     /// The large preview of the rendering, in place of the keys.
     @Published private(set) var previewOpen = false
     @Published private(set) var renderStyle: RenderStyle
+    /// Emoji typed from the emoji page, most recent first.
+    @Published private(set) var recentEmoji: [String]
 
     /// Fingers on the keys, published separately so a press redraws only keys.
     let presses = KeyPresses()
@@ -86,6 +89,9 @@ final class KeyboardModel: ObservableObject {
     private var lastChange: Change?
     /// LaTeX the user put back after it converted, which space then leaves.
     private var keptLaTeX: String?
+    /// Shift turned on by the keyboard at the start of a sentence, rather
+    /// than by the user, so it can turn itself off again.
+    private var autoShifted = false
     /// Accepting a word types a space after it, which punctuation takes
     /// back, as in iOS: `word` then `,` gives `word,` rather than `word ,`.
     private var autoSpaced = false
@@ -105,6 +111,7 @@ final class KeyboardModel: ObservableObject {
         renderStyle = RenderStyle(
             size: RenderStyle.Size(rawValue: defaults.string(forKey: "renderSize") ?? "") ?? .medium,
             dark: defaults.bool(forKey: "renderDark"))
+        recentEmoji = (defaults.string(forKey: "recentEmoji") ?? "").map(String.init)
         host.requestSupplementaryLexicon { [weak self] lexicon in
             DispatchQueue.main.async { self?.words.use(lexicon) }
         }
@@ -192,8 +199,8 @@ final class KeyboardModel: ObservableObject {
             output = output == .unicode ? .latex : .unicode
             defaults.set(output.rawValue, forKey: "output")
             notice = output == .unicode
-                ? "Symbols: \\alpha then space gives α. Maths between $ signs stays LaTeX."
-                : "LaTeX mode: nothing converts. Tap LaTeX again to turn it off."
+                ? "LaTeX off: \\alpha then space gives α. Maths between $ signs stays LaTeX."
+                : "LaTeX on: nothing converts. Tap LaTeX again to turn it off."
             typed = false
         case .nextKeyboard:
             host?.advanceToNextInputMode()
@@ -231,6 +238,27 @@ final class KeyboardModel: ObservableObject {
         refresh(releasingShift: true)
     }
 
+    /// Types an emoji from the emoji page and remembers it for the top of
+    /// the page next time.
+    func insertEmoji(_ emoji: String) {
+        notice = nil
+        lastChange = nil
+        autoSpaced = false
+        proxy?.insertText(emoji)
+        lastTyped = emoji.last
+        var recent = recentEmoji.filter { $0 != emoji }
+        recent.insert(emoji, at: 0)
+        recentEmoji = Array(recent.prefix(32))
+        defaults.set(recentEmoji.joined(), forKey: "recentEmoji")
+        refresh(releasingShift: true)
+    }
+
+    /// The emoji or globe key's touches, which iOS turns into the next
+    /// keyboard on a tap and the list of keyboards on a hold.
+    func handleInputModeList(from view: UIView, with event: UIEvent) {
+        host?.handleInputModeList(from: view, with: event)
+    }
+
     func setCursorMode(_ on: Bool) {
         cursorMode = on
         if !on { refresh() }
@@ -240,6 +268,7 @@ final class KeyboardModel: ObservableObject {
     func textChanged() {
         lastTyped = nil
         refresh()
+        updateAutoShift()
     }
 
     func openPreview() {
@@ -331,7 +360,10 @@ final class KeyboardModel: ObservableObject {
         if returnLabel != label { returnLabel = label }
         let kind = FieldKind(proxy?.keyboardType ?? .default)
         if field != kind { field = kind }
-        if releasingShift { releaseShift() }
+        if releasingShift {
+            releaseShift()
+            updateAutoShift()
+        }
         let strip = currentStrip()
         if self.strip != strip { self.strip = strip }
     }
@@ -403,6 +435,8 @@ final class KeyboardModel: ObservableObject {
             page = .letters
         }
         if shift != .off { shift = .off }
+        autoShifted = false
+        updateAutoShift()
     }
 
     private func show(_ message: String) {
@@ -412,7 +446,7 @@ final class KeyboardModel: ObservableObject {
 
     // MARK: - Typing behaviour
 
-    /// Symbols mode converts, except in fields that only take plain ASCII,
+    /// Symbols converts, except in fields that only take plain ASCII,
     /// like some usernames, where only LaTeX can go.
     private var converts: Bool {
         output == .unicode && proxy?.keyboardType != .asciiCapable
@@ -435,6 +469,13 @@ final class KeyboardModel: ObservableObject {
         guard let proxy else { return }
         let before = self.before
 
+        // Words in `\text{}` and the like keep their spaces, so the template
+        // jump below does not throw the second word out of the braces.
+        if let command = MathSource.openBraceCommand(in: before), Self.textCommands.contains(command) {
+            proxy.insertText(" ")
+            lastPlainSpace = .distantPast
+            return
+        }
         // Inside a template's braces, space steps out of them instead, and
         // into the next pair if there is one: `\frac{a|}{}` to `\frac{a}{|}`.
         // The new position is worked out from the text already read, because
@@ -455,10 +496,20 @@ final class KeyboardModel: ObservableObject {
             lastPlainSpace = .distantPast
             return
         }
-        // Only symbols mode converts, and never math between `$` signs, which
+        // Only Symbols converts, and never math between `$` signs, which
         // is for copying as an image.
         let converting = converts && !before.hasSuffix("$")
-        switch converting ? TriggerDetector.outcome(buffer: before, terminator: " ") : .none {
+        var outcome = converting ? TriggerDetector.outcome(buffer: before, terminator: " ") : .none
+        // The engine leaves bare scripts alone unless they are between `$`
+        // signs, but a braced one, as the x² key types, is maths on purpose,
+        // so it converts as if it were: `x^{2}` to `x²`.
+        if converting, outcome == .none, let run = MathSource.bracedScript(in: before) {
+            outcome = TriggerDetector.outcome(buffer: "$" + run + "$", terminator: " ")
+            if case .replace(let r) = outcome {
+                outcome = .replace(Replacement(deleteCount: r.deleteCount - 2, insert: r.insert, notice: r.notice))
+            }
+        }
+        switch outcome {
         case .replace(let r):
             let source = String(before.suffix(r.deleteCount))
             for _ in 0..<r.deleteCount { proxy.deleteBackward() }
@@ -490,6 +541,7 @@ final class KeyboardModel: ObservableObject {
     /// Tap for one capital, double-tap for caps lock, tap again to release.
     private func tapShift() {
         let now = Date()
+        autoShifted = false
         switch shift {
         case .locked:
             shift = .off
@@ -503,14 +555,71 @@ final class KeyboardModel: ObservableObject {
         lastShiftTap = now
     }
 
-    /// Shift lasts for one character unless locked. Nothing is capitalised
-    /// automatically, since x and X differ in maths: shift is on only when the
-    /// user turns it on.
+    /// Shift lasts for one character unless locked.
     private func releaseShift() {
         if shift == .on { shift = .off }
+        autoShifted = false
+    }
+
+    /// Automatic capitals, off unless turned on in the app, since x and X
+    /// differ in maths. The keyboard can only read the app's setting with
+    /// Full Access.
+    private var autoCapitals: Bool {
+        hasFullAccess && SharedSettings.autoCapitals
+    }
+
+    /// Capitals where the field asks for them, as the system keyboard does:
+    /// at the start of a sentence for most fields, of every word for names,
+    /// or throughout. Shift the keyboard turned on turns off again when the
+    /// cursor leaves the start of a sentence; shift the user set is theirs.
+    private func updateAutoShift() {
+        guard shift != .locked else { return }
+        let wanted = wantsCapital()
+        if wanted, shift == .off {
+            shift = .on
+            autoShifted = true
+        } else if !wanted, shift == .on, autoShifted {
+            shift = .off
+            autoShifted = false
+        }
+    }
+
+    private func wantsCapital() -> Bool {
+        guard autoCapitals, let proxy else { return false }
+        let style = proxy.autocapitalizationType ?? .sentences
+        if style == .allCharacters { return true }
+        // Straight after a letter, never, whatever the context still says:
+        // the host app reports the text a moment after it changes.
+        if let typed = lastTyped, !typed.isWhitespace { return false }
+        var before = self.before
+        if let typed = lastTyped, before.last?.isWhitespace != true { before.append(typed) }
+        guard !Self.inMath(before) else { return false }
+        switch style {
+        case .words: return before.last.map(\.isWhitespace) ?? true
+        case .sentences: return Self.startsSentence(before)
+        default: return false
+        }
+    }
+
+    /// The start of the text, of a line, or of a sentence after `.`, `!` or
+    /// `?` and a space, with any closing quote or bracket between.
+    static func startsSentence(_ before: String) -> Bool {
+        guard let last = before.last else { return true }
+        if last.isNewline { return true }
+        guard last.isWhitespace else { return false }
+        let text = before.reversed().drop(while: { $0.isWhitespace && !$0.isNewline })
+            .drop(while: { "\"')]”’".contains($0) })
+        guard let end = text.first else { return true }
+        return ".!?".contains(end) || end.isNewline
     }
 
     // MARK: - Helpers
+
+    /// Commands whose braces hold words rather than maths.
+    private static let textCommands: Set<String> = [
+        "text", "textrm", "textbf", "textit", "textsf", "texttt", "emph", "mbox",
+        "mathrm", "operatorname",
+    ]
 
     /// What the return key says. `nil` means the plain return arrow.
     private static func label(for type: UIReturnKeyType) -> String? {
