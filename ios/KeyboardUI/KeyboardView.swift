@@ -314,6 +314,8 @@ private struct BalloonShape: Shape {
 private struct StripView: View {
     @ObservedObject var model: KeyboardModel
     @Environment(\.colorScheme) private var colorScheme
+    /// LaTeX was held, so letting go does not also tap it.
+    @State private var held = false
 
     /// The LaTeX switch and the ∑ key stay at the ends of the bar whatever
     /// it shows between them, so they are always where the thumb expects.
@@ -355,6 +357,23 @@ private struct StripView: View {
                 })
             case .words(let offer):
                 words(offer)
+            case .settings:
+                slots(KeyboardSetting.allCases.map { setting in
+                    let on = model.isOn(setting)
+                    return AnyView(StripButton { model.perform(.toggle(setting)) } label: {
+                        Text(setting.label)
+                            .font(.system(size: 14, weight: on ? .semibold : .regular))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .foregroundStyle(on ? Color.white : Color.stripText)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(on ? Color.squiggleAccent : Color.clear))
+                            .overlay(Capsule().strokeBorder(on ? Color.clear : Color.stripDivider, lineWidth: 1.5))
+                    }
+                    .accessibilityLabel(setting.label)
+                    .accessibilityValue(on ? "on" : "off"))
+                })
             case .math(let latex):
                 mathPreview(latex: latex)
             case .selection(let text):
@@ -375,9 +394,12 @@ private struct StripView: View {
 
     /// LaTeX on or off: filled orange while on, when nothing converts, and
     /// outlined while off, so it reads as a switch rather than a title.
+    /// Holding it opens the keyboard's settings instead.
     private var modeSwitch: some View {
         let on = model.output == .latex
-        return StripButton { model.perform(.toggleOutput) } label: {
+        return StripButton {
+            if held { held = false } else { model.perform(.toggleOutput) }
+        } label: {
             Text("LaTeX")
                 .font(.system(size: 15, weight: on ? .bold : .medium))
                 .lineLimit(1)
@@ -388,8 +410,13 @@ private struct StripView: View {
                 .background(Capsule().fill(on ? Color.squiggleAccent : Color.clear))
                 .overlay(Capsule().strokeBorder(on ? Color.clear : Color.stripDivider, lineWidth: 1.5))
         }
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+            held = true
+            model.perform(.openSettings)
+        })
         .accessibilityLabel("LaTeX")
         .accessibilityValue(on ? "on" : "off")
+        .accessibilityAction(named: "Keyboard settings") { model.perform(.openSettings) }
     }
 
     /// The page of Greek letters and symbols, and back to the letters from it.

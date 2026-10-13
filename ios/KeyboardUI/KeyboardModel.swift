@@ -50,11 +50,17 @@ final class KeyboardModel: ObservableObject {
         /// Selected text with math in it, typeset with its words.
         case selection(String)
         case notice(String)
+        /// The keyboard's own settings, as switches.
+        case settings
     }
 
     @Published var page: KeyboardPage = .letters
     @Published private(set) var shift: Shift = .off
     @Published private(set) var output: Output
+    /// The keyboard's own settings, changed in the row holding LaTeX opens.
+    @Published private(set) var settings: [KeyboardSetting: Bool] = [:]
+    /// The settings row is showing in the bar.
+    @Published private(set) var settingsOpen = false
     @Published private(set) var strip: Strip = .quick
     @Published private(set) var copied = false
     @Published private(set) var needsGlobe = false
@@ -112,6 +118,9 @@ final class KeyboardModel: ObservableObject {
             size: RenderStyle.Size(rawValue: defaults.string(forKey: "renderSize") ?? "") ?? .medium,
             dark: defaults.bool(forKey: "renderDark"))
         recentEmoji = (defaults.string(forKey: "recentEmoji") ?? "").map(String.init)
+        for setting in KeyboardSetting.allCases {
+            settings[setting] = defaults.object(forKey: setting.rawValue) as? Bool ?? setting.byDefault
+        }
         host.requestSupplementaryLexicon { [weak self] lexicon in
             DispatchQueue.main.async { self?.words.use(lexicon) }
         }
@@ -133,6 +142,13 @@ final class KeyboardModel: ObservableObject {
 
     func perform(_ action: KeyAction) {
         notice = nil
+        // Any other key closes the settings row, and LaTeX only closes it.
+        if settingsOpen {
+            if case .toggle = action {} else {
+                settingsOpen = false
+                if action == .toggleOutput { refresh(releasingShift: false); return }
+            }
+        }
         if copied { copied = false }
         if previewOpen { previewOpen = false }
         let change = lastChange
@@ -201,6 +217,17 @@ final class KeyboardModel: ObservableObject {
             notice = output == .unicode
                 ? "LaTeX off: \\alpha then space gives α. Maths between $ signs stays LaTeX."
                 : "LaTeX on: nothing converts. Tap LaTeX again to turn it off."
+            typed = false
+        case .openSettings:
+            settingsOpen = true
+            typed = false
+        case .toggle(let setting):
+            let on = !isOn(setting)
+            settings[setting] = on
+            defaults.set(on, forKey: setting.rawValue)
+            if setting == .haptics, on, !hasFullAccess {
+                notice = "Haptics need Allow Full Access, in Settings > Keyboards."
+            }
             typed = false
         case .nextKeyboard:
             host?.advanceToNextInputMode()
@@ -368,8 +395,16 @@ final class KeyboardModel: ObservableObject {
         if self.strip != strip { self.strip = strip }
     }
 
+    func isOn(_ setting: KeyboardSetting) -> Bool {
+        settings[setting] ?? setting.byDefault
+    }
+
+    /// Keys tap back, if the user wants it and iOS lets the keyboard.
+    var playsHaptics: Bool { isOn(.haptics) && hasFullAccess }
+
     private func currentStrip() -> Strip {
         if let notice { return .notice(notice) }
+        if settingsOpen { return .settings }
         let before = self.before
 
         if let partial = CommandSuggestions.partialCommand(in: before) {
@@ -393,16 +428,18 @@ final class KeyboardModel: ObservableObject {
             return .notice("Can't render this: \(problem)")
         }
 
-        if wordsWanted, !Self.inMath(before), let word = WordCorrector.currentWord(in: before) {
+        // A lone letter keeps the quick keys, since `x` is as likely a
+        // variable about to take the x² key as the start of a word.
+        if wordsWanted, !Self.inMath(before), let word = WordCorrector.currentWord(in: before), word.count > 1 {
             return .words(words.offer(for: word))
         }
         return .quick
     }
 
-    /// Spelling suggestions, unless the text field turns them off, as code
-    /// editors, address bars and email fields do.
+    /// Spelling suggestions, unless the user or the text field turns them
+    /// off, as code editors, address bars and email fields do.
     private var wordsWanted: Bool {
-        guard let proxy, proxy.autocorrectionType != .no else { return false }
+        guard isOn(.words), let proxy, proxy.autocorrectionType != .no else { return false }
         switch proxy.keyboardType ?? .default {
         case .URL, .emailAddress, .webSearch, .twitter: return false
         default: return true
@@ -528,7 +565,7 @@ final class KeyboardModel: ObservableObject {
         let quick = Date().timeIntervalSince(lastPlainSpace) < 0.4
         let afterWord = before.hasSuffix(" ")
             && before.dropLast().last.map { $0.isLetter || $0.isNumber } == true
-        if quick && afterWord {
+        if quick && afterWord && isOn(.doubleSpaceStop) {
             proxy.deleteBackward()
             proxy.insertText(". ")
             lastPlainSpace = .distantPast

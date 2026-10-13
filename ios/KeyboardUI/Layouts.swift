@@ -23,7 +23,28 @@ enum KeyAction: Hashable {
     /// the first empty brace.
     case template(String, back: Int)
     case space, backspace, newline, shift, nextKeyboard, toggleOutput
+    /// The settings row in the bar, opened by holding LaTeX.
+    case openSettings
+    case toggle(KeyboardSetting)
     case page(KeyboardPage)
+}
+
+/// What the keyboard keeps for itself, so it needs neither the app nor
+/// Full Access to remember it. Haptics still need Full Access to play.
+enum KeyboardSetting: String, CaseIterable, Hashable {
+    case words, doubleSpaceStop, haptics
+
+    var label: String {
+        switch self {
+        case .words: return "Words"
+        case .doubleSpaceStop: return "Space space ."
+        case .haptics: return "Haptics"
+        }
+    }
+
+    /// Words and the full stop match the system keyboard; haptics are off,
+    /// as there.
+    var byDefault: Bool { self != .haptics }
 }
 
 struct Key: Hashable {

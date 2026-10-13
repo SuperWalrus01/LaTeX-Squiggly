@@ -115,6 +115,7 @@ final class KeyTouchView: UIView {
 
     private let model: KeyboardModel
     private var presses: KeyPresses { model.presses }
+    private let haptic = UIImpactFeedbackGenerator(style: .light)
     private var fingers: [ObjectIdentifier: Finger] = [:]
     var frames: [KeyFrame] = []
     var popupCeiling: CGFloat = -44
@@ -196,6 +197,7 @@ final class KeyTouchView: UIView {
             let finger = Finger(origin: key, page: model.page, at: point, touch: touch)
             fingers[ObjectIdentifier(touch)] = finger
             UIDevice.current.playInputClick()
+            if model.playsHaptics { haptic.impactOccurred() }
             land(finger)
             forwardKeyboardSwitch(finger, event)
         }

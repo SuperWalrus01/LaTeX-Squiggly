@@ -69,16 +69,45 @@ final class TypingTests: XCTestCase {
     }
 
     func testScriptKeyConvertsAfterSpaceStepsOut() {
-        tap("123"); tap("3")
+        type("x")
         let square = app.buttons["x²"].firstMatch
         XCTAssertTrue(square.waitForExistence(timeout: 3),
                       "The bar offers: \(app.buttons.allElementsBoundByIndex.map(\.label))")
         square.tap()
-        tap("2")
+        tap("123"); tap("2")
         tap("space")
-        XCTAssertEqual(text, "3^{2}", "space steps out of the braces")
+        XCTAssertEqual(text, "x^{2}", "space steps out of the braces")
         tap("space")
-        XCTAssertEqual(text, "3² ")
+        XCTAssertEqual(text, "x² ")
+    }
+
+    /// Holding LaTeX opens the keyboard's settings, and turning words off
+    /// there takes them out of the bar.
+    func testHoldingLaTeXOpensSettings() {
+        let latex = app.buttons["LaTeX"].firstMatch
+        latex.press(forDuration: 0.8)
+        XCTAssertEqual(latex.value as? String, "off", "holding does not also switch LaTeX")
+        let words = app.buttons["Words"].firstMatch
+        XCTAssertTrue(words.waitForExistence(timeout: 2), "the settings row is open")
+        XCTAssertEqual(words.value as? String, "on")
+        XCTAssertEqual(app.buttons["Haptics"].firstMatch.value as? String, "off")
+        words.tap()
+        type("teh")
+        XCTAssertFalse(app.buttons["the"].firstMatch.waitForExistence(timeout: 2), "no words in the bar")
+        latex.press(forDuration: 0.8)
+        app.buttons["Words"].firstMatch.tap()
+        tap("delete")
+        XCTAssertTrue(app.buttons["te"].firstMatch.waitForExistence(timeout: 3) || app.buttons["the"].exists,
+                      "words are back")
+    }
+
+    func testDoubleSpaceStopCanBeTurnedOff() {
+        app.buttons["LaTeX"].firstMatch.press(forDuration: 0.8)
+        app.buttons["Space space ."].firstMatch.tap()
+        type("so  ")
+        XCTAssertEqual(text, "so  ")
+        app.buttons["LaTeX"].firstMatch.press(forDuration: 0.8)
+        app.buttons["Space space ."].firstMatch.tap()
     }
 
     func testNothingIsCorrectedWithoutATap() {
