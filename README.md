@@ -43,16 +43,32 @@ extension have a renderer that copies your LaTeX as a PNG, ready to paste. The
 [guide](https://superwalrus01.github.io/LaTeX-Squiggly/guide.html) walks
 through each.
 
-## Screenshots
+## See it on each platform
+
+### macOS
 
 <p align="center">
-  <img src="chrome/store/screenshot-1-typing.png" alt="Typing LaTeX in a message box on a web page, converted to real characters as you type" width="760">
-  <br><sub>Commands become real characters as you type, in any text box.</sub>
+  <img src="assets/github/macos-demo.gif" alt="On a Mac: LaTeX typed into a document becomes real characters, then Control-Option-Command-L opens the renderer, and the copied PNG is pasted into the document" width="760">
+  <br><sub>A menu bar app. Type in any app; <kbd>⌃⌥⌘L</kbd> opens the renderer, <kbd>⌘Enter</kbd> copies the picture.</sub>
+</p>
+
+### Windows
+
+<p align="center">
+  <img src="assets/github/windows-demo.gif" alt="On Windows: LaTeX typed into a document becomes real characters, then Win+Alt+L opens the renderer, and the copied PNG is pasted into the document" width="760">
+  <br><sub>A tray app. Type in any app; <kbd>Win+Alt+L</kbd> opens the renderer, <kbd>Ctrl+Enter</kbd> copies the picture.</sub>
+</p>
+
+### Chrome
+
+<p align="center">
+  <img src="chrome/store/chrome-v2/screenshot-1-type-anywhere.png" alt="Typing LaTeX in a chat on a web page, converted to real characters as you type" width="760">
+  <br><sub>Commands become real characters as you type, in any text box on the web.</sub>
 </p>
 
 <p align="center">
-  <img src="chrome/store/screenshot-4-renderer.png" alt="The renderer drawing the Gaussian integral, with a Copy PNG button" width="760">
-  <br><sub>The renderer turns bigger maths into an image, in the Chrome extension and the Mac app.</sub>
+  <img src="chrome/store/chrome-v2/screenshot-2-renderer.png" alt="The renderer opened from the toolbar icon, suggesting \frac as LaTeX is typed" width="760">
+  <br><sub>The toolbar icon or <kbd>Alt+Shift+E</kbd> opens the renderer, which draws your LaTeX as you type.</sub>
 </p>
 
 <details>
@@ -60,18 +76,23 @@ through each.
 <br>
 
 <p align="center">
-  <img src="chrome/store/screenshot-5-paste.png" alt="The rendered equation pasted into a message as an image" width="760">
+  <img src="chrome/store/chrome-v2/screenshot-3-right-click.png" alt="Right-clicking LaTeX selected on a page and choosing Render selection as image" width="760">
+  <br><sub>Right-click LaTeX selected on any page to render it.</sub>
+</p>
+
+<p align="center">
+  <img src="chrome/store/chrome-v2/screenshot-4-paste-anywhere.png" alt="The same rendered equation pasted into a chat, an email, a slide and a dark-mode chat" width="760">
   <br><sub>The copied PNG pastes anywhere, even where LaTeX is not understood.</sub>
+</p>
+
+<p align="center">
+  <img src="chrome/store/chrome-v2/screenshot-5-control-privacy.png" alt="The extension's popup with its per-site switch, its two shortcuts, and its privacy guarantees" width="760">
+  <br><sub>Switch it off for a site or pause it anywhere. Nothing you type is stored or sent.</sub>
 </p>
 
 <p align="center">
   <img src="chrome/store/screenshot-2-notice.png" alt="A note explaining that a fraction was written on one line with a slash" width="760">
   <br><sub>When plain text can only approximate something, a short note says what happened.</sub>
-</p>
-
-<p align="center">
-  <img src="chrome/store/screenshot-3-welcome.png" alt="The Chrome extension's welcome tour, with a practice box" width="760">
-  <br><sub>The Chrome extension's welcome page has a short tour and a practice box.</sub>
 </p>
 
 </details>

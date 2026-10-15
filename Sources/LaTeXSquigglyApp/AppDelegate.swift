@@ -110,6 +110,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.addButton(withTitle: "Set Up Now")
         alert.addButton(withTitle: "Later")
         alert.alertStyle = .informational
+        // The mascot waves in place of the app icon, when the bundle has it.
+        if let url = Bundle.main.url(forResource: "mascot-hello", withExtension: "png"),
+           let mascot = NSImage(contentsOf: url) {
+            alert.icon = mascot
+        }
 
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {

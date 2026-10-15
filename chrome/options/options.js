@@ -50,7 +50,17 @@ practice.addEventListener("keydown", (event) => {
   practiceResult.textContent = outcome.notice
     ? `${outcome.source} became ${outcome.insert.trim()}. ${outcome.notice}`
     : `${outcome.source} became ${outcome.insert.trim()}. Undo brings it back.`;
+  cheer();
 });
+
+// The mascot in the welcome's corner celebrates each conversion in the box.
+const mascot = document.getElementById("welcome-mascot");
+function cheer() {
+  mascot.src = "mascot-celebrate.png";
+  mascot.classList.remove("cheer");
+  void mascot.offsetWidth;   // restarts the hop
+  mascot.classList.add("cheer");
+}
 
 // MARK: The shortcut
 

@@ -73,6 +73,9 @@ else
     ICON_NAME=""
 fi
 
+# The mascot, waving from the first-run welcome.
+cp "assets/mascot/hello.png" "$CONTENTS/Resources/mascot-hello.png"
+
 # The renderer window's page and the extension files it is made of, laid out
 # as Sources/LaTeXSquigglyApp/Web/files.json says. The app serves them from
 # here; see RendererFiles.swift.

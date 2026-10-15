@@ -56,29 +56,53 @@ access. Updates that do not add permissions are usually faster.
 
 ## Store listing
 
-**Description**
+**Summary**
+
+The line under the name, in search results and at the top of the listing. It
+is `description` in `chrome/manifest.json`, at most 132 characters, so the
+dashboard cannot edit it: it changes when a package with the new text is
+uploaded.
 
 ```
-Type LaTeX in any text box on the web and get real characters. \alpha becomes α, \Rightarrow becomes ⇒, and $x^2$ becomes x², right where you typed it, as soon as you press space.
+Type LaTeX in any text box and get real symbols (\alpha becomes α). Select LaTeX and right-click to copy it as an image.
+```
 
-The result is ordinary Unicode text, not an image, so it survives copying and pasting into chat messages, emails, comments and forms.
+**Description**
 
-For what Unicode cannot write, such as fractions, matrices and braces, the popup's renderer turns LaTeX into an image: type it, see it drawn as you type, and copy it as a PNG to paste into Google Docs, Slack or an email.
+The first two lines are what most people read, so they say what it does, one
+line for typing and one for the renderer's right-click item. The sections
+under them explain the rest, for whoever scrolls, and end with the links. The
+store shows the description as plain text, so the links are written out in
+full.
 
-• 202 symbols: Greek letters, operators, relations, arrows, set theory, logic
-• Superscripts and subscripts inside dollars: $x^2$, $a_1$, $\int_0^1$
-• Fractions, roots, binomials and \mathbb{R}
-• Honest when it has to approximate: if something cannot be written exactly in plain text, a short note says what it did, and if it cannot be written at all, your text is left as typed
-• Stays quiet on Overleaf and other LaTeX editors, in code editors, and in password fields, and anywhere you switch it off
-• In ordinary text boxes, undo brings the command back
-• The toolbar icon turns grey wherever it is not converting, and Alt+Shift+L pauses it anywhere
-• Renderer: maths-mode LaTeX to PNG or SVG, drawn by MathJax inside the extension, with a white or transparent background, colours, your own \newcommand definitions, command autocomplete and a history. Alt+Shift+E opens it, or right-click selected LaTeX and choose Render selection as image; Ctrl+Enter copies
+```
+Type LaTeX in any text box and get real symbols the moment you press space: \alpha becomes α, $x^2$ becomes x².
 
-Where it works: text boxes, search boxes, comment fields and rich text editors on web pages. Google Docs documents work too. Not in Google Sheets or Slides, and not in Chrome's address bar or on Chrome's own pages, which no extension can reach.
+Select LaTeX on any page, right-click and choose Render selection as image. Copy it as a PNG and paste it into a chat, an email, a slide or a doc.
 
-Privacy: to recognise a command, the extension keeps the last few characters you typed in a text box, in memory only, and forgets them when you click or change fields. Nothing you type in a web page is saved or sent anywhere, and the extension makes no network requests. Your settings, and the last LaTeX you typed into the renderer, are stored with Chrome.
+TYPING
+• \alpha → α   $x^2$ → x²   \mathbb{R} → ℝ   \sum_{i=1}^{n} → ∑ᵢ₌₁ⁿ
+• 202 symbols, plus superscripts, subscripts, fractions and roots
+• The result is ordinary text, so anyone can read, copy and search it
+• If something can't be written exactly in plain text, a short note says what it did
 
-Also available as a menu bar app for macOS and a tray app for Windows, which work in every app, not only the browser.
+RENDERER
+• For maths plain text can't hold, like stacked fractions and matrices
+• Live preview, command suggestions, colours, braces, a transparent background and a history
+• Alt+Shift+E opens it. Ctrl+Enter (Cmd+Enter on a Mac) copies the PNG
+
+WHERE IT WORKS
+• Text boxes, comment fields, web chats and Google Docs (not Sheets, Slides or the address bar)
+• Stays quiet on Overleaf, other LaTeX sites and code editors. Alt+Shift+L pauses it anywhere
+
+PRIVATE
+• Nothing you type is stored or sent, and it makes no network requests
+
+FREE AND OPEN SOURCE
+• Mac menu bar app that works in every app, not just Chrome (Windows coming soon): https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest
+• Guide: https://superwalrus01.github.io/LaTeX-Squiggly/guide.html
+• Source code: https://github.com/SuperWalrus01/LaTeX-Squiggly
+• Report a problem: https://github.com/SuperWalrus01/LaTeX-Squiggly/issues
 ```
 
 **Category:** Productivity (or Tools, whichever the dashboard offers).
@@ -90,9 +114,9 @@ Also available as a menu bar app for macOS and a tray app for Windows, which wor
 | Field | File |
 |---|---|
 | Store icon (128×128) | `chrome/icons/icon-128.png` |
-| Screenshots (1280×800) | `chrome/store/screenshot-1-typing.png`, `screenshot-2-notice.png`, `screenshot-3-welcome.png`, `screenshot-4-renderer.png`, `screenshot-5-paste.png` |
-| Small promo tile (440×280) | `chrome/store/promo-440x280.png` |
-| Marquee promo tile (1400×560), optional | `chrome/store/marquee-1400x560.png` |
+| Screenshots (1280×800) | `chrome/store/chrome-v2/screenshot-1-type-anywhere.png`, `screenshot-3-right-click.png`, `screenshot-2-renderer.png`, `screenshot-4-paste-anywhere.png`, `screenshot-5-control-privacy.png`, in that order, so right-click to render is second |
+| Small promo tile (440×280) | `chrome/store/chrome-v2/promo-small-440x280.png` |
+| Marquee promo tile (1400×560), optional | `chrome/store/chrome-v2/promo-marquee-1400x560.png` |
 | Promo video, optional | A YouTube link. Upload `build/latex-squiggly-demo.webm` to YouTube (Unlisted is enough) and paste its address. |
 
 The screenshots are real: the extension typing into a page, not a mock-up.
@@ -103,6 +127,10 @@ link is what the listing keeps.
 The renderer's two show its actual popup, and the PNG it copied pasted into a
 message.
 Every image is a 24-bit PNG with no alpha channel, which the store requires.
+
+For holidays, `chrome/store/holidays/` has a set of these images per holiday,
+from back to uni to Pi Day, with a themed store icon. Its README says when to
+swap each set in and how.
 
 **Homepage URL:** `https://superwalrus01.github.io/LaTeX-Squiggly/`
 
