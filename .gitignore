@@ -28,3 +28,8 @@ windows/**/bin/
 windows/**/obj/
 windows/dist/
 windows/LaTeXSquiggly.App/Assets/preview/
+
+# The iPhone app and its App Store images are kept local for now, not on
+# GitHub.
+/ios/
+/marketing/
