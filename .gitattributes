@@ -10,6 +10,10 @@
 *.icns binary
 *.ico binary
 *.tiff binary
+*.jar binary
+
+# Windows runs this, and cmd.exe wants CRLF.
+android/gradlew.bat text eol=crlf
 
 # Generated files. GitHub collapses them in diffs and leaves them out of the
 # language statistics. Never edit them by hand; see CONTRIBUTING.md.
@@ -19,6 +23,7 @@ Sources/LaTeXUnicodeChecks/GeneratedCodepointChecks.swift linguist-generated=tru
 Sources/LaTeXSquigglyApp/MenuBarIconData.swift linguist-generated=true
 windows/LaTeXSquiggly.Core/Engine/*.g.cs linguist-generated=true
 chrome/engine/tables.js linguist-generated=true
+android/engine/src/main/kotlin/**/Tables.g.kt linguist-generated=true
 conformance/*.json linguist-generated=true
 site/assets/data.js linguist-generated=true
 

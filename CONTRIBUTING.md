@@ -115,13 +115,14 @@ these. The top level holds only the conventional files: `README.md`,
 
    ```
    python3 scripts/generate-js-tables.py
+   python3 scripts/generate-kotlin-tables.py
    python3 scripts/generate-csharp-tables.py
    python3 scripts/generate-conformance-reference.py
    ```
 
-4. Port the logic change to `windows/LaTeXSquiggly.Core/` and
-   `chrome/engine/engine.js`, matching the Swift code's structure so the three
-   stay comparable line by line.
+4. Port the logic change to `windows/LaTeXSquiggly.Core/`,
+   `chrome/engine/engine.js` and `android/engine/`, matching the Swift code's
+   structure so the four stay comparable line by line.
 5. Run `scripts/check-all.sh`. If the site's numbers or examples changed,
    `scripts/make-site.py` has already updated `site/`; commit that too.
 

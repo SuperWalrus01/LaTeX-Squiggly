@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LaTeX Squiggly</string>
+    <string name="keyboard_name">LaTeX Squiggly maths keyboard</string>
+    <string name="keyboard_subtype">Maths (LaTeX)</string>
+    <string name="menu_convert">Convert LaTeX</string>
+    <string name="menu_render">Render LaTeX</string>
+    <string name="renderer_title">Render LaTeX</string>
+</resources>

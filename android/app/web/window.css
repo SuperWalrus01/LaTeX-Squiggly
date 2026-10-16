@@ -1,0 +1,22 @@
+/* The Android app's renderer. The renderer's own styles are in
+   renderer/renderer.css; this is only the page around them. */
+
+body { padding: 16px; }
+
+/* There is no Ctrl+Enter on a phone, and no shortcut that opens this. */
+.renderer-footer > span:first-child { display: none; }
+.renderer-footer { justify-content: flex-end; }
+
+/* Fingers, not pointers. */
+.actions .button, .segmented button { min-height: 44px; }
+
+.settings { margin-top: 16px; font-size: 14px; }
+.settings summary { color: var(--muted); width: max-content; padding: 8px 0; }
+.settings .card {
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+}
+.settings .hint { display: block; font-size: 12px; }
+.settings .error { color: var(--danger); margin: 0 0 8px; }

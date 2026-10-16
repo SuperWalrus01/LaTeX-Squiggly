@@ -29,6 +29,11 @@ windows/**/obj/
 windows/dist/
 windows/LaTeXSquiggly.App/Assets/preview/
 
+# Android port build output. Its build/ folders are covered by build/ above.
+android/.gradle/
+android/.kotlin/
+android/local.properties
+
 # The iPhone app and its App Store images are kept local for now, not on
 # GitHub.
 /ios/

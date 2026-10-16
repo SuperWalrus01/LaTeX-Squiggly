@@ -1,11 +1,14 @@
 // What the renderer needs from wherever it runs: storage, the clipboard,
 // saving a file, closing, and its own files' addresses. The renderer runs in
-// two places, the extension's popup and the macOS app's renderer window, and
-// this is the only file that knows which.
+// three places, the extension's popup, the macOS app's renderer window and
+// the Android app's renderer, and this is the only file that knows which.
 //
 // In the extension it is Chrome's own APIs. In the Mac app the page is in a
 // WKWebView, and each call is a message to the app, which answers it: see
-// Sources/LaTeXSquigglyApp/RendererWindow.swift for the other side.
+// Sources/LaTeXSquigglyApp/RendererWindow.swift for the other side. On
+// Android the page is in a WebView, and the app's RendererBridge is a global
+// object whose methods answer at once: see
+// android/app/src/main/kotlin/.../render/RendererBridge.kt.
 //
 // A classic script, not a module, so the classic renderer/settings.js can use
 // it too.
@@ -15,6 +18,7 @@
   const listeners = [];
 
   const bridge = globalThis.webkit?.messageHandlers?.squiggly;
+  const androidBridge = globalThis.SquigglyAndroid;
 
   // chrome.storage.get's three forms: a key, a list of keys, or an object of
   // defaults that stored values replace.
@@ -64,6 +68,56 @@
     },
   };
 
+  // The Android bridge's methods are synchronous and pass strings, so values
+  // go across as JSON. Saving asks the user where, which takes a while: the
+  // app answers it later through squigglyAndroidReply.
+  const replies = new Map();
+  let nextReply = 0;
+  globalThis.squigglyAndroidReply = (id, ok, error) => {
+    const reply = replies.get(id);
+    replies.delete(id);
+    if (!reply) return;
+    if (error) reply.reject(new Error(error));
+    else reply.resolve(ok);
+  };
+  const failed = (error) => {
+    if (error) throw new Error(error);
+  };
+
+  const android = {
+    kind: "android",
+    url: (path) => new URL(`/${path}`, location.href).href,
+    initialInput: () => JSON.parse(androidBridge.initialInput()),
+    async get(area, keys) {
+      const { names, defaults } = wanted(keys);
+      const stored = JSON.parse(androidBridge.get(area, JSON.stringify(names)));
+      return { ...defaults, ...stored };
+    },
+    async set(area, items) {
+      androidBridge.set(area, JSON.stringify(items));
+      const changes = Object.fromEntries(Object.entries(items).map(([k, v]) => [k, { newValue: v }]));
+      for (const listener of listeners) listener(changes, area);
+    },
+    onChanged: (listener) => listeners.push(listener),
+    shortcut: async () => null,
+    openSettings: () => document.dispatchEvent(new Event("squiggly-open-settings")),
+    close: () => androidBridge.close(),
+    // The size goes with the PNG so the keyboard can insert it at the size it
+    // was previewed.
+    async copyImage(blob, { width, height }) {
+      failed(androidBridge.copyImage(await base64(await blob), width, height));
+    },
+    copyText: async (text) => failed(androidBridge.copyText(text)),
+    async save(blob, name) {
+      const data = await base64(blob);
+      const id = nextReply++;
+      return new Promise((resolve, reject) => {
+        replies.set(id, { resolve, reject });
+        androidBridge.save(id, name, blob.type || "application/octet-stream", data);
+      });
+    },
+  };
+
   const chromeHost = {
     kind: "chrome",
     url: (path) => chrome.runtime.getURL(path),
@@ -95,5 +149,5 @@
     },
   };
 
-  ns.host = bridge ? mac : chromeHost;
+  ns.host = bridge ? mac : androidBridge ? android : chromeHost;
 })();

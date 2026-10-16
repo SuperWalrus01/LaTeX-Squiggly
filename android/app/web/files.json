@@ -1,0 +1,11 @@
+{
+  "comment": "Where each file of the Android renderer comes from, relative to the repository. app/build.gradle.kts copies them into the app's assets under web/, and RendererActivity serves them from there. A path ending in / is a whole folder.",
+  "files": {
+    "index.html": "android/app/web/renderer.html",
+    "window.js": "android/app/web/window.js",
+    "window.css": "android/app/web/window.css",
+    "shared/ui.css": "chrome/shared/ui.css",
+    "engine/tables.js": "chrome/engine/tables.js",
+    "renderer/": "chrome/renderer/"
+  }
+}

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- No permissions at all, INTERNET included. A keyboard sees everything typed
+     into it, so the strongest promise it can make is one the system enforces:
+     this app cannot reach the network. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Squiggly">
+
+        <!-- Setup, settings and a box to try the keyboard in. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- The maths keyboard. -->
+        <service
+            android:name=".keyboard.KeyboardService"
+            android:exported="true"
+            android:label="@string/keyboard_name"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
+        <!-- "Convert LaTeX" in every app's selection menu. No window of its
+             own unless there is something to say. -->
+        <activity
+            android:name=".selection.ConvertSelectionActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="@string/menu_convert"
+            android:theme="@style/Theme.Squiggly.Translucent">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!-- The renderer. Not exported: the keyboard opens it with the text it
+             may replace, and no other app gets to say what that is. -->
+        <activity
+            android:name=".render.RendererActivity"
+            android:exported="false"
+            android:label="@string/renderer_title"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- The same renderer as "Render LaTeX" in the selection menu, which
+             other apps open, so it takes only the selected text. -->
+        <activity-alias
+            android:name=".render.RenderSelection"
+            android:exported="true"
+            android:label="@string/menu_render"
+            android:targetActivity=".render.RendererActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Rendered images, for the clipboard and for inserting from the
+             keyboard. Not exported: apps read an image only through the
+             permission granted with it. -->
+        <provider
+            android:name=".render.ImageProvider"
+            android:authorities="${applicationId}.images"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>

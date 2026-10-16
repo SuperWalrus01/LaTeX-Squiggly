@@ -1,10 +1,10 @@
 # Architecture
 
-LaTeX Squiggly runs on three platforms, and all three must give the same answer
+LaTeX Squiggly runs on four platforms, and all four must give the same answer
 to the same typing. This document explains how that is arranged: what is the
 source of truth, what is generated from it, and how the ports are held to it.
 
-## One engine, three platforms
+## One engine, four platforms
 
 ```
                     Sources/LaTeXUnicode           the engine: tables, tokenizer,
@@ -26,7 +26,7 @@ uses no system APIs, so it is fully testable, and the macOS app is a thin
 shell around it.
 
 **The other platforms are ports, not rewrites of the tables.** The Windows
-(C#) and Chrome (JavaScript) engines are hand-written ports of the converter
+(C#), Chrome (JavaScript) and Android (Kotlin) engines are hand-written ports of the converter
 logic, but their tables are generated from the Swift engine's own runtime
 tables (`latex-squiggly --dump-tables`), never typed. A table transcribed by
 hand drifts the first time somebody adds a symbol to one side.
@@ -42,6 +42,7 @@ the identical answer, down to how many characters to delete:
 |---|---|---|
 | Windows | `windows/LaTeXSquiggly.Conformance` | 4,098 |
 | Chrome | `chrome/test/conformance.mjs` | 4,076 |
+| Android | `android/engine/src/conformance` | 4,080 |
 
 Only the parts that touch the operating system are genuinely different per
 platform, and each platform's README says which and why.
@@ -53,6 +54,7 @@ platform, and each platform's README says which and why.
 | macOS | `Sources/LaTeXSquigglyApp` | a `CGEventTap` | posting synthetic key events | [macos.md](macos.md) |
 | Windows | `windows/LaTeXSquiggly.App` | a low-level keyboard hook on its own thread | `SendInput` | [windows/README.md](../windows/README.md) |
 | Chrome | `chrome/content` | page `beforeinput` and `keydown` events | `execCommand("insertText")`, after confirming the text in front of the caret | [chrome/README.md](../chrome/README.md) |
+| Android | `android/app` | being the keyboard: a maths keyboard the user switches to | the input connection, after confirming the text before the caret | [android/README.md](../android/README.md) |
 
 Two design points recur on every platform:
 
@@ -75,12 +77,14 @@ their output is reviewable in a diff. They must never be edited by hand:
 | `Sources/LaTeXUnicodeChecks/GeneratedCodepointChecks.swift` | `scripts/generate-swift-tables.py` | the same |
 | `windows/LaTeXSquiggly.Core/Engine/*.g.cs` | `scripts/generate-csharp-tables.py` | the built Swift engine |
 | `chrome/engine/tables.js` | `scripts/generate-js-tables.py` | the built Swift engine |
+| `android/engine/.../Tables.g.kt` | `scripts/generate-kotlin-tables.py` | the built Swift engine |
 | `conformance/reference.json` | `scripts/generate-conformance-reference.py` | the built Swift engine |
 | `conformance/windows-result.json` | the Windows conformance runner | a passing run |
 | `site/assets/data.js`, marked regions of `site/index.html` | `scripts/make-site.py` | the Swift engine and the Windows result |
 | `Sources/LaTeXSquigglyApp/MenuBarIconData.swift`, `assets/*.icns`, `assets/dmg-background.tiff` | `scripts/make-mac-icons.sh` | `assets/*.png` |
 | `windows/LaTeXSquiggly.App/Assets/*.ico` | `scripts/make-windows-icons.py` | `assets/*.png` |
 | `chrome/icons/*.png` | `scripts/make-chrome-icons.py` | `assets/menu-icon.png` |
+| `android/app/src/main/res/mipmap-*` | `scripts/make-android-icons.py` | `assets/app-icon.png` |
 | `site/assets/*.png` | `scripts/make-site-images.swift` | `assets/*.png` |
 
 `chrome/renderer/mathjax/` is not generated but copied: MathJax, as released,
@@ -111,6 +115,7 @@ Package.swift       the Swift package manifest
 windows/            the Windows port: engine (Core), tray app (App) and the
                     conformance runner (Conformance), as .NET 8 projects
 chrome/             the Chrome extension, with its store listing in STORE.md
+android/            the Android port: engine (plain Kotlin) and app, a draft
 conformance/        the reference every port is checked against
 assets/             source artwork, and the icons generated from it
 scripts/            everything run by hand: build, check, generate, make

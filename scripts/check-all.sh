@@ -13,15 +13,16 @@
 #   4. windows        the C# port gives the Swift engine's answer, every time
 #   5. chrome         the extension's engine does too, and its copy of
 #                     MathJax is the one scripts/fetch-mathjax.sh wrote
+#   6. android        the Android app's Kotlin engine does too
 #
 # Step 3 is the one that catches the likeliest mistake: a generated table
 # edited by hand. It regenerates everything from the Swift engine and fails if
 # the result differs from what is committed, so the fix is always to edit the
 # generator, never its output.
 #
-# Step 4 needs the .NET 8 SDK. Without it the step is skipped with a warning
-# rather than failing, so the rest can be checked on a machine that only builds
-# the Mac app. CI always has it.
+# Step 4 needs the .NET 8 SDK and step 6 a Java runtime. Without them each is
+# skipped with a warning rather than failing, so the rest can be checked on a
+# machine that only builds the Mac app. CI always has both.
 #
 set -euo pipefail
 
@@ -40,6 +41,7 @@ GENERATED=(
     Sources/LaTeXUnicode/ScriptTables.swift
     Sources/LaTeXUnicodeChecks/GeneratedCodepointChecks.swift
     chrome/engine/tables.js
+    android/engine/src/main/kotlin/io/github/superwalrus01/squiggly/engine/Tables.g.kt
     windows/LaTeXSquiggly.Core/Engine
     conformance/reference.json
     conformance/windows-result.json
@@ -47,17 +49,18 @@ GENERATED=(
     site/index.html
 )
 
-echo "==> 1/5  versions"
+echo "==> 1/6  versions"
 python3 scripts/check-version.py
 
-echo "==> 2/5  engine"
+echo "==> 2/6  engine"
 swift build
 swift run latex-squiggly-check
 
-echo "==> 3/5  generated files"
+echo "==> 3/6  generated files"
 python3 scripts/generate-swift-tables.py >/dev/null
 swift build >/dev/null
 python3 scripts/generate-js-tables.py >/dev/null
+python3 scripts/generate-kotlin-tables.py >/dev/null
 python3 scripts/generate-csharp-tables.py >/dev/null
 python3 scripts/generate-conformance-reference.py >/dev/null
 python3 scripts/make-site.py >/dev/null
@@ -71,7 +74,7 @@ if ! git diff --quiet -- "${GENERATED[@]}"; then
 fi
 echo "every generated file matches its generator"
 
-echo "==> 4/5  windows"
+echo "==> 4/6  windows"
 if command -v dotnet >/dev/null; then
     dotnet run --project windows/LaTeXSquiggly.Conformance -v quiet -- conformance/reference.json
     git diff --quiet -- conformance/windows-result.json || {
@@ -82,10 +85,19 @@ else
     echo "warning: skipped, the .NET 8 SDK is not installed"
 fi
 
-echo "==> 5/5  chrome"
+echo "==> 5/6  chrome"
 node chrome/test/conformance.mjs
 (cd chrome/renderer/mathjax && shasum -a 256 --check --quiet SHA256SUMS)
 echo "MathJax matches its checksums"
+
+echo "==> 6/6  android"
+if command -v java >/dev/null; then
+    # The engine alone, which needs only Maven Central; building the app needs
+    # the Android SDK, and CI does that in a job of its own.
+    android/gradlew -p android -PengineOnly=true -q :engine:conformance
+else
+    echo "warning: skipped, no Java runtime is installed"
+fi
 
 echo
 echo "All checks passed."

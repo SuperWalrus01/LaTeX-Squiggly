@@ -74,3 +74,35 @@ jobs:
         run: node chrome/test/mac-window.cjs
         env:
           NODE_PATH: ${{ runner.temp }}/playwright/node_modules
+
+      # So is the Android app's renderer; the app's side is built by the job
+      # below.
+      - name: The Android renderer's page
+        run: node chrome/test/android-window.cjs
+        env:
+          NODE_PATH: ${{ runner.temp }}/playwright/node_modules
+
+  android:
+    name: Android app
+    # GitHub's Ubuntu image carries the Android SDK, which macOS's lacks.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: The engine against the conformance reference
+        run: android/gradlew -p android :engine:conformance
+
+      - name: Build the app
+        run: android/gradlew -p android :app:assembleDebug :app:lintDebug
+
+      # A debug build, signed with the runner's throwaway key: for trying on a
+      # phone, not for the Play Store.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: latex-squiggly-android-debug
+          path: android/app/build/outputs/apk/debug/*.apk

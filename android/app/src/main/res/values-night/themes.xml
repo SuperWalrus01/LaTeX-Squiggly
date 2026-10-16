@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Squiggly" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorAccent">#F27A1A</item>
+        <item name="android:colorPrimary">#F27A1A</item>
+        <item name="android:windowBackground">#1C1B19</item>
+    </style>
+
+    <style name="Theme.Squiggly.Translucent" parent="android:Theme.Material.Dialog.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:colorAccent">#F27A1A</item>
+    </style>
+</resources>
