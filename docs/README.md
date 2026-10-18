@@ -6,6 +6,7 @@
 | [engine.md](engine.md) | The conversion engine: its API, what it converts, the rules for when typing becomes a conversion, and why it decides what it does |
 | [macos.md](macos.md) | The Mac app: installing, updating, permissions, suppression, the menu, settings, signing |
 | [releasing.md](releasing.md) | How to make a release |
+| [iphone-features/](iphone-features/LaTeX-Squiggly-iPhone-Features.pdf) | Every feature of the iPhone app, as a PDF, updated with each new feature |
 
 Each platform folder has its own README for what is specific to it:
 [windows/](../windows/README.md), [chrome/](../chrome/README.md) and

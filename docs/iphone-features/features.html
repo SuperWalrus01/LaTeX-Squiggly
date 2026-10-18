@@ -1,0 +1,223 @@
+<!doctype html>
+<!--
+  Every feature of the iPhone app, printed to LaTeX-Squiggly-iPhone-Features.pdf
+  by make-features.sh. Update this page whenever a feature is added or
+  changed, then run the script and commit both.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LaTeX Squiggly for iPhone: Features</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  :root {
+    --paper: #FAF7EE; --ink: #221A12; --soft: #6E6355; --rule: #E6DFD0;
+    --squiggle: #E2660F; --card: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0; color: var(--ink); background: #FFFFFF;
+    font: 10.5pt/1.45 ui-rounded, "SF Pro Rounded", -apple-system, "Helvetica Neue", sans-serif;
+  }
+  header { display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 2px solid var(--squiggle); padding-bottom: 10px; margin-bottom: 16px; }
+  h1 { font-size: 24pt; margin: 0; letter-spacing: -0.3px; }
+  h1 span { color: var(--squiggle); }
+  .meta { color: var(--soft); font-size: 9pt; text-align: right; }
+  .lead { font-size: 12pt; margin: 0 0 18px; }
+  h2 { font-size: 13.5pt; margin: 22px 0 8px; color: var(--squiggle);
+    break-after: avoid; }
+  h3 { font-size: 11pt; margin: 0 0 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: var(--paper); border: 1px solid var(--rule); border-radius: 12px;
+    padding: 10px 12px; break-inside: avoid; }
+  .card p, .card ul { margin: 0; }
+  ul { padding-left: 16px; }
+  li { margin: 2px 0; }
+  code { font: 9.5pt ui-monospace, "SF Mono", Menlo, monospace; background: #EFE8D8;
+    padding: 0 3px; border-radius: 4px; }
+  .new { display: inline-block; font-size: 7.5pt; font-weight: 700; color: #fff;
+    background: var(--squiggle); border-radius: 6px; padding: 0 5px; margin-left: 4px;
+    vertical-align: 1px; }
+  .wide { grid-column: 1 / -1; }
+  footer { margin-top: 20px; color: var(--soft); font-size: 8.5pt; border-top: 1px solid var(--rule);
+    padding-top: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LaTeX <span>Squiggly</span> for iPhone</h1>
+  <div class="meta">Every feature, in one place<br>Version 1.0 · updated 18 October 2026</div>
+</header>
+
+<p class="lead">A keyboard that types like the iPhone's own, turns LaTeX into symbols as you
+type, and makes equations into images you can paste anywhere. It comes with an app that
+teaches it, renders equations, and holds its settings.</p>
+
+<h2>The keyboard: maths as you type</h2>
+<div class="grid">
+  <div class="card">
+    <h3>LaTeX to symbols on space</h3>
+    <p>Type <code>\alpha</code> then space and get α. About 200 commands: Greek letters,
+    operators, relations, arrows, set symbols and more, from the same engine as the Mac app.
+    Braced scripts convert too: <code>x^{2}</code> becomes x², <code>a_{n}</code> becomes aₙ.</p>
+  </div>
+  <div class="card">
+    <h3>See each conversion, and undo it <span class="new">NEW</span></h3>
+    <p>The bar shows <code>\alpha</code> → α for a moment after space converts it, with an
+    Undo button. Delete straight after does the same. With key taps on, a conversion taps
+    a little firmer than a key.</p>
+  </div>
+  <div class="card">
+    <h3>Command suggestions</h3>
+    <p>Type <code>\</code> and a few letters and the bar offers matching commands with the
+    symbol each makes, common ones first. Tap one to finish it. Structures like
+    <code>\frac</code> and <code>\sqrt</code> come with empty boxes to fill in.</p>
+  </div>
+  <div class="card">
+    <h3>Your own shortcuts <span class="new">NEW</span></h3>
+    <p>Make commands of your own in Settings, like <code>\R</code> for ℝ or <code>\eps</code>
+    for ε. They convert on space, with the same undo, and come first in the suggestions.
+    One with a built-in command's name takes its place.</p>
+  </div>
+  <div class="card">
+    <h3>Quick keys in the bar</h3>
+    <p><code>$…$</code>, <code>{ }</code>, x², x₂ and a⁄b, each with the cursor already in
+    the box. Space steps out of a box, and from the top of a fraction to the bottom.</p>
+  </div>
+  <div class="card">
+    <h3>Live equation preview</h3>
+    <p>The bar typesets the maths before the cursor as you type it. Maths that won't
+    typeset says why, such as an unknown command.</p>
+  </div>
+  <div class="card">
+    <h3>The symbols page</h3>
+    <p>Thirty Greek letters and symbols one tap away, from the α∞ key, set in Latin Modern,
+    LaTeX's own typeface <span class="new">NEW</span>. Hold a key for its relatives: π for ϖ
+    and Π, ≤ for ≪ and ⊆. A faint dot marks keys that have them <span class="new">NEW</span>.</p>
+  </div>
+  <div class="card">
+    <h3>Converting on or off</h3>
+    <p>The LS mark at the left of the bar: orange converts, dark keeps everything as typed,
+    for LaTeX documents. Maths between <code>$</code> signs always stays LaTeX, ready to copy
+    as an image.</p>
+  </div>
+</div>
+
+<h2>The keyboard: everyday typing</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Feels like the iPhone's keyboard</h3>
+    <ul>
+      <li>Key sizes and pop-ups measured from Apple's keyboard</li>
+      <li>A touch between keys types the likelier letter</li>
+      <li>Fast two-thumb typing keeps its order</li>
+      <li>Slide from 123 onto a key to type it and go back</li>
+      <li>Keyboard clicks, and optional haptics</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Spelling suggestions</h3>
+    <p>Spellings and completions from the iPhone's dictionary, and your text replacements, in
+    the bar. Nothing is ever changed unless you tap it, so maths and commands are left alone.
+    Punctuation after a picked word takes back its space.</p>
+  </div>
+  <div class="card">
+    <h3>Gestures</h3>
+    <ul>
+      <li>Hold space to move the cursor like a trackpad</li>
+      <li>Hold delete to repeat, then delete whole words</li>
+      <li>Hold a letter for accents</li>
+      <li>Shift once for a capital, twice for caps lock</li>
+      <li>Two quick spaces type a full stop</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Fits the text box</h3>
+    <ul>
+      <li>Email and web boxes get <code>@</code>, <code>/</code> and <code>.</code> beside space</li>
+      <li>Number boxes open on the numbers</li>
+      <li>Return says go, search, send, next or done, as the app asks</li>
+      <li>Automatic capitals, if turned on</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Emoji page</h3>
+    <p>A full emoji keyboard inside this one, by category, with the ones you use most first.</p>
+  </div>
+  <div class="card">
+    <h3>Light and fast <span class="new">NEW</span></h3>
+    <p>A key press redraws only the keys that change, and word suggestions and fonts load
+    without holding up typing. A letter takes about a third less time to go in, and the
+    longest pauses are gone.</p>
+  </div>
+</div>
+
+<h2>Equations as images</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Copy from the bar</h3>
+    <p>Type maths between <code>$</code> signs, or select some, and tap Copy. Then paste the
+    image into any app. Tap the preview first to see it large and pick small, medium or
+    large, on a light or dark card.</p>
+  </div>
+  <div class="card">
+    <h3>Share sheet</h3>
+    <p>Select LaTeX anywhere, such as a note, an email or a web page, tap Share, then LaTeX
+    Squiggly. Copy, share or save the image from there.</p>
+  </div>
+  <div class="card">
+    <h3>Messages app</h3>
+    <p>Write an equation in the Messages app drawer and send it as a picture. Recent
+    equations stay there to send again.</p>
+  </div>
+  <div class="card">
+    <h3>The Render tab</h3>
+    <p>For long or tricky equations: type or paste LaTeX, choose the size and card, then
+    Copy or Share. Text with <code>$…$</code> in it keeps its words around the maths.</p>
+  </div>
+</div>
+
+<h2>The app</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Guide</h3>
+    <p>Ten short lessons, about three minutes in all, from turning the keyboard on to
+    images from anywhere, each ticked off as it is done. A one-minute tour on first launch.</p>
+  </div>
+  <div class="card">
+    <h3>Help</h3>
+    <p>Answers to common questions, the four ways to make an image, tips and tricks for every
+    key, and every symbol with a search; tap one to copy its command.</p>
+  </div>
+  <div class="card">
+    <h3>Settings</h3>
+    <ul>
+      <li>Spelling suggestions, on by default</li>
+      <li>Space space for a full stop, on by default</li>
+      <li>Automatic capitals, off by default</li>
+      <li>Haptics, off by default</li>
+      <li>Your shortcuts <span class="new">NEW</span></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>iPad <span class="new">NEW</span></h3>
+    <p>Runs on iPad too. The keyboard gets taller iPad keys, the same height upright and
+    sideways, and the app's screens keep a comfortable reading width. In Slide Over the
+    keyboard takes an iPhone's layout.</p>
+  </div>
+  <div class="card wide">
+    <h3>Privacy</h3>
+    <p>Nothing you type leaves your phone. Allow Full Access is recommended, and is used only
+    to put images on the clipboard, read the app's settings and play haptics. Without it,
+    everything else still works.</p>
+  </div>
+</div>
+
+<footer>Needs iOS 16 or later, on iPhone or iPad. This page lists what the app does today;
+it is updated with each new feature.</footer>
+
+</body>
+</html>
