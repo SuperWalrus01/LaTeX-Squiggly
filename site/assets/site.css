@@ -337,11 +337,25 @@ a.platform:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); 
 .two-up h3 { margin-top: 0; }
 
 /* ---------- iPhone ---------- */
+/* The screenshots roll past on their own, like a marquee. The set is in the
+   page twice, so moving the track by half its width lands it exactly where
+   it started and the loop has no seam. Hovering pauses it; with reduced
+   motion it is a row you scroll instead. */
 .phones {
-  display: flex; gap: 1.2rem; overflow-x: auto; scroll-snap-type: x mandatory;
-  padding: .5rem 1.25rem 1.5rem; margin-inline: -1.25rem; scrollbar-width: thin;
+  margin-top: 2.5rem; overflow: hidden; margin-inline: calc(50% - 50vw);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
-.phones figure { margin: 0; flex: 0 0 min(15rem, 62vw); scroll-snap-align: center; }
+.phones-track { display: flex; gap: 1.4rem; width: max-content; padding-block: .5rem 1.5rem; animation: roll 45s linear infinite; }
+.phones:hover .phones-track, .phones:focus-within .phones-track { animation-play-state: paused; }
+@keyframes roll { to { transform: translateX(calc(-50% - .7rem)); } }
+.phones figure { margin: 0; flex: 0 0 15rem; }
+@media (max-width: 40rem) { .phones figure { flex-basis: 12rem; } }
+@media (prefers-reduced-motion: reduce) {
+  .phones { overflow-x: auto; -webkit-mask: none; mask: none; margin-inline: 0; }
+  .phones-track { animation: none; }
+  .phones figure[aria-hidden="true"] { display: none; }
+}
 .phones img { display: block; width: 100%; height: auto; border-radius: 22px; box-shadow: 0 24px 40px -22px rgba(60,20,0,.55); }
 .phones figcaption { margin-top: .7rem; font-weight: 600; font-size: .95rem; text-align: center; }
 .split { display: grid; gap: 3rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
