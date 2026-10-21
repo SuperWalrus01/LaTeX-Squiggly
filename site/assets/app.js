@@ -175,7 +175,7 @@ function fire(terminator) {
   if (result.kind === "none") return false;
 
   if (result.kind === "refuse") {
-    say("<span class='said'>Left as you typed it — " + esc(result.reason) + "</span>");
+    say("<span class='said'>Left as you typed it: " + esc(result.reason) + "</span>");
     return false;
   }
   const cut = at - result.deleteCount;

@@ -5,44 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LaTeX Squiggly Guide</title>
 <meta name="description" content="How to use LaTeX Squiggly on macOS, Windows and Chrome, with short video tutorials: typing LaTeX that becomes real characters, pausing it, keeping it out of the way, and turning bigger maths into an image.">
-<meta name="theme-color" content="#FAF7EE" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#17130F" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#E2660F">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/touch-icon.png">
 <link rel="canonical" href="https://superwalrus01.github.io/LaTeX-Squiggly/guide.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/styles.css">
 <script src="assets/guide.js" defer></script>
 </head>
 <body>
-<div class="wrap">
-  <header class="masthead">
-    <div class="brandline"><div class="brandmark"></div><b>LaTeX Squiggly</b></div>
-    <nav>
-      <a href="./">Home</a>
-      <a href="#videos">Videos</a>
-      <a href="#basics">Basics</a>
-      <a href="#mac">Mac</a>
-      <a href="#windows">Windows</a>
-      <a href="#chrome">Chrome</a>
-      <a href="#images">Images</a>
-      <a href="#help">Help</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mac" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/></symbol>
+  <symbol id="i-win" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"/></symbol>
+  <symbol id="i-web" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9M12 3C9.4 5.6 8.2 8.6 8.2 12s1.2 6.4 3.8 9"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.5h3"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 17h16M8 7v10M16 7v10"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8.5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17v.01"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M8 14h8"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
+    <nav aria-label="Main">
+      <a class="optional" href="./">Home</a>
+      <a href="guide.html" aria-current="page">Guide</a>
+      <a class="optional" href="privacy.html">Privacy</a>
+      <a class="btn btn-primary" href="./#get">Get it free</a>
     </nav>
-  </header>
+  </div>
+</header>
 
-  <main class="guide">
-    <section style="border-top:0">
-      <p class="eyebrow">Guide</p>
-      <h2>How to use LaTeX Squiggly</h2>
-      <p class="lede">Type a LaTeX command where you would normally type, press space, and the command becomes the real character: <code>\alpha</code> becomes α, <code>\to</code> becomes →. It works the same way in the Mac app, the Windows app and the Chrome extension. Maths that plain text cannot hold, such as a stacked fraction, can be turned into an image instead.</p>
-      <p class="lede">Nothing you type is stored or sent anywhere. The <a href="privacy.html">privacy page</a> says exactly what is read and when.</p>
-    </section>
+<main>
+  <section class="band page-hero">
+    <div class="wrap">
+      <img class="mascot bob" src="assets/mascot/reading.png" alt="" width="299" height="321">
+      <span class="pill">Guide</span>
+      <h1>How to use LaTeX Squiggly</h1>
+      <p class="sub">Type a LaTeX command where you'd normally type, press space, and it becomes the real character: <code>\alpha</code> becomes α, <code>\to</code> becomes →. It works the same way on the Mac, on Windows, in Chrome and on iPhone. Maths that plain text can't hold becomes an image instead.</p>
+      <nav class="chips" aria-label="Jump to">
+        <a href="#videos"><svg><use href="#i-play"/></svg>Videos</a>
+        <a href="#mac"><svg><use href="#i-mac"/></svg>Mac</a>
+        <a href="#windows"><svg><use href="#i-win"/></svg>Windows</a>
+        <a href="#chrome"><svg><use href="#i-web"/></svg>Chrome</a>
+        <a href="#iphone"><svg><use href="#i-phone"/></svg>iPhone</a>
+        <a href="#images"><svg><use href="#i-image"/></svg>Images</a>
+      </nav>
+    </div>
+  </section>
 
-    <section id="videos">
+  <div class="wrap doc">
+    <aside class="toc">
+      <nav aria-label="On this page">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#videos">Video tutorials</a></li>
+          <li><a href="#basics">The basics</a></li>
+          <li><a href="#mac">Mac app</a></li>
+          <li><a href="#windows">Windows app</a></li>
+          <li><a href="#chrome">Chrome extension</a></li>
+          <li><a href="#iphone">iPhone keyboard</a></li>
+          <li><a href="#images">Maths as images</a></li>
+          <li><a href="#help">If nothing happens</a></li>
+        </ol>
+      </nav>
+    </aside>
+    <div class="guide">
+      <div class="callout" style="max-width:none">
+        <p>Nothing you type is stored or sent anywhere. The <a href="privacy.html">privacy page</a> says exactly what is read and when.</p>
+      </div>
+
+    <section class="doc-section" id="videos">
       <p class="eyebrow">Video tutorials</p>
-      <h2>Watch it work</h2>
+      <h2><span class="badge"><svg><use href="#i-play"/></svg></span>Watch it work</h2>
       <p class="lede">Each step below has a short video, between 10 and 18 seconds long, made from the real app. New in Chrome: <a href="#watch-rightclick">select any LaTeX on a page, right-click, and render it</a>. The Chrome videos were made on a Mac, so they show ⌥⇧ and ⌘ where Windows and ChromeOS use Alt+Shift and Ctrl.</p>
       <div class="watch">
         <div><h3>Everywhere</h3><ul><li><a href="#watch-basics">Type a command, press space</a> <span>0:11</span></li><li><a href="#watch-scripts">Scripts, fractions and sums</a> <span>0:11</span></li><li><a href="#watch-undo">Undo a conversion</a> <span>0:10</span></li><li><a href="#watch-honest">When it can&#x27;t be exact</a> <span>0:13</span></li><li><a href="#watch-quiet">Where it stays out of your way</a> <span>0:14</span></li></ul></div>
@@ -52,9 +96,9 @@
       </div>
     </section>
 
-    <section id="basics">
+    <section class="doc-section" id="basics">
       <p class="eyebrow">Everywhere</p>
-      <h2>The basics</h2>
+      <h2><span class="badge"><svg><use href="#i-bolt"/></svg></span>The basics</h2>
       <ol class="steps">
         <li><b>Type a command, then a space.</b> The command is replaced with its character, right where you typed it. On the Mac and Windows, Tab works as well as space. Return never converts, so it cannot send a half-finished message.</li>
         <li><b>Put scripts inside dollars.</b> <code>$x^2$</code> gives x² and <code>$a_1$</code> gives a₁. The dollars say you meant maths, so an ordinary <code>x^2</code> in a sentence is left alone.</li>
@@ -113,13 +157,13 @@
           <ol class="carousel-tabs"><li><button type="button" data-slide="0" aria-current="true">Type a command, press space</button></li><li><button type="button" data-slide="1">Scripts, fractions and sums</button></li><li><button type="button" data-slide="2">Undo a conversion</button></li><li><button type="button" data-slide="3">When it can&#x27;t be exact</button></li><li><button type="button" data-slide="4">Where it stays out of your way</button></li></ol>
         </div>
       </div>
-      <p class="lede" style="margin-top:1.2rem">There are 202 symbols. Search them all on the <a href="./#symbols">home page</a>, or in the app's or extension's settings.</p>
+      <p class="lede" style="margin-top:1.2rem">There are 202 symbols. Search them all on the <a href="./#symbols">home page</a>, or in the app's or extension's settings, or on the iPhone keyboard's ∑ key.</p>
       <p class="lede"><b>It stays out of LaTeX editors.</b> In Overleaf, TeX editors and code editors, <code>\alpha</code> has to stay <code>\alpha</code>, so LaTeX Squiggly does nothing there. You can add your own apps and sites to that list.</p>
     </section>
 
-    <section id="mac">
+    <section class="doc-section" id="mac">
       <p class="eyebrow">macOS 13 and later</p>
-      <h2>The Mac app</h2>
+      <h2><span class="badge"><svg><use href="#i-mac"/></svg></span>The Mac app</h2>
       <h3>Installing</h3>
       <ol class="steps">
         <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the disk image</a>, open it, and drag <b>LaTeX Squiggly</b> onto <b>Applications</b>.</li>
@@ -144,9 +188,9 @@
       <p class="lede">Quit from the menu bar, drag the old app to the Trash, and install the new one. Your settings are kept. If macOS asks for the permissions again, first remove the old <b>LaTeX Squiggly</b> entries from both lists in <b>System Settings → Privacy &amp; Security</b>. Left in place, they stay ticked but do nothing.</p>
     </section>
 
-    <section id="windows">
+    <section class="doc-section" id="windows">
       <p class="eyebrow">Windows 10 and later, beta</p>
-      <h2>The Windows app</h2>
+      <h2><span class="badge"><svg><use href="#i-win"/></svg></span>The Windows app</h2>
       <h3>Installing</h3>
       <ol class="steps">
         <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the .exe</a> and double-click it. There is no installer and it needs no admin rights.</li>
@@ -169,9 +213,9 @@
       <p class="lede">The Windows app also turns maths into an image: see <a href="#images">below</a>. It needs the Microsoft Edge WebView2 Runtime, which Windows 11 has and Windows 10 gets through updates.</p>
     </section>
 
-    <section id="chrome">
+    <section class="doc-section" id="chrome">
       <p class="eyebrow">Chrome, Edge, Brave and other Chromium browsers</p>
-      <h2>The Chrome extension</h2>
+      <h2><span class="badge"><svg><use href="#i-web"/></svg></span>The Chrome extension</h2>
       <h3>Installing</h3>
       <ol class="steps">
         <li>Add <b>LaTeX Squiggly</b> from the <a href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">Chrome Web Store</a>. A welcome page opens with a practice box to try it in.</li>
@@ -213,9 +257,32 @@
 
     </section>
 
-    <section id="images">
+    <section class="doc-section" id="iphone">
+      <p class="eyebrow">iPhone and iPad · coming soon to the App Store</p>
+      <h2><span class="badge"><svg><use href="#i-phone"/></svg></span>The iPhone keyboard</h2>
+      <p class="lede">On iPhone, LaTeX Squiggly is a whole keyboard. It types like the iPhone's own, converts LaTeX when you press space, and turns equations into pictures. It is on its way to the App Store; these are the steps for when it arrives.</p>
+      <h3>Setting it up</h3>
+      <ol class="steps">
+        <li>Open <b>Settings</b>, then <b>General → Keyboard → Keyboards</b>.</li>
+        <li>Tap <b>Add New Keyboard</b> and choose <b>LaTeX Squiggly</b>.</li>
+        <li>Optional: tap <b>LaTeX Squiggly</b> and turn on <b>Allow Full Access</b>. It lets the keyboard copy rendered images, follow the app's settings and play haptics. Nothing you type leaves your phone either way.</li>
+        <li>In any app, hold the globe key and pick <b>LaTeX Squiggly</b>. Type <code>\alpha</code> and a space.</li>
+      </ol>
+      <h3>Using it</h3>
+      <ul class="steps">
+        <li><b>Undo a conversion:</b> tap <b>Undo</b> in the bar above the keys, or press delete straight after.</li>
+        <li><b>Finish a command:</b> type <code>\</code> and a few letters, then tap a suggestion in the bar.</li>
+        <li><b>Find a symbol:</b> the <b>∑</b> key opens Greek letters and maths symbols. Hold a key for its relatives.</li>
+        <li><b>Pause it:</b> tap the LS mark at the left of the bar. Orange converts; dark keeps everything as typed.</li>
+        <li><b>Make an image:</b> type maths between <code>$</code> signs, or select some, and tap <b>Copy</b> in the bar. From another app, select LaTeX, tap <b>Share</b>, then <b>LaTeX Squiggly</b>.</li>
+        <li><b>In Messages:</b> open LaTeX Squiggly in the Messages app drawer, write an equation, and send it as a picture.</li>
+      </ul>
+      <p class="lede">The app has ten short lessons that walk through all of this, about three minutes in all.</p>
+    </section>
+
+    <section class="doc-section" id="images">
       <p class="eyebrow">Mac app, Windows app and Chrome extension</p>
-      <h2>Turning maths into an image</h2>
+      <h2><span class="badge"><svg><use href="#i-image"/></svg></span>Turning maths into an image</h2>
       <p class="lede">Fractions, matrices and sums with limits have no plain-text form. The renderer draws them as a picture you can paste into chats, slides, documents and emails.</p>
       <div class="callout">
         <p class="callout-title">Quickest in Chrome: select, right-click, render</p>
@@ -286,9 +353,9 @@
       <p class="lede"><b>On the Mac,</b> a copied PNG pastes at the size it was previewed and stays sharp. In Chrome, a browser cannot tell the clipboard the image's size, so a 3× image may paste larger than expected. Resize it after pasting, or lower the scale.</p>
     </section>
 
-    <section id="help">
+    <section class="doc-section" id="help">
       <p class="eyebrow">Help</p>
-      <h2>If nothing happens</h2>
+      <h2><span class="badge"><svg><use href="#i-help"/></svg></span>If nothing happens</h2>
       <ul class="steps">
         <li><b>Is it switched on?</b> A faded or grey icon means it is paused or the app or site is excluded. The menu or popup says which.</li>
         <li><b>Did you press space?</b> A command only converts when it is finished with a space (or Tab, on the desktop).</li>
@@ -299,12 +366,51 @@
       </ul>
       <p class="lede">Still stuck, or found a symbol that should be there? Open a <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">GitHub issue</a>.</p>
     </section>
-  </main>
+    </div>
+  </div>
+</main>
 
-  <footer>
-    <p style="margin-bottom:.4rem"><a href="./">Home</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly">Source code</a></p>
-    <p class="credit">Music in the videos: “Voxel Revolution” by Kevin MacLeod (<a href="https://incompetech.com">incompetech.com</a>), licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sound effects by Kenney, CC0.</p>
-  </footer>
-</div>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="about">
+        <img src="assets/mascot/hello.png" alt="" width="300" height="359" loading="lazy">
+        <div>
+          <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
+          <p>Type LaTeX anywhere and get real characters. Free and open source, made by <a href="https://keenanjusak.com">Keenan Jusak</a>.</p>
+        </div>
+      </div>
+      <div>
+        <h4>Get it</h4>
+        <ul>
+          <li><a href="./#get-mac">Mac</a></li>
+          <li><a href="./#get-windows">Windows</a></li>
+          <li><a href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">Chrome</a></li>
+          <li><a href="./#iphone">iPhone (soon)</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="#basics">Guide</a></li>
+          <li><a href="#videos">Video tutorials</a></li>
+          <li><a href="./#symbols">All symbols</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly">Source code</a></li>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases">Releases</a></li>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">Report a problem</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="small">
+      <p>Music in the videos: “Voxel Revolution” by Kevin MacLeod (<a href="https://incompetech.com">incompetech.com</a>), licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sound effects by Kenney, CC0.</p>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

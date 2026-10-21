@@ -1,18 +1,23 @@
 # The LaTeX Squiggly site
 
-A plain static site: no build step, no framework, no dependencies. Open
-`index.html` in a browser and it works, from the file system or from a server.
+A plain static site: no build step, no framework, no dependencies. Serve the
+folder (`python3 -m http.server` inside `site/`) and open it. From the file
+system most of it works, but Chrome will not draw the logo and wordmark masks.
 
 ```
 site/
-  index.html            the page
-  privacy.html          the privacy policy, for all three platforms
+  index.html            the home page
+  privacy.html          the privacy policy, for every platform
   guide.html            how to use it, on each platform
-  assets/styles.css     one stylesheet, tokens for light and dark
+  assets/styles.css     one stylesheet for all three pages, tokens for light and dark
   assets/app.js         the live demo and the symbol browser
   assets/data.js        generated: the app's own tables
   assets/*.png          the artwork, the icons, the link cards
+  assets/guide.js       the guide's video carousels and its sidebar
   assets/videos/        the guide's tutorial videos (720p MP4) and their posters
+  assets/mascot/        mascot poses, copied from assets/mascot at the root
+  assets/shots/         store screenshots, scaled down: the iPhone ones from
+                        ios/store/v2, the Chrome ones from chrome/store/chrome-v2
 ```
 
 ## Publishing it

@@ -3,81 +3,166 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LaTeX Squiggly — type LaTeX anywhere on macOS or Windows, get real characters</title>
-<meta name="description" content="A menu bar app for macOS and a tray app for Windows that turns \alpha into &#945; as you type, in any app, and knows to stay quiet in your TeX editor. Try it in the browser.">
-<meta name="theme-color" content="#FAF7EE" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#17130F" media="(prefers-color-scheme: dark)">
+<title>LaTeX Squiggly: type LaTeX anywhere, get real characters</title>
+<meta name="description" content="Type \alpha, press space, get &#945;. LaTeX Squiggly turns LaTeX into real characters as you type, in any app, on macOS, Windows and Chrome, with an iPhone keyboard on the way. It stays quiet in your TeX editor. Try it in the browser.">
+<meta name="theme-color" content="#E2660F">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/touch-icon.png">
 <link rel="canonical" href="https://superwalrus01.github.io/LaTeX-Squiggly/">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="LaTeX Squiggly">
-<meta property="og:description" content="Type \alpha, press space, get &#945; &#8212; in any app, on macOS or Windows. Converts LaTeX to Unicode as you type, and stays quiet where LaTeX source is written.">
+<meta property="og:description" content="Type \alpha, press space, get &#945;, in any app. Converts LaTeX to Unicode as you type, and stays quiet where LaTeX source is written.">
 <meta property="og:image" content="https://superwalrus01.github.io/LaTeX-Squiggly/assets/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-<div class="wrap">
-  <header class="masthead">
-    <div class="brandline"><div class="brandmark"></div><b>LaTeX Squiggly</b></div>
-    <nav>
-      <a href="#try">Try it</a>
-      <a href="#quiet">Staying quiet</a>
-      <a href="#dollars">Dollars</a>
-      <a href="#symbols">Symbols</a>
-      <a href="#cost">Cost</a>
-      <a href="#install">Get it</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mac" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/></symbol>
+  <symbol id="i-win" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"/></symbol>
+  <symbol id="i-web" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9M12 3C9.4 5.6 8.2 8.6 8.2 12s1.2 6.4 3.8 9"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.5h3"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 17h16M8 7v10M16 7v10"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
+    <nav aria-label="Main">
+      <a class="optional" href="#platforms">Platforms</a>
+      <a class="optional" href="#iphone">iPhone</a>
+      <a class="optional" href="#symbols">Symbols</a>
       <a href="guide.html">Guide</a>
+      <a class="btn btn-primary" href="#get">Get it free</a>
     </nav>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <section class="hero" id="try" style="border-top:0">
-      <div class="hero-grid">
-        <div>
-          <h1 class="wordmark" role="img" aria-label="LaTeX Squiggly"></h1>
-          <p class="thesis">You can't paste LaTeX into Slack. So type it anyway — and get <em>real characters</em> instead.</p>
-          <p class="sub">A menu bar app on macOS, a tray app on Windows. Type <code>\alpha</code>, press space, and the letters you just typed become <b>α</b> — in place, in whatever app you were already in.</p>
-          <div class="meta-row">
-            <span class="chip">macOS 13+</span>
-            <span class="chip">Windows 10+</span>
-            <span class="chip">202 symbols</span>
-          </div>
+<main>
+  <section class="band hero" id="try">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill rise">Free and open source · Mac, Windows, Chrome · iPhone soon</span>
+        <h1 class="wordmark rise d1" role="img" aria-label="LaTeX Squiggly"></h1>
+        <p class="headline rise d1">Type <code>\alpha</code>. Get&nbsp;α.</p>
+        <p class="sub rise d2">LaTeX Squiggly turns LaTeX into <b>real characters</b> as you type, in Slack, email, Notes, Google Docs, anywhere. And it knows to stay quiet in your TeX editor.</p>
+        <div class="cta-row rise d3">
+          <a class="btn btn-ink" href="#get"><svg><use href="#i-down"/></svg>Get it free</a>
+          <a class="btn btn-ghost-band" href="#watch"><svg><use href="#i-play"/></svg>Watch it work</a>
         </div>
-
-        <div>
-          <div class="stage">
-            <div class="stage-bar"><span class="dot"></span> Converting as you type</div>
-            <textarea id="compose" spellcheck="false" aria-label="Try typing LaTeX here">Reviewer 2 wants the bound restated: for every ε > 0 there is an N with |xₙ − x| < ε.
-
-Try it here — type \theta then press space.</textarea>
-            <div class="stage-foot"><p id="notice">This box behaves the way the app does. Space or tab finishes a command; return never does.</p></div>
-          </div>
-          <div class="tries">
-            <span>Try:</span>
-            <button class="try" data-src="\lambda">\lambda</button>
-            <button class="try" data-src="\Rightarrow">\Rightarrow</button>
-            <button class="try" data-src="$x^2$">$x^2$</button>
-            <button class="try" data-src="\frac{3}{7}">\frac{3}{7}</button>
-            <button class="try" data-src="\mathbb{R}">\mathbb{R}</button>
-            <button class="try" data-src="$\int_0^1$">$\int_0^1$</button>
-            <button class="try" data-src="\vec{v}">\vec{v}</button>
-          </div>
+        <div class="platform-row rise d3">
+          <span><svg><use href="#i-mac"/></svg>macOS 13+</span>
+          <span><svg><use href="#i-win"/></svg>Windows 10+</span>
+          <span><svg><use href="#i-web"/></svg>Chrome, Edge, Brave</span>
+          <span><svg><use href="#i-phone"/></svg>iPhone, coming soon</span>
         </div>
       </div>
-    </section>
 
-    <section id="what">
-      <p class="eyebrow">What comes out</p>
-      <h2>Characters, not markup</h2>
-      <p class="lede">Every result below is what the app's own engine produced, not a mock-up. It is ordinary Unicode text: it survives a copy, a paste, a chat message and an email subject line, because there is nothing left to render.</p>
-      <div class="pairs">
+      <div class="demo rise d2">
+        <img class="peek" src="assets/mascot/peeking.png" alt="" width="310" height="257">
+        <div class="stage">
+          <div class="stage-bar"><span class="lights"><i></i><i></i><i></i></span><span class="dot"></span> Try it here</div>
+          <textarea id="compose" spellcheck="false" aria-label="Try typing LaTeX here">For every ε > 0 there is an N with |xₙ − x| < ε.
+
+Your turn: type \theta and press space.</textarea>
+          <div class="stage-foot"><p id="notice">This box works the way the app does. Space or tab finishes a command; return never does.</p></div>
+        </div>
+        <div class="tries">
+          <span>Or tap one:</span>
+          <button class="try" data-src="\lambda">\lambda</button>
+          <button class="try" data-src="\Rightarrow">\Rightarrow</button>
+          <button class="try" data-src="$x^2$">$x^2$</button>
+          <button class="try" data-src="\frac{3}{7}">\frac{3}{7}</button>
+          <button class="try" data-src="\mathbb{R}">\mathbb{R}</button>
+          <button class="try" data-src="$\int_0^1$">$\int_0^1$</button>
+          <button class="try" data-src="\vec{v}">\vec{v}</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="platforms">
+    <div class="wrap">
+      <div class="section-head center">
+        <p class="eyebrow">Everywhere you write</p>
+        <h2>One engine, wherever you type</h2>
+        <p class="lede">The same symbols and the same rules on every platform, so <code>\alpha</code> does the same thing in Slack on your Mac, a Google Doc in Chrome and a message on your phone.</p>
+      </div>
+      <div class="platforms">
+        <a class="platform" href="#get-mac">
+          <div class="pic"><img src="assets/videos/mac.jpg" alt="The Mac app pasting a rendered sum into a document" loading="lazy" width="1280" height="720"></div>
+          <div class="body">
+            <span class="kind"><svg><use href="#i-mac"/></svg>Mac</span>
+            <p>A menu bar app for macOS 13 and later. Works in every app: Notes, Mail, Slack, Word.</p>
+            <span class="go">Download for Mac →</span>
+          </div>
+        </a>
+        <a class="platform" href="#get-windows">
+          <div class="pic"><img src="assets/videos/windows.jpg" alt="The Windows app converting LaTeX in Notepad" loading="lazy" width="1280" height="720"></div>
+          <div class="body">
+            <span class="kind"><svg><use href="#i-win"/></svg>Windows <span class="tag">Beta</span></span>
+            <p>A tray app for Windows 10 and later. No installer, and no admin rights needed.</p>
+            <span class="go">Download for Windows →</span>
+          </div>
+        </a>
+        <a class="platform" href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">
+          <div class="pic"><img src="assets/shots/chrome-type.jpg" alt="The Chrome extension converting LaTeX in a web chat" loading="lazy" width="1120" height="700"></div>
+          <div class="body">
+            <span class="kind"><svg><use href="#i-web"/></svg>Chrome</span>
+            <p>Any text box on the web, Google Docs included. Works in Edge and Brave too.</p>
+            <span class="go">Add to Chrome →</span>
+          </div>
+        </a>
+        <a class="platform" href="#iphone">
+          <div class="pic phone"><img src="assets/shots/iphone-type.jpg" alt="The iPhone keyboard turning \infty into ∞ in Messages" loading="lazy" width="560" height="1217"></div>
+          <div class="body">
+            <span class="kind"><svg><use href="#i-phone"/></svg>iPhone <span class="tag">Soon</span></span>
+            <p>A full keyboard that converts as you type, and turns equations into pictures.</p>
+            <span class="go">See the keyboard →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tight" id="watch">
+    <div class="wrap feature-video">
+      <div>
+        <p class="eyebrow">Eleven seconds</p>
+        <h2>Watch it work</h2>
+        <ul class="ticks">
+          <li><b>Type a command, press space.</b> <code>\alpha</code> becomes α, right where you typed it.</li>
+          <li><b>Scripts go in dollars.</b> <code>$x^2$</code> becomes x², and an ordinary x^2 is left alone.</li>
+          <li><b>Changed your mind?</b> ⌘Z or Ctrl+Z brings the command back.</li>
+          <li><b>Writing LaTeX for real?</b> In Overleaf and TeX editors it stays out of the way.</li>
+        </ul>
+        <a class="btn btn-ghost" href="guide.html#videos"><svg><use href="#i-play"/></svg>All 14 short tutorials</a>
+      </div>
+      <video controls preload="none" playsinline width="1280" height="720" poster="assets/videos/basics.jpg" aria-label="Video: type a command, press space">
+        <source src="assets/videos/basics.mp4" type="video/mp4">
+      </video>
+    </div>
+  </section>
+
+  <section class="section" id="what">
+    <div class="wrap">
+      <div class="section-head center">
+        <p class="eyebrow">What comes out</p>
+        <h2>Characters, not markup</h2>
+        <p class="lede">Every result below came out of the app's own engine. It is ordinary Unicode text, so it survives a copy, a paste, a chat message and an email subject line: there is nothing left to render.</p>
+      </div>
+      <div class="pairs tiles">
         <!-- BEGIN generated: symbols (scripts/make-site.py) -->
         <div class='pair'><div class='src'>\alpha</div><div class='arrow'>&#8594;</div><div class='out'>α</div></div>
         <div class='pair'><div class='src'>\Rightarrow</div><div class='arrow'>&#8594;</div><div class='out'>⇒</div></div>
@@ -91,24 +176,78 @@ Try it here — type \theta then press space.</textarea>
         <div class='pair'><div class='src'>\infty</div><div class='arrow'>&#8594;</div><div class='out'>∞</div></div>
         <!-- END generated: symbols -->
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="honest">
-      <p class="eyebrow">When it can't</p>
-      <h2>It tells you, in words about your maths</h2>
-      <p class="lede">Some LaTeX has no honest one-line form. The app leaves your text exactly as you typed it and says why — naming the constraint rather than reporting a syntax error, because <code>\vec</code> is not a typo.</p>
-      <div class="pairs">
-        <!-- BEGIN generated: refusals (scripts/make-site.py) -->
+  <section class="band section" id="iphone">
+    <div class="wrap">
+      <div class="split">
+        <div>
+          <p class="eyebrow">iPhone and iPad</p>
+          <h2>A whole keyboard for maths</h2>
+          <p class="lede">It types like the iPhone's own keyboard, and LaTeX becomes symbols as you go. When plain text isn't enough, copy the equation as a picture.</p>
+          <span class="coming">Coming soon to the App Store</span>
+        </div>
+        <ul class="ticks">
+          <li><b>Converts on space,</b> with undo, and suggests commands as you type them.</li>
+          <li><b>See your maths</b> typeset above the keys while you write it.</li>
+          <li><b>Every symbol one key away.</b> Hold a key for its relatives.</li>
+          <li><b>Send equations as pictures</b> in Messages, or from any app's share sheet.</li>
+          <li><b>Private:</b> nothing you type leaves your phone.</li>
+        </ul>
+      </div>
+      <div class="phones" tabindex="0" aria-label="iPhone screenshots">
+        <figure><img src="assets/shots/iphone-see.jpg" alt="The keyboard showing the quadratic formula rendered above the keys" loading="lazy" width="560" height="1217"><figcaption>See your maths as you type</figcaption></figure>
+        <figure><img src="assets/shots/iphone-copy.jpg" alt="A rendered quadratic formula pasted into Messages" loading="lazy" width="560" height="1217"><figcaption>Paste it as an image</figcaption></figure>
+        <figure><img src="assets/shots/iphone-symbols.jpg" alt="The symbols page of the keyboard" loading="lazy" width="560" height="1217"><figcaption>Every symbol, one key away</figcaption></figure>
+        <figure><img src="assets/shots/iphone-share.jpg" alt="Rendering LaTeX from the share sheet" loading="lazy" width="560" height="1217"><figcaption>Render LaTeX from any app</figcaption></figure>
+        <figure><img src="assets/shots/iphone-messages.jpg" alt="Sending an equation in Messages" loading="lazy" width="560" height="1217"><figcaption>Send equations in Messages</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="images">
+    <div class="wrap split">
+      <figure class="shot"><img src="assets/shots/chrome-renderer.jpg" alt="The renderer showing the Gaussian integral, ready to copy as a PNG" loading="lazy" width="1120" height="700"></figure>
+      <div>
+        <p class="eyebrow">When plain text isn't enough</p>
+        <h2>Paste a picture of the maths</h2>
+        <p class="lede">Fractions, matrices and sums with limits have no plain-text form. Type the LaTeX, or select it on any page, and copy a crisp image to paste into chats, slides and email.</p>
+        <ul class="ticks">
+          <li><b>Mac:</b> ⌃⌥⌘L from any app</li>
+          <li><b>Windows:</b> Win+Alt+L from any app</li>
+          <li><b>Chrome:</b> select LaTeX, right-click, <i>Render selection as image</i></li>
+          <li><b>iPhone:</b> copy from the bar, the share sheet or Messages</li>
+        </ul>
+        <a href="guide.html#images">How to use the renderer →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="honest" style="padding-top:2rem">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">When it can't</p>
+        <h2>It tells you why, in words about your maths</h2>
+        <p class="lede">Some LaTeX has no honest one-line form. Then the app leaves your text exactly as you typed it and names the reason, because <code>\vec</code> is not a typo. Where a close version makes sense, it uses it and says so.</p>
+      </div>
+      <div class="two-up">
+        <div>
+          <h3>Left as typed, with the reason</h3>
+          <div class="pairs">
+            <!-- BEGIN generated: refusals (scripts/make-site.py) -->
         <div class='pair'><div class='src'>\vec{v}</div><div class='arrow'>&#8594;</div><div class='out refused'>An accent cannot be drawn over other characters in plain text.</div></div>
         <div class='pair'><div class='src'>\overbrace</div><div class='arrow'>&#8594;</div><div class='out refused'>An overbrace cannot be drawn over other characters in plain text.</div></div>
         <div class='pair'><div class='src'>\matrix</div><div class='arrow'>&#8594;</div><div class='out refused'>A matrix needs two-dimensional layout, which has no inline Unicode form.</div></div>
         <div class='pair'><div class='src'>\mathbf{x}</div><div class='arrow'>&#8594;</div><div class='out refused'>Bold, script and fraktur alphabets are not supported yet.</div></div>
         <div class='pair'><div class='src'>$e^{i\pi}$</div><div class='arrow'>&#8594;</div><div class='out refused'>There is no Unicode superscript for “π”.</div></div>
         <!-- END generated: refusals -->
-      </div>
-      <p class="lede" style="margin-top:1.6rem">Where an approximation is defensible, it takes it and tells you it did. A fraction with an exact character becomes that character; one that composes legibly out of scripts is composed; everything else goes on one line with a slash.</p>
-      <div class="pairs">
-        <!-- BEGIN generated: fallbacks (scripts/make-site.py) -->
+          </div>
+        </div>
+        <div>
+          <h3>As close as plain text allows</h3>
+          <div class="pairs">
+            <!-- BEGIN generated: fallbacks (scripts/make-site.py) -->
         <div class='pair'><div class='src'>\frac{1}{2}</div><div class='arrow'>&#8594;</div><div class='out'>½</div></div>
         <div class='pair'><div class='src'>\frac{3}{7}</div><div class='arrow'>&#8594;</div><div class='out'>³⁄₇</div></div>
         <div class='pair'><div class='src'>\frac{a}{b}</div><div class='arrow'>&#8594;</div><div class='out'>a∕b<small>A fraction cannot be stacked in plain text, so it was written on one line with a slash.</small></div></div>
@@ -116,96 +255,46 @@ Try it here — type \theta then press space.</textarea>
         <div class='pair'><div class='src'>\sqrt[3]{x}</div><div class='arrow'>&#8594;</div><div class='out'>∛x<small>A radical sign cannot extend over what is under it, so the root was written as ∛(…).</small></div></div>
         <div class='pair'><div class='src'>\binom{n}{k}</div><div class='arrow'>&#8594;</div><div class='out'>C(n, k)<small>A binomial coefficient cannot be stacked in plain text, so it was written as C(n, k).</small></div></div>
         <!-- END generated: fallbacks -->
-      </div>
-    </section>
-
-    <section id="quiet">
-      <p class="eyebrow">Staying quiet</p>
-      <h2>The hard part isn't converting. It's knowing when not to.</h2>
-      <p class="lede">An always-on replacement with no exceptions rewrites your LaTeX source as you write it. So the app watches which app is in front, and in a TeX editor it does nothing at all — no buffer is even kept, which makes a replacement there structurally impossible rather than merely declined.</p>
-
-      <div class="cols" style="margin-bottom:2rem">
-        <div class="note">
-          <h3>Excluded on sight</h3>
-          <p>These ship excluded, and the list is re-checked at every launch, so an editor you install next month is covered without you thinking about it. Anything you delete stays deleted.</p>
-        </div>
-        <div class="note">
-          <h3>Overleaf, in any browser</h3>
-          <p>A browser is one app with a thousand documents in it, so the page matters as much as the app. These hosts are excluded wherever they are open — and so is every subdomain.</p>
-        </div>
-      </div>
-
-      <ul class="quietlist">
-        <li>Cursor</li><li>RStudio</li><li>Terminal</li><li>Visual Studio Code</li>
-        <li>TeXShop</li><li>TeXstudio</li><li>Texifier</li><li>LyX</li><li>BBEdit</li>
-      </ul>
-      <ul class="quietlist">
-        <li class="site">overleaf.com</li><li class="site">sharelatex.com</li><li class="site">papeeria.com</li>
-        <li class="site">cocalc.com</li><li class="site">latexbase.com</li>
-      </ul>
-
-      <h3 style="font-family:var(--display);font-weight:600;letter-spacing:-.01em;margin:2.2rem 0 .5rem">What each browser will actually tell you</h3>
-      <p class="lede" style="margin-bottom:1rem">Measured on macOS 15.6 against Safari 26 and Chrome 152 — not assumed, because the received wisdom here is wrong in both directions.</p>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th>Browser</th><th>Gives the page URL</th><th>Cost of a read</th><th>How</th></tr></thead>
-          <tbody>
-            <tr><td>Chrome, Chromium family</td><td class="yes">Yes</td><td class="num">2.8 ms avg</td><td><code>AXDocument</code> on the focused window, and an <code>AXWebArea</code> under the caret</td></tr>
-            <tr><td>Safari</td><td class="yes">Yes</td><td class="num">12 ms avg · 109 ms worst</td><td><code>AXWebArea</code> six levels down; it does <b>not</b> answer <code>AXDocument</code>, contrary to the usual claim</td></tr>
-            <tr><td>Firefox family</td><td class="no">No</td><td class="num">—</td><td>Window title only, so site rules fall back to matching it</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="lede" style="margin-top:1rem">Two consequences are baked in. Safari's descent is skipped on the path inside the keystroke callback, where 109 ms would be felt as a stuck key. And a browser that will say nothing at all is treated as suppressed — a setting you can turn off if you never open Overleaf.</p>
-    </section>
-
-    <section id="symbols">
-      <p class="eyebrow">Coverage</p>
-      <h2>202 symbols, and a way to find them</h2>
-      <p class="lede">Every character is resolved from its official Unicode name by the table generator, never transcribed by hand. Search runs over the command, the Unicode name and the category at once — so <b>greek capital</b> narrows to eleven rows, and <b>double-struck</b> finds the blackboard bold letters without knowing they are called that.</p>
-      <div class="browser">
-        <div class="browser-bar">
-          <input class="search" id="q" type="search" placeholder="Search: alpha, greek capital, double-struck, arrow…" aria-label="Search symbols">
-          <span class="count" id="count"></span>
-        </div>
-        <div id="grid"></div>
-      </div>
-    </section>
-
-    <section id="dollars">
-      <p class="eyebrow">The dollar rule</p>
-      <h2>It knows the difference between maths and money</h2>
-      <p class="lede">Superscripts are the dangerous feature. <code>x^2</code> cannot convert on its own, because <code>2^3</code> in a sentence and <code>a_b</code> in a variable name would rewrite themselves the moment you hit space. So bare scripts are unreachable, and <code>$x^2$</code> — which nobody types by accident — is what turns them on.</p>
-      <p class="lede">That is not enough by itself. <b>I have $5$ left</b> is a pair of dollar signs around a number, and rewriting it would be worse than useless. So a span only converts when it contains a backslash, a caret or an underscore: an actual mathematical signal. Currency has none, and is left alone.</p>
-      <div class="pairs">
-        <!-- BEGIN generated: dollars (scripts/make-site.py) -->
-        <div class='pair'><div class='src'>I have $5$ left</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
-        <div class='pair'><div class='src'>that costs $20 and $30 more</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
-        <div class='pair'><div class='src'>$a$</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
-        <div class='pair'><div class='src'>x^2</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
-        <div class='pair'><div class='src'>2^3</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
-        <div class='pair'><div class='src'>$x^2$</div><div class='arrow'>&#8594;</div><div class='out'>x²</div></div>
-        <div class='pair'><div class='src'>$5x^2$</div><div class='arrow'>&#8594;</div><div class='out'>5x²</div></div>
-        <!-- END generated: dollars -->
-      </div>
-      <div class="cols" style="margin-top:2rem">
-        <div class="note"><h3>Capped at 48 characters</h3><p>So a stray dollar sign earlier in the sentence cannot reach forward and swallow half a line on its way to the one you just typed.</p></div>
-        <div class="note"><h3>Failure here is always reported</h3><p>Unlike the backslash path, where staying quiet is polite, wrapping something in <code>$…$</code> is a clear statement of intent — so if it cannot be converted, the app says so rather than doing nothing.</p></div>
-      </div>
-    </section>
-
-    <section id="menu">
-      <p class="eyebrow">In the menu bar</p>
-      <h2>Two icon states, not three</h2>
-      <div class="cols">
-        <div>
-          <p class="lede" style="margin-bottom:1.2rem">The icon answers one question: is it converting right now. That has the same answer whether the app is switched off or merely staying quiet in Cursor — so the menu answers the other question, naming the rule it is obeying. A third glyph meaning "off, but for a different reason" would be read as neither.</p>
-          <div class="cols" style="gap:1rem">
-            <div class="note"><h3>Settings</h3><p>Conversion, open at login, notices, scripts Unicode cannot make, and both permissions stated plainly — granted or not, live. The menu can only offer a permission while it is missing; it has nowhere to say "granted".</p></div>
-            <div class="note"><h3>Exclusions</h3><p>The two lists, editable, and the only place they live. Apps are added by file picker so the bundle identifier is read off the disk rather than typed.</p></div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="quiet" style="padding-top:2rem">
+    <div class="wrap">
+      <div class="section-head with-mascot" style="max-width:none">
+        <img class="mascot" src="assets/mascot/reading.png" alt="" width="299" height="321" loading="lazy">
+        <p class="eyebrow">Staying quiet</p>
+        <h2 style="max-width:40rem">The hard part isn't converting. It's knowing when not to.</h2>
+        <p class="lede">In a TeX editor, <code>\alpha</code> has to stay <code>\alpha</code>. So LaTeX Squiggly watches which app is in front, and in an editor it does nothing at all. It doesn't even keep a buffer there, so it can't replace anything.</p>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <h3>Excluded on sight</h3>
+          <p style="margin-bottom:1rem">These ship excluded, and the list is checked again at every launch, so an editor you install next month is covered too. Anything you remove stays removed.</p>
+          <ul class="quietlist">
+            <li>Cursor</li><li>RStudio</li><li>Terminal</li><li>Visual Studio Code</li>
+            <li>TeXShop</li><li>TeXstudio</li><li>Texifier</li><li>LyX</li><li>BBEdit</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Overleaf, in any browser</h3>
+          <p style="margin-bottom:1rem">A browser is one app with a thousand documents in it, so the page matters as much as the app. These sites are excluded wherever they're open, and so is every subdomain.</p>
+          <ul class="quietlist">
+            <li class="site">overleaf.com</li><li class="site">sharelatex.com</li><li class="site">papeeria.com</li>
+            <li class="site">cocalc.com</li><li class="site">latexbase.com</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top:3.5rem">
         <div>
+          <h3 style="margin-top:0;font-size:1.5rem">One glance at the menu bar</h3>
+          <p class="lede" style="font-size:1rem">The icon answers one question: is it converting right now? The menu answers the next one, naming the rule it's following, such as staying quiet in Cursor.</p>
+          <p class="lede" style="font-size:1rem"><b>Settings</b> holds conversion, open at login, notices and both permissions, live. <b>Exclusions</b> holds the two lists above, and apps are added with a file picker so nothing needs typing.</p>
+        </div>
+        <div style="max-width:24rem;width:100%;justify-self:end">
           <div class="menubar"><div class="mbmark"></div><div class="mbmark off"></div><span>11:02</span></div>
           <div class="menu">
             <div class="state">Converting as you type</div>
@@ -219,81 +308,211 @@ Try it here — type \theta then press space.</textarea>
             <hr>
             <div class="cmd">Quit LaTeX Squiggly</div>
           </div>
-          <p class="lede" style="font-size:.85rem;margin:.9rem 0 0">Left: converting. Right: the same mark, faded and struck through, when it isn't.</p>
+          <p class="muted" style="font-size:.86rem;margin:.8rem 0 0">Left: converting. Right: the same mark, faded, when it isn't.</p>
         </div>
       </div>
-    </section>
 
-    <section id="cost">
-      <p class="eyebrow">What it costs you</p>
-      <h2>Nothing you can measure</h2>
-      <p class="lede">Measured on the running app over a five-minute idle window, using the same energy metric Activity Monitor shows. macOS starts calling an app an energy problem at around 150 idle wakeups per <em>second</em>.</p>
+      <details class="more">
+        <summary>What each browser tells it about the page <span>Measured, not assumed</span></summary>
+        <div class="inner">
+          <p class="lede">Measured on macOS 15.6 against Safari 26 and Chrome 152, because the usual advice here is wrong in both directions.</p>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Browser</th><th>Gives the page URL</th><th>Cost of a read</th><th>How</th></tr></thead>
+              <tbody>
+                <tr><td>Chrome, Chromium family</td><td class="yes">Yes</td><td class="num">2.8 ms avg</td><td><code>AXDocument</code> on the focused window, and an <code>AXWebArea</code> under the caret</td></tr>
+                <tr><td>Safari</td><td class="yes">Yes</td><td class="num">12 ms avg · 109 ms worst</td><td><code>AXWebArea</code> six levels down; it does <b>not</b> answer <code>AXDocument</code>, contrary to the usual claim</td></tr>
+                <tr><td>Firefox family</td><td class="no">No</td><td class="num">n/a</td><td>Window title only, so site rules fall back to matching it</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="lede" style="margin-top:1rem;margin-bottom:0">Two consequences are built in. Safari's slow lookup is skipped inside the keystroke itself, where 109 ms would feel like a stuck key. And a browser that says nothing at all is treated as quiet, a setting you can turn off if you never open Overleaf.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="section" id="dollars" style="padding-top:2rem">
+    <div class="wrap two-up" style="align-items:center">
+      <div>
+        <p class="eyebrow">The dollar rule</p>
+        <h2>It knows maths from money</h2>
+        <p class="lede">A bare <code>x^2</code> can't convert on its own, or <code>2^3</code> in a sentence and <code>a_b</code> in a variable name would rewrite themselves. So scripts need <code>$x^2$</code>, which nobody types by accident.</p>
+        <p class="lede">And <b>I have $5$ left</b> isn't maths, so a span only converts when it holds a backslash, a caret or an underscore. Money has none of those, so it's left alone.</p>
+        <div class="cards" style="margin-top:1.6rem">
+          <div class="card"><h3>48 characters at most</h3><p>A stray dollar earlier in the sentence can't reach forward and swallow half a line.</p></div>
+          <div class="card"><h3>Always reported</h3><p>Dollars mean you wanted maths, so if they can't convert, the app says so.</p></div>
+        </div>
+      </div>
+      <div class="pairs">
+        <!-- BEGIN generated: dollars (scripts/make-site.py) -->
+        <div class='pair'><div class='src'>I have $5$ left</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>that costs $20 and $30 more</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>$a$</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>x^2</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>2^3</div><div class='arrow'>&#8594;</div><div class='out quiet'>left exactly as typed</div></div>
+        <div class='pair'><div class='src'>$x^2$</div><div class='arrow'>&#8594;</div><div class='out'>x²</div></div>
+        <div class='pair'><div class='src'>$5x^2$</div><div class='arrow'>&#8594;</div><div class='out'>5x²</div></div>
+        <!-- END generated: dollars -->
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="symbols" style="padding-top:2rem">
+    <div class="wrap">
+      <div class="section-head center">
+        <p class="eyebrow">Coverage</p>
+        <h2>202 symbols, and a way to find them</h2>
+        <p class="lede">Every character comes from its official Unicode name, never typed in by hand. Search by command, name or category: <b>greek capital</b> finds eleven, and <b>double-struck</b> finds ℝ, ℕ and friends.</p>
+      </div>
+      <div class="browser">
+        <div class="browser-bar">
+          <input class="search" id="q" type="search" placeholder="Search: alpha, greek capital, double-struck, arrow…" aria-label="Search symbols">
+          <span class="count" id="count"></span>
+        </div>
+        <div id="grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section night" id="cost">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">What it costs you</p>
+        <h2>Nothing you can measure</h2>
+        <p class="lede">Measured on the running Mac app over five idle minutes, with the energy metric Activity Monitor uses. macOS calls an app an energy problem at around 150 idle wakeups a <em>second</em>.</p>
+      </div>
       <div class="figures">
         <div class="figure"><b>0.01%</b><span>of one CPU core, idle</span></div>
         <div class="figure"><b>0.0</b><span>energy impact, every sample</span></div>
         <div class="figure"><b>0.28/s</b><span>idle wakeups</span></div>
-        <div class="figure"><b>15 MB</b><span>resident memory</span></div>
+        <div class="figure"><b>15 MB</b><span>of memory</span></div>
       </div>
-      <div class="cols" style="margin-top:2rem">
-        <div class="note"><h3>Nothing is stored or sent</h3><p>The app keeps a short in-memory buffer of what you just typed and discards it the moment a command completes, or the moment you move the caret, switch app or change tab. There is no network code in it.</p></div>
-        <div class="note"><h3>Two permissions, and why</h3><p>Input Monitoring to notice when you type a command; Accessibility to replace the text. Having only the first would give you an app that watches you type and can do nothing about it.</p></div>
-        <div class="note"><h3>It reads a page only while running</h3><p>Reaching into a browser's accessibility tree happens only while conversion is actually on. Switched off, every app looks like a non-browser.</p></div>
+      <div class="cards">
+        <div class="card"><div class="icon"><svg><use href="#i-lock"/></svg></div><h3>Nothing stored or sent</h3><p>A short buffer of what you just typed lives in memory, and is dropped the moment a command completes or you move the caret, switch app or change tab. There is no network code.</p></div>
+        <div class="card"><div class="icon"><svg><use href="#i-eye"/></svg></div><h3>Two permissions, and why</h3><p>Input Monitoring to notice a command; Accessibility to replace it. With only the first, it could watch you type and do nothing about it.</p></div>
+        <div class="card"><div class="icon"><svg><use href="#i-bolt"/></svg></div><h3>Reads a page only while on</h3><p>It looks into a browser's page only while conversion is on. Switched off, every app looks like a non-browser.</p></div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="install">
-      <p class="eyebrow">Getting it</p>
-      <h2>Download it, or build it</h2>
-      <p class="lede">Both platforms run the same engine. Not a similar one: the Windows tables are generated from the tables the macOS engine uses at runtime, and the two are diffed against each other over <!-- BEGIN generated: corpus -->2,030<!-- END generated: corpus --> LaTeX fragments before anything is published, with both required to give the identical answer down to the number of backspaces. Only the parts that touch the operating system differ, and the <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/tree/main/windows">Windows README</a> says exactly which and why.</p>
-
-      <div class="downloads">
-        <p class="lede"><b>macOS 13+.</b> <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the disk image</a>, open it, and drag <b>LaTeX Squiggly</b> onto <b>Applications</b>. It is signed but not notarized — that needs a paid Apple Developer account — so the first time you open it macOS will refuse. Go to <b>System Settings → Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b>.</p>
-        <p class="lede"><b>Windows 10+.</b> <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest">Download the .exe</a> and double-click it. No installer, no admin rights, and Windows asks for no permission at all. It is not code-signed, so SmartScreen will say <em>Windows protected your PC</em>: click <b>More info</b>, then <b>Run anyway</b>. Your antivirus may also take an interest, because the app installs a low-level keyboard hook, which is the same mechanism a keylogger uses.</p>
-        <p class="lede"><b>Chrome.</b> <a href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">Add it from the Chrome Web Store</a>. It also works in Edge, Brave and other Chromium browsers, and needs nothing installed outside the browser.</p>
-        <p class="lede" style="margin-bottom:0">You should be sceptical of any app that asks you to click past a security warning, particularly one that can see your keystrokes. So, plainly: <b>nothing you type is stored, logged, or sent anywhere.</b> The app holds the last 64 characters in memory only long enough to recognise a command, then forgets them — the instant one completes, and also whenever you click, press return, move the cursor, switch app, or change browser tab. There is no networking code in the project at all: it never opens a connection, so there is nowhere for anything you type to go. Nothing is written to disk except your own settings. You do not have to take that on trust; the source is right there, and on a Mac you can build it yourself in about a minute.</p>
+  <section class="section" id="get">
+    <div class="wrap">
+      <div class="section-head center">
+        <p class="eyebrow">Get it</p>
+        <h2>Free, for wherever you write</h2>
+        <p class="lede">No account and no sign-up. Pick your platform.</p>
+      </div>
+      <div class="get">
+        <div class="card" id="get-mac">
+          <h3><svg><use href="#i-mac"/></svg>Mac</h3>
+          <span class="req">macOS 13 or later</span>
+          <a class="btn btn-primary" href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest"><svg><use href="#i-down"/></svg>Download for Mac</a>
+          <p class="fine">Signed but not notarized, so the first time macOS refuses. Open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</p>
+        </div>
+        <div class="card" id="get-windows">
+          <h3><svg><use href="#i-win"/></svg>Windows</h3>
+          <span class="req">Windows 10 or later · beta</span>
+          <a class="btn btn-primary" href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases/latest"><svg><use href="#i-down"/></svg>Download for Windows</a>
+          <p class="fine">Not code-signed, so SmartScreen may warn you: click <b>More info</b>, then <b>Run anyway</b>. Antivirus may notice the keyboard hook too.</p>
+        </div>
+        <div class="card" id="get-chrome">
+          <h3><svg><use href="#i-web"/></svg>Chrome</h3>
+          <span class="req">Chrome, Edge, Brave and other Chromium browsers</span>
+          <a class="btn btn-primary" href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">Add to Chrome</a>
+          <p class="fine">Nothing to install outside the browser.</p>
+        </div>
+        <div class="card" id="get-iphone">
+          <h3><svg><use href="#i-phone"/></svg>iPhone</h3>
+          <span class="req">iPhone and iPad</span>
+          <span class="btn btn-ghost" aria-disabled="true">Coming soon</span>
+          <p class="fine">On its way to the App Store.</p>
+        </div>
       </div>
 
-      <p class="lede" style="margin-top:1.2rem">Installed it? The <a href="guide.html">guide</a> walks through the first steps on each platform, with short videos, and how to turn an equation into an image. In Chrome the quickest way is to <a href="guide.html#watch-rightclick">select LaTeX on any page, right-click, and choose Render selection as image</a>.</p>
+      <div class="promise">
+        <img src="assets/mascot/backpack.png" alt="" width="277" height="324" loading="lazy">
+        <div>
+          <h3>Nothing you type leaves your device</h3>
+          <p>You should be careful with any app that can see your keystrokes. LaTeX Squiggly holds the last 64 characters in memory only long enough to spot a command, then forgets them. There is no networking code in the project at all, and nothing is written to disk except your settings.</p>
+          <p>You don't have to take that on trust: read the <a href="privacy.html">privacy policy</a>, or <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly">the source code</a>. Installed it? The <a href="guide.html">guide</a> walks you through the first steps.</p>
+        </div>
+      </div>
 
-      <h3>Building it on a Mac</h3>
-      <p class="lede">This is the primary path, not a fallback. An app built on the machine it runs on is never downloaded, so it never carries <code>com.apple.quarantine</code> and Gatekeeper never blocks it — no System Settings detour, and nobody has to weaken a security setting to run something that reads their keystrokes. It needs the Command Line Tools; Xcode's 15 GB is not required, which is why the bundle is assembled by hand rather than by an <code>.xcodeproj</code>.</p>
-      <pre><span class="c"># 1. Apple's command line tools (not Xcode)</span>
+      <details class="more">
+        <summary>Build it yourself <span>Mac and Windows, from source</span></summary>
+        <div class="inner">
+          <p class="lede">Both platforms run the same engine. The Windows tables are generated from the ones the Mac uses, and the two are checked against each other over <!-- BEGIN generated: corpus -->2,030<!-- END generated: corpus --> LaTeX fragments before anything is published, down to the number of backspaces. The <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/tree/main/windows">Windows README</a> says exactly what differs and why.</p>
+          <h3>On a Mac</h3>
+          <p class="lede">An app built on the Mac it runs on is never downloaded, so Gatekeeper never blocks it. You need Apple's Command Line Tools, not all of Xcode.</p>
+          <pre><span class="c"># 1. Apple's command line tools (not Xcode)</span>
 xcode-select --install
 
 <span class="c"># 2. get the source</span>
 git clone https://github.com/SuperWalrus01/LaTeX-Squiggly.git
 cd LaTeX-Squiggly
 
-<span class="c"># 3. a stable signing identity — once, BEFORE the first install</span>
+<span class="c"># 3. a stable signing identity, once, BEFORE the first install</span>
 scripts/setup-mac-signing.sh
 
 <span class="c"># 4. build and install</span>
 scripts/install-mac-app.sh
 open "/Applications/LaTeX Squiggly.app"</pre>
-      <p class="lede">Order matters: macOS ties the Accessibility grant to the code signature, so signing <em>after</em> you have granted permission invalidates the grant. Ad-hoc signatures key on a hash that changes with every build, which is how you end up re-granting Accessibility forever and blaming the app.</p>
-      <pre><span class="c"># ask the app what it currently sees</span>
-"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose</pre>
-      <p class="lede">It prints every rule and, for each running browser, what it can read and what it would do. Hosts are printed rather than whole URLs — an Overleaf link carries a share token, and a diagnostic somebody pastes into a bug report should not carry it too.</p>
+          <p class="lede">Order matters: macOS ties the Accessibility permission to the code signature, so signing <em>after</em> granting it undoes the grant. To see what the app currently sees:</p>
+          <pre>"/Applications/LaTeX Squiggly.app/Contents/MacOS/LaTeX Squiggly" --diagnose</pre>
+          <h3>The Windows app</h3>
+          <p class="lede">Built from a Mac or Linux machine: the .NET SDK cross-compiles. The script checks the port against the Mac engine's answers and publishes nothing if they disagree.</p>
+          <pre><span class="c"># needs the .NET 8 SDK; nothing else</span>
+scripts/build-windows.sh</pre>
+        </div>
+      </details>
+    </div>
+  </section>
+</main>
 
-      <h3>Building the Windows app</h3>
-      <p class="lede">From a Mac or a Linux box, which is how it is actually built: the .NET SDK cross-compiles, so no Windows machine is needed to produce the binary. The pipeline generates the C# tables from the Swift engine, records what the Swift engine answers, checks the port against it, and only then publishes. If any of that disagrees, nothing is published.</p>
-      <pre><span class="c"># needs the .NET 8 SDK; nothing else</span>
-scripts/build-windows.sh
-<span class="c">#   1/6  building the Swift engine</span>
-<span class="c">#   2/6  generating the C# tables from it</span>
-<span class="c">#   3/6  generating the icons</span>
-<span class="c">#   4/6  recording Swift's answers</span>
-<span class="c">#   5/6  checking the port against them</span>
-<span class="c">#   6/6  publishing for win-x64</span></pre>
-      <p class="lede" style="margin-bottom:0">The Windows app cannot be run on the machine it is built on, so agreement with the macOS engine is the only evidence available that the port is faithful. That is why it is checked before publishing rather than after shipping.</p>
-    </section>
-  </main>
-
-  <footer>
-    <p>The demo above runs the same tables the app does — 202 symbols, 40 superscripts, 32 subscripts and 19 vulgar fractions, all generated from official Unicode names. Its results were checked against the app's own converter.</p>
-    <p style="margin-bottom:0">LaTeX Squiggly is a menu bar app on macOS 13+ and a tray app on Windows 10+. <!-- BEGIN generated: checks -->1,749<!-- END generated: checks --> checks on the macOS build, no XCTest required, and <!-- BEGIN generated: winchecks -->4,098<!-- END generated: winchecks --> more holding the Windows port to the same answers.</p>
-  </footer>
-</div>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="about">
+        <img src="assets/mascot/hello.png" alt="" width="300" height="359" loading="lazy">
+        <div>
+          <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
+          <p>Type LaTeX anywhere and get real characters. Free and open source, made by <a href="https://keenanjusak.com">Keenan Jusak</a>.</p>
+        </div>
+      </div>
+      <div>
+        <h4>Get it</h4>
+        <ul>
+          <li><a href="#get-mac">Mac</a></li>
+          <li><a href="#get-windows">Windows</a></li>
+          <li><a href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">Chrome</a></li>
+          <li><a href="#iphone">iPhone (soon)</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="guide.html">Guide</a></li>
+          <li><a href="guide.html#videos">Video tutorials</a></li>
+          <li><a href="#symbols">All symbols</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly">Source code</a></li>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases">Releases</a></li>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">Report a problem</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="small">
+      <p>The demo at the top runs the same tables the app does: 202 symbols, 40 superscripts, 32 subscripts and 19 vulgar fractions, all generated from official Unicode names, and checked against the app's own converter.</p>
+      <p><!-- BEGIN generated: checks -->1,749<!-- END generated: checks --> checks on the macOS build, and <!-- BEGIN generated: winchecks -->4,098<!-- END generated: winchecks --> more holding the Windows port to the same answers.</p>
+    </div>
+  </div>
+</footer>
 <script src="assets/data.js"></script>
 <script src="assets/app.js"></script>
 </body>

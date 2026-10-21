@@ -5,60 +5,139 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LaTeX Squiggly Privacy</title>
 <meta name="description" content="What LaTeX Squiggly does with what you type: it reads it on your own computer or phone to recognise LaTeX, and never stores or sends it.">
-<meta name="theme-color" content="#FAF7EE" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#17130F" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#E2660F">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/touch-icon.png">
 <link rel="canonical" href="https://superwalrus01.github.io/LaTeX-Squiggly/privacy.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-<div class="wrap">
-  <header class="masthead">
-    <div class="brandline"><div class="brandmark"></div><b>LaTeX Squiggly</b></div>
-    <nav>
-      <a href="./">Home</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mac" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/></symbol>
+  <symbol id="i-win" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"/></symbol>
+  <symbol id="i-web" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9M12 3C9.4 5.6 8.2 8.6 8.2 12s1.2 6.4 3.8 9"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.5h3"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 17h16M8 7v10M16 7v10"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8.5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17v.01"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M8 14h8"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
+    <nav aria-label="Main">
+      <a class="optional" href="./">Home</a>
       <a href="guide.html">Guide</a>
+      <a class="optional" href="privacy.html" aria-current="page">Privacy</a>
+      <a class="btn btn-primary" href="./#get">Get it free</a>
     </nav>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <section style="border-top:0">
-      <p class="eyebrow">Privacy</p>
-      <h2>What happens to what you type</h2>
-      <p class="lede">LaTeX Squiggly has to see your typing to turn <code>\alpha</code> into α. It does that entirely on your own computer or phone. Nothing you type in a web page or another app is stored, logged or sent anywhere, and the apps and the extension make no network requests at all.</p>
-    </section>
+<main>
+  <section class="band page-hero">
+    <div class="wrap">
+      <img class="mascot bob" src="assets/mascot/backpack.png" alt="" width="277" height="324">
+      <span class="pill">Privacy · updated 16 October 2026</span>
+      <h1>What happens to what you type</h1>
+      <p class="sub">LaTeX Squiggly has to see your typing to turn <code>\alpha</code> into α. It does that entirely on your own computer or phone. Nothing you type in a web page or another app is stored, logged or sent anywhere, and the apps and the extension make no network requests at all.</p>
+      <nav class="chips" aria-label="Jump to">
+        <a href="#chrome"><svg><use href="#i-web"/></svg>Chrome extension</a>
+        <a href="#desktop"><svg><use href="#i-mac"/></svg>Mac and Windows</a>
+        <a href="#iphone"><svg><use href="#i-phone"/></svg>iPhone</a>
+        <a href="#questions"><svg><use href="#i-help"/></svg>Questions</a>
+      </nav>
+    </div>
+  </section>
 
-    <section>
-      <h2>The Chrome extension</h2>
-      <p class="lede"><b>What it reads.</b> While you type in a text box on a web page, the extension keeps the last 64 characters you typed in memory so it can recognise a LaTeX command when you press space. It is cleared whenever you click, press an arrow key, press Return or move to another field. When it converts something, it reads the few characters just before the cursor to confirm they are what you typed, then replaces them.</p>
-      <p class="lede"><b>Google Docs.</b> The extension also converts in Google Docs documents, unless you switch that off in its settings. Docs does not show the extension your text, so there it keeps a record of the keys you pressed instead, forgets it after four seconds without typing or whenever you click, and replaces a command by pressing Backspace and typing the result. Nothing more is read, and nothing leaves your computer.</p>
-      <p class="lede"><b>What it keeps.</b> Only your settings: whether conversion is on, whether notices are shown, and the list of sites where it stays off. These are saved with Chrome's own storage and, if you have Chrome sync turned on, synced through your Google account like any other extension setting. The developer never receives them.</p>
-      <p class="lede"><b>The renderer.</b> The extension's popup can also turn LaTeX into an image. What you type into the popup for that, or select on a page and send to it with <b>Render selection as image</b>, is kept in Chrome's local storage on your computer, so it is still there when you reopen the popup, until you change it or remove the extension. So is the LaTeX of the last 10 images you copied or saved, as a history, which you can clear from the popup; the images themselves are not kept. It is never synced or sent. The renderer's settings, including any commands you define, are saved and synced like the other settings. The image is made inside the extension and goes only where you copy or save it.</p>
-      <p class="lede"><b>Which sites.</b> It runs on every web page so that it works wherever you type, and it checks each page's address against your list of excluded sites. The address is compared and then dropped. It is never stored or sent.</p>
-      <p class="lede"><b>What it never does.</b> It does not collect, transmit, sell or share any data. It does not use analytics, advertising or tracking, it does not load code from anywhere, and it does not read pages beyond the text field you are typing in.</p>
-    </section>
+  <div class="narrow" style="padding-block:3rem 4rem">
+    <div class="summary">
+      <div class="card"><div class="icon"><svg><use href="#i-lock"/></svg></div><h3>Stays on your device</h3><p>Your typing is read in memory to spot LaTeX, then forgotten.</p></div>
+      <div class="card"><div class="icon"><svg><use href="#i-eye"/></svg></div><h3>No tracking</h3><p>No analytics, no advertising, no account.</p></div>
+      <div class="card"><div class="icon"><svg><use href="#i-bolt"/></svg></div><h3>No network requests</h3><p>Nothing is sent to the developer or anyone else.</p></div>
+    </div>
+    <p class="muted" style="font-size:.92rem;margin:0 0 2.2rem">The cards above are a summary. The full policy for each platform follows.</p>
 
-    <section>
-      <h2>The macOS and Windows apps</h2>
-      <p class="lede">The desktop apps work the same way: the last few keystrokes are held in memory to recognise a command, and cleared on every click, arrow key and app switch. To keep out of Overleaf, the macOS app reads the address of the browser tab in front, compares it with your excluded sites, and drops it. Nothing is written to disk except your settings, and nothing is sent anywhere. The macOS app's renderer, which turns LaTeX into an image, keeps the last LaTeX typed into it and the last 10 equations copied or saved in the app's own settings on your Mac, like the extension's, and sends nothing.</p>
-    </section>
+      <section class="policy" id="chrome">
+        <h2><span class="badge"><svg><use href="#i-web"/></svg></span>The Chrome extension</h2>
+        <p><b>What it reads.</b> While you type in a text box on a web page, the extension keeps the last 64 characters you typed in memory so it can recognise a LaTeX command when you press space. It is cleared whenever you click, press an arrow key, press Return or move to another field. When it converts something, it reads the few characters just before the cursor to confirm they are what you typed, then replaces them.</p>
+      <p><b>Google Docs.</b> The extension also converts in Google Docs documents, unless you switch that off in its settings. Docs does not show the extension your text, so there it keeps a record of the keys you pressed instead, forgets it after four seconds without typing or whenever you click, and replaces a command by pressing Backspace and typing the result. Nothing more is read, and nothing leaves your computer.</p>
+      <p><b>What it keeps.</b> Only your settings: whether conversion is on, whether notices are shown, and the list of sites where it stays off. These are saved with Chrome's own storage and, if you have Chrome sync turned on, synced through your Google account like any other extension setting. The developer never receives them.</p>
+      <p><b>The renderer.</b> The extension's popup can also turn LaTeX into an image. What you type into the popup for that, or select on a page and send to it with <b>Render selection as image</b>, is kept in Chrome's local storage on your computer, so it is still there when you reopen the popup, until you change it or remove the extension. So is the LaTeX of the last 10 images you copied or saved, as a history, which you can clear from the popup; the images themselves are not kept. It is never synced or sent. The renderer's settings, including any commands you define, are saved and synced like the other settings. The image is made inside the extension and goes only where you copy or save it.</p>
+      <p><b>Which sites.</b> It runs on every web page so that it works wherever you type, and it checks each page's address against your list of excluded sites. The address is compared and then dropped. It is never stored or sent.</p>
+      <p><b>What it never does.</b> It does not collect, transmit, sell or share any data. It does not use analytics, advertising or tracking, it does not load code from anywhere, and it does not read pages beyond the text field you are typing in.</p>
+      </section>
 
-    <section>
-      <h2>The iPhone app</h2>
-      <p class="lede"><b>The keyboard.</b> While you type with it, the keyboard reads the text around the cursor in the field you are typing in, as every iPhone keyboard does, to convert a command, suggest a spelling or show your equation rendered. That text is used in memory and never stored or sent. For spelling, iOS also hands keyboards your text replacements and the names in your contacts, which are used the same way.</p>
-      <p class="lede"><b>Full Access.</b> The keyboard works without it. If you turn on Allow Full Access, iOS warns that a keyboard could then send what you type over the network. LaTeX Squiggly uses Full Access for three things only: to put a rendered equation on the clipboard, to read the typing settings you choose in the app, and to play a light tap with each key if you turn haptics on. It makes no network requests with it or without it.</p>
-      <p class="lede"><b>What it keeps.</b> Your settings: whether the keyboard converts, the typing settings in the app, the size and colour of rendered images, and which lessons you have done. The keyboard also keeps the emoji you used most recently, to show them first. The Messages app also keeps the LaTeX of the last 12 equations you sent, so you can send them again; the images themselves are not kept. These stay on your iPhone, in the app's own storage.</p>
-      <p class="lede"><b>Rendering.</b> The app, the share sheet and Messages make each image on your iPhone. It goes only where you copy, share, save or send it. Saving to Photos asks for permission to add images, and the app never reads your photos.</p>
-      <p class="lede"><b>What it never does.</b> It does not collect, transmit, sell or share any data, and has no analytics, advertising or tracking. Nothing reaches the developer, so there is nothing for them to delete: deleting the app removes everything it kept on your iPhone.</p>
-    </section>
+      <section class="policy" id="desktop">
+        <h2><span class="badge"><svg><use href="#i-mac"/></svg></span>The macOS and Windows apps</h2>
+        <p>The desktop apps work the same way: the last few keystrokes are held in memory to recognise a command, and cleared on every click, arrow key and app switch. To keep out of Overleaf, the macOS app reads the address of the browser tab in front, compares it with your excluded sites, and drops it. Nothing is written to disk except your settings, and nothing is sent anywhere. The macOS app's renderer, which turns LaTeX into an image, keeps the last LaTeX typed into it and the last 10 equations copied or saved in the app's own settings on your Mac, like the extension's, and sends nothing.</p>
+      </section>
 
-    <section>
-      <h2>Questions</h2>
-      <p class="lede">The source code is public, so every claim here can be checked. Questions and reports are welcome as <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">GitHub issues</a>.</p>
-      <p class="lede">Last updated 16 October 2026.</p>
-    </section>
-  </main>
-</div>
+      <section class="policy" id="iphone">
+        <h2><span class="badge"><svg><use href="#i-phone"/></svg></span>The iPhone app</h2>
+        <p><b>The keyboard.</b> While you type with it, the keyboard reads the text around the cursor in the field you are typing in, as every iPhone keyboard does, to convert a command, suggest a spelling or show your equation rendered. That text is used in memory and never stored or sent. For spelling, iOS also hands keyboards your text replacements and the names in your contacts, which are used the same way.</p>
+      <p><b>Full Access.</b> The keyboard works without it. If you turn on Allow Full Access, iOS warns that a keyboard could then send what you type over the network. LaTeX Squiggly uses Full Access for three things only: to put a rendered equation on the clipboard, to read the typing settings you choose in the app, and to play a light tap with each key if you turn haptics on. It makes no network requests with it or without it.</p>
+      <p><b>What it keeps.</b> Your settings: whether the keyboard converts, the typing settings in the app, the size and colour of rendered images, and which lessons you have done. The keyboard also keeps the emoji you used most recently, to show them first. The Messages app also keeps the LaTeX of the last 12 equations you sent, so you can send them again; the images themselves are not kept. These stay on your iPhone, in the app's own storage.</p>
+      <p><b>Rendering.</b> The app, the share sheet and Messages make each image on your iPhone. It goes only where you copy, share, save or send it. Saving to Photos asks for permission to add images, and the app never reads your photos.</p>
+      <p><b>What it never does.</b> It does not collect, transmit, sell or share any data, and has no analytics, advertising or tracking. Nothing reaches the developer, so there is nothing for them to delete: deleting the app removes everything it kept on your iPhone.</p>
+      </section>
+
+      <section class="policy" id="questions">
+        <h2><span class="badge"><svg><use href="#i-help"/></svg></span>Questions</h2>
+        <p>The source code is public, so every claim here can be checked. Questions and reports are welcome as <a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">GitHub issues</a>.</p>
+        <p>Last updated 16 October 2026.</p>
+      </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="about">
+        <img src="assets/mascot/hello.png" alt="" width="300" height="359" loading="lazy">
+        <div>
+          <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
+          <p>Type LaTeX anywhere and get real characters. Free and open source, made by <a href="https://keenanjusak.com">Keenan Jusak</a>.</p>
+        </div>
+      </div>
+      <div>
+        <h4>Get it</h4>
+        <ul>
+          <li><a href="./#get-mac">Mac</a></li>
+          <li><a href="./#get-windows">Windows</a></li>
+          <li><a href="https://chromewebstore.google.com/detail/ojpadebobipacpolocdfolelplfinanb">Chrome</a></li>
+          <li><a href="./#iphone">iPhone (soon)</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="guide.html">Guide</a></li>
+          <li><a href="guide.html#videos">Video tutorials</a></li>
+          <li><a href="./#symbols">All symbols</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly">Source code</a></li>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/releases">Releases</a></li>
+          <li><a href="https://github.com/SuperWalrus01/LaTeX-Squiggly/issues">Report a problem</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

@@ -60,3 +60,17 @@ function followHash() {
 }
 window.addEventListener("hashchange", followHash);
 followHash();
+
+// The sidebar marks the section being read: the last one whose top has
+// passed a line a little below the sticky top bar.
+const tocLinks = [...document.querySelectorAll(".toc a")];
+const tocTargets = tocLinks.map((link) => document.querySelector(link.getAttribute("href")));
+function markToc() {
+  let on = 0;
+  tocTargets.forEach((target, i) => { if (target && target.getBoundingClientRect().top < 140) on = i; });
+  tocLinks.forEach((link, i) => link.classList.toggle("on", i === on));
+}
+if (tocLinks.length) {
+  window.addEventListener("scroll", markToc, { passive: true });
+  markToc();
+}
