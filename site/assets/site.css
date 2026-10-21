@@ -589,6 +589,25 @@ ul.steps > li::before { content: ""; position: absolute; left: .55rem; top: .62r
 .policy p b:first-child { color: var(--ink); display: block; font-family: var(--display); font-size: 1.05rem; margin-bottom: .15rem; }
 @media (max-width: 40rem) { .policy { padding: 1.4rem 1.2rem .6rem; } }
 
+/* The privacy page's platforms, one at a time. Sticky under the top bar,
+   so another platform is one tap away from anywhere in a long policy. */
+.tabs {
+  position: sticky; top: 4.6rem; z-index: 10;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .3rem;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 999px;
+  padding: .3rem; margin-bottom: 1.4rem; box-shadow: var(--shadow);
+}
+.tabs a {
+  display: flex; align-items: center; justify-content: center; gap: .45rem;
+  padding: .6rem .5rem; border-radius: 999px; text-decoration: none;
+  color: var(--ink-soft); font-weight: 600; font-size: .95rem; white-space: nowrap;
+}
+.tabs a:hover { color: var(--ink); background: var(--paper-sunk); }
+.tabs a[aria-selected="true"] { background: var(--squiggle); color: #fff; }
+.tabs svg { width: 1.05rem; height: 1.05rem; flex: none; }
+@media (max-width: 40rem) { .tabs .long { display: none; } .tabs a { font-size: .88rem; gap: .3rem; } }
+.policy[hidden] { display: none; }
+
 /* ---------- footer ---------- */
 .footer { background: var(--night); color: rgba(247,241,230,.72); margin-top: 0; position: relative; padding-block: 4.5rem 2.5rem; font-size: .93rem; }
 .footer::before {
