@@ -41,23 +41,17 @@
   <div class="wrap">
     <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
     <nav aria-label="Main">
-      <details class="navmenu">
-        <summary aria-current="page">Home<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
-        <div class="navmenu-panel">
-          <a class="navmenu-home" href="./">The home page<span>Back to the top</span></a>
-          <ul>
-            <li><a href="#try"><b>Try it</b><span>Type LaTeX in the live demo</span></a></li>
-            <li><a href="#platforms"><b>Platforms</b><span>Mac, Windows, Chrome, iPhone</span></a></li>
-            <li><a href="#watch"><b>Watch it work</b><span>The 11-second tour</span></a></li>
-            <li><a href="#what"><b>What comes out</b><span>Characters, not markup</span></a></li>
-            <li><a href="#iphone"><b>iPhone keyboard</b><span>Coming to the App Store</span></a></li>
-            <li><a href="#images"><b>Images</b><span>The renderer</span></a></li>
-            <li><a href="#quiet"><b>Staying quiet</b><span>Out of your TeX editor</span></a></li>
-            <li><a href="#symbols"><b>All symbols</b><span>Search all 202</span></a></li>
-            <li><a href="#get"><b>Get it</b><span>Downloads for every platform</span></a></li>
-          </ul>
+      <div class="navhome">
+        <a class="navhome-toggle" href="./" aria-current="page" aria-expanded="false" aria-controls="home-links">Home<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="navhome-links" id="home-links" hidden>
+          <a href="#try">Try it</a>
+          <a href="#platforms">Platforms</a>
+          <a href="#iphone">iPhone</a>
+          <a href="#images">Images</a>
+          <a href="#symbols">Symbols</a>
+          <a href="#get">Get it</a>
         </div>
-      </details>
+      </div>
       <a href="guide.html">Guide</a>
       <a href="privacy.html">Privacy</a>
       <a class="btn btn-primary" href="#get">Get it free</a>
