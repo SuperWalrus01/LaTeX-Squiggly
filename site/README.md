@@ -34,7 +34,7 @@ absolute URL. The Chrome extension's store listing and settings page link to
 
 ## What is generated, and what is not
 
-`index.html`, `privacy.html`, `guide.html`, `styles.css` and `app.js` are
+`index.html`, `privacy.html`, `guide.html`, `site.css`, `guide.js` and `app.js` are
 written by hand. `assets/guide-renderer.png` is a screenshot of the
 extension's Renderer tab. The videos in `assets/videos/` are rendered from the
 real extension, engine and renderer; their music is "Voxel Revolution" by Kevin
