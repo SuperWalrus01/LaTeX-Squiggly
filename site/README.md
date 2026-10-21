@@ -26,11 +26,16 @@ site/
 change to it reaches `main`, and can be run by hand from the **Actions** tab.
 The repository's **Settings → Pages → Source** is set to *GitHub Actions*.
 
-The site is at `https://superwalrus01.github.io/LaTeX-Squiggly/`. If the
-repository moves, change the `<link rel="canonical">` in both pages and
-`og:image` in `index.html`, which some scrapers insist on reading as an
-absolute URL. The Chrome extension's store listing and settings page link to
-`privacy.html`, so that address must keep working.
+The site is at `https://latexsquiggly.keenanjusak.com/`, a custom domain set
+in **Settings → Pages → Custom domain**, with a CNAME record for
+`latexsquiggly` pointing at `superwalrus01.github.io` in the keenanjusak.com
+DNS. The old address, `https://superwalrus01.github.io/LaTeX-Squiggly/`,
+redirects there, so links to it keep working.
+
+If the address changes, change the `<link rel="canonical">` in all three pages
+and `og:image` in `index.html`, which some scrapers insist on reading as an
+absolute URL. The Chrome extension's store listing and settings page, and the
+iPhone app, link to `privacy.html`, so that address must keep working.
 
 ## What is generated, and what is not
 
