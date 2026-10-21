@@ -9,7 +9,7 @@ site/
   index.html            the home page
   privacy.html          the privacy policy, for every platform
   guide.html            how to use it, on each platform
-  assets/styles.css     one stylesheet for all three pages, tokens for light and dark
+  assets/site.css       one stylesheet for all three pages, tokens for light and dark
   assets/app.js         the live demo and the symbol browser
   assets/data.js        generated: the app's own tables
   assets/*.png          the artwork, the icons, the link cards
