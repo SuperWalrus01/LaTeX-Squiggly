@@ -20,6 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
+<script src="assets/nav.js" defer></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -40,10 +41,25 @@
   <div class="wrap">
     <a class="brandline" href="./"><span class="brandmark"></span><b>LaTeX Squiggly</b></a>
     <nav aria-label="Main">
-      <a class="optional" href="#platforms">Platforms</a>
-      <a class="optional" href="#iphone">iPhone</a>
-      <a class="optional" href="#symbols">Symbols</a>
+      <details class="navmenu">
+        <summary aria-current="page">Home<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="navmenu-panel">
+          <a class="navmenu-home" href="./">The home page<span>Back to the top</span></a>
+          <ul>
+            <li><a href="#try"><b>Try it</b><span>Type LaTeX in the live demo</span></a></li>
+            <li><a href="#platforms"><b>Platforms</b><span>Mac, Windows, Chrome, iPhone</span></a></li>
+            <li><a href="#watch"><b>Watch it work</b><span>The 11-second tour</span></a></li>
+            <li><a href="#what"><b>What comes out</b><span>Characters, not markup</span></a></li>
+            <li><a href="#iphone"><b>iPhone keyboard</b><span>Coming to the App Store</span></a></li>
+            <li><a href="#images"><b>Images</b><span>The renderer</span></a></li>
+            <li><a href="#quiet"><b>Staying quiet</b><span>Out of your TeX editor</span></a></li>
+            <li><a href="#symbols"><b>All symbols</b><span>Search all 202</span></a></li>
+            <li><a href="#get"><b>Get it</b><span>Downloads for every platform</span></a></li>
+          </ul>
+        </div>
+      </details>
       <a href="guide.html">Guide</a>
+      <a href="privacy.html">Privacy</a>
       <a class="btn btn-primary" href="#get">Get it free</a>
     </nav>
   </div>
