@@ -463,8 +463,10 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-spa
 .get .card { display: flex; flex-direction: column; gap: .6rem; padding: 1.5rem; }
 .get .card h3 { display: flex; align-items: center; gap: .55rem; font-size: 1.35rem; margin: 0; }
 .get .card h3 svg { width: 1.4rem; height: 1.4rem; color: var(--squiggle); }
-.get .card .req { font-size: .85rem; color: var(--ink-faint); font-weight: 500; }
-.get .card .btn { align-self: flex-start; margin-top: .3rem; }
+/* Each subtitle has room for two lines and each button fills its card, so the
+   four buttons sit in a row at any width and a long label never spills out. */
+.get .card .req { font-size: .85rem; color: var(--ink-faint); font-weight: 500; min-height: 2.6em; }
+.get .card .btn { justify-content: center; white-space: normal; text-align: center; margin-top: .3rem; }
 .get .card .fine { font-size: .86rem; color: var(--ink-faint); margin-top: auto; padding-top: .5rem; }
 
 .promise {
